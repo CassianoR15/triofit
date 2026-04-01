@@ -459,7 +459,7 @@ function SaudeStatusCard({status,onRecuperado,onDorRecuperado,soLeitura}){
   );
 }
 
-// Seletor de aluno para prof
+// Seletor de aluno para prof — seleção única, clique no mesmo deseleciona
 function AlunoSelector({alunos,selecionado,onSelect,accentClass}){
   if(alunos.length===0)return null;
   return(
@@ -467,7 +467,8 @@ function AlunoSelector({alunos,selecionado,onSelect,accentClass}){
       <div style={{fontSize:"0.8rem",color:"var(--text3)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:"0.75rem"}}>Selecionar aluno / paciente</div>
       <div className="aluno-sel-wrap">
         {alunos.map(a=>(
-          <button key={a.id} className={`aluno-sel-btn ${selecionado?.id===a.id?accentClass:""}`} onClick={()=>onSelect(a)}>
+          <button key={a.id} className={`aluno-sel-btn ${selecionado?.id===a.id?accentClass:""}`}
+            onClick={()=>onSelect(selecionado?.id===a.id ? null : a)}>
             <div className="aluno-sel-avatar">{initials(a.nome)}</div>
             {a.nome.split(" ")[0]}
           </button>
@@ -1026,40 +1027,75 @@ function TreinadorPrescrever({user}){
               <div style={{fontFamily:"var(--font-display)",fontSize:"1.3rem",color:"var(--orange)",marginBottom:"1rem"}}>{DIAS_SEMANA[diaEdit]}</div>
               <div className="form-group">
                 <label className="form-label">Tipo do dia</label>
-                <div style={{display:"flex",gap:"0.5rem"}}>
-                  <button className={`toggle-btn ${diaAtual.tipo==="treino"?"active-orange":""}`} onClick={()=>setDiaTipo(diaEdit,"treino")}>🏋️ Treino</button>
-                  <button className={`toggle-btn ${diaAtual.tipo==="descanso"?"active-orange":""}`} onClick={()=>setDiaTipo(diaEdit,"descanso")}>😴 Descanso</button>
+                <div style={{display:"flex",gap:"0.5rem",flexWrap:"wrap"}}>
+                  {[["descanso","😴 Descanso"],["academia","🏋️ Academia"],["corrida","🏃 Corrida"],["natacao","🏊 Natação"],["luta","🥊 Luta"],["ciclismo","🚴 Ciclismo"],["funcional","⚡ Funcional"],["caminhada","🚶 Caminhada"]].map(([v,l])=>(
+                    <button key={v} className={`toggle-btn ${diaAtual.tipo===v?"active-orange":""}`} onClick={()=>setDiaTipo(diaEdit,v)}>{l}</button>
+                  ))}
                 </div>
               </div>
-              {diaAtual.tipo==="treino"&&(
+              {diaAtual.tipo!=="descanso"&&(
                 <>
-                  <div className="form-group"><label className="form-label">Nome do treino</label><input className="form-input" value={diaAtual.nome} onChange={e=>setDiaNome(diaEdit,e.target.value)} placeholder="Ex: Treino A — Peito + Tríceps"/></div>
+                  <div className="form-group"><label className="form-label">Nome do treino</label><input className="form-input" value={diaAtual.nome} onChange={e=>setDiaNome(diaEdit,e.target.value)} placeholder={
+                    diaAtual.tipo==="corrida"?"Ex: Corrida leve 5km Z2":
+                    diaAtual.tipo==="natacao"?"Ex: Natação técnica 2000m":
+                    diaAtual.tipo==="luta"?"Ex: Treino de Jiu-Jitsu":
+                    diaAtual.tipo==="ciclismo"?"Ex: Ciclismo Z2 40km":
+                    "Ex: Treino A — Peito + Tríceps"
+                  }/></div>
                   <div className="form-group"><label className="form-label">Observações do dia</label><input className="form-input" value={diaAtual.obs} onChange={e=>setDiaObs(diaEdit,e.target.value)} placeholder="Instruções específicas..."/></div>
 
-                  {/* EXERCÍCIOS */}
+                  {/* CAMPOS ESPECÍFICOS POR MODALIDADE */}
+                  {(diaAtual.tipo==="corrida"||diaAtual.tipo==="natacao"||diaAtual.tipo==="ciclismo"||diaAtual.tipo==="caminhada")&&(
+                    <div style={{background:"rgba(52,152,219,0.08)",border:"1px solid rgba(52,152,219,0.2)",borderRadius:"var(--radius)",padding:"1rem",marginBottom:"1rem"}}>
+                      <div style={{fontSize:"0.8rem",color:"var(--blue)",marginBottom:"0.75rem",textTransform:"uppercase",letterSpacing:"0.1em"}}>
+                        {diaAtual.tipo==="corrida"?"🏃 Prescrição de corrida":diaAtual.tipo==="natacao"?"🏊 Prescrição de natação":diaAtual.tipo==="ciclismo"?"🚴 Prescrição de ciclismo":"🚶 Prescrição de caminhada"}
+                      </div>
+                      <div className="grid-2">
+                        <div className="form-group"><label className="form-label">Distância</label><input className="form-input" placeholder={diaAtual.tipo==="natacao"?"Ex: 2000m":"Ex: 5km ou 10km"} value={diaAtual.distancia||""} onChange={e=>setDias(p=>{const n=[...p];n[diaEdit]={...n[diaEdit],distancia:e.target.value};return n;})}/></div>
+                        <div className="form-group"><label className="form-label">Tempo / Ritmo</label><input className="form-input" placeholder={diaAtual.tipo==="natacao"?"Ex: 2min/100m":"Ex: 6min/km ou 30min"} value={diaAtual.ritmo||""} onChange={e=>setDias(p=>{const n=[...p];n[diaEdit]={...n[diaEdit],ritmo:e.target.value};return n;})}/></div>
+                        <div className="form-group"><label className="form-label">Zona / Intensidade</label><input className="form-input" placeholder="Ex: Z2, leve, moderado..." value={diaAtual.zona||""} onChange={e=>setDias(p=>{const n=[...p];n[diaEdit]={...n[diaEdit],zona:e.target.value};return n;})}/></div>
+                        <div className="form-group"><label className="form-label">Duração total</label><input className="form-input" placeholder="Ex: 45min" value={diaAtual.duracaoTotal||""} onChange={e=>setDias(p=>{const n=[...p];n[diaEdit]={...n[diaEdit],duracaoTotal:e.target.value};return n;})}/></div>
+                      </div>
+                    </div>
+                  )}
+                  {diaAtual.tipo==="luta"&&(
+                    <div style={{background:"rgba(231,76,60,0.08)",border:"1px solid rgba(231,76,60,0.2)",borderRadius:"var(--radius)",padding:"1rem",marginBottom:"1rem"}}>
+                      <div style={{fontSize:"0.8rem",color:"var(--red)",marginBottom:"0.75rem",textTransform:"uppercase",letterSpacing:"0.1em"}}>🥊 Prescrição de luta</div>
+                      <div className="grid-2">
+                        <div className="form-group"><label className="form-label">Rounds</label><input className="form-input" placeholder="Ex: 5 rounds" value={diaAtual.rounds||""} onChange={e=>setDias(p=>{const n=[...p];n[diaEdit]={...n[diaEdit],rounds:e.target.value};return n;})}/></div>
+                        <div className="form-group"><label className="form-label">Tempo por round</label><input className="form-input" placeholder="Ex: 5min / 1min descanso" value={diaAtual.tempoRound||""} onChange={e=>setDias(p=>{const n=[...p];n[diaEdit]={...n[diaEdit],tempoRound:e.target.value};return n;})}/></div>
+                        <div className="form-group"><label className="form-label">Foco do treino</label><input className="form-input" placeholder="Ex: Sparring, técnica, condicionamento" value={diaAtual.foco||""} onChange={e=>setDias(p=>{const n=[...p];n[diaEdit]={...n[diaEdit],foco:e.target.value};return n;})}/></div>
+                        <div className="form-group"><label className="form-label">Modalidade</label><input className="form-input" placeholder="Ex: BJJ, Muay Thai, MMA" value={diaAtual.modalidadeLuta||""} onChange={e=>setDias(p=>{const n=[...p];n[diaEdit]={...n[diaEdit],modalidadeLuta:e.target.value};return n;})}/></div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* EXERCÍCIOS (academia/funcional) */}
+                  {(diaAtual.tipo==="academia"||diaAtual.tipo==="funcional")&&(
+                    <>
                   {diaAtual.exercicios&&diaAtual.exercicios.length>0&&(
                     <div style={{marginBottom:"1rem"}}>
                       {diaAtual.exercicios.map((ex,j)=>(
                         <div key={j} style={{display:"flex",alignItems:"center",gap:"0.75rem",padding:"0.65rem",background:"var(--card)",borderRadius:"var(--radius)",marginBottom:"0.4rem",fontSize:"0.85rem"}}>
                           <span style={{fontWeight:600,flex:1}}>{ex.nome}</span>
-                          <span style={{color:"var(--text2)"}}>{ex.series&&`${ex.series}x`} {ex.reps} {ex.carga&&`• ${ex.carga}`} {ex.duracao&&`• ${ex.duracao}`}</span>
+                          <span style={{color:"var(--text2)"}}>{ex.series&&`${ex.series}x`} {ex.reps} {ex.carga&&`• ${ex.carga}`}</span>
                           <button className="btn btn-sm btn-ghost" onClick={()=>removeEx(diaEdit,j)}>✕</button>
                         </div>
                       ))}
                     </div>
                   )}
-
-                  {/* ADD EXERCÍCIO */}
                   <div style={{background:"var(--card)",borderRadius:"var(--radius)",padding:"1rem"}}>
                     <div style={{fontSize:"0.8rem",color:"var(--text3)",marginBottom:"0.75rem",textTransform:"uppercase",letterSpacing:"0.1em"}}>+ Adicionar exercício</div>
                     <div className="grid-2">
                       <div className="form-group"><label className="form-label">Nome</label><input className="form-input" placeholder="Ex: Supino Reto" value={novoEx.nome} onChange={e=>setNovoEx(p=>({...p,nome:e.target.value}))}/></div>
                       <div className="form-group"><label className="form-label">Séries</label><input className="form-input" placeholder="Ex: 4" value={novoEx.series} onChange={e=>setNovoEx(p=>({...p,series:e.target.value}))}/></div>
-                      <div className="form-group"><label className="form-label">Reps / Tempo</label><input className="form-input" placeholder="Ex: 8-10 ou 30min" value={novoEx.reps} onChange={e=>setNovoEx(p=>({...p,reps:e.target.value}))}/></div>
-                      <div className="form-group"><label className="form-label">Carga / Intensidade</label><input className="form-input" placeholder="Ex: 80kg ou Z2" value={novoEx.carga} onChange={e=>setNovoEx(p=>({...p,carga:e.target.value}))}/></div>
+                      <div className="form-group"><label className="form-label">Reps / Tempo</label><input className="form-input" placeholder="Ex: 8-10 ou 30s" value={novoEx.reps} onChange={e=>setNovoEx(p=>({...p,reps:e.target.value}))}/></div>
+                      <div className="form-group"><label className="form-label">Carga</label><input className="form-input" placeholder="Ex: 80kg ou Corporal" value={novoEx.carga} onChange={e=>setNovoEx(p=>({...p,carga:e.target.value}))}/></div>
                     </div>
                     <button className="btn btn-orange btn-sm" onClick={()=>addEx(diaEdit)}>+ Adicionar</button>
                   </div>
+                    </>
+                  )}
                 </>
               )}
             </div>
@@ -1075,6 +1111,86 @@ function TreinadorPrescrever({user}){
 // ============================================================
 // TREINADOR — DASHBOARD + ACOMPANHAMENTO
 // ============================================================
+
+// Resumo semanal (visão de acompanhamento)
+function ResumoSemanalAluno({aluno,onVerCompleto}){
+  const saude=DB.getData("saude",aluno.id)||{};
+  const agua=DB.getData("agua_hoje",aluno.id)||0;
+  const meta=DB.getData("meta_agua",aluno.id)||3000;
+  const planoTreino=DB.getData("plano_treino_aluno",aluno.id);
+  const av=DB.getData("treino_avaliacao",aluno.id)||{};
+  const diasDoente=saude.doente_desde?diffDays(saude.doente_desde):0;
+
+  // Contar dias de treino feitos (baseado no check)
+  const check=DB.getData("treino_check_hoje",aluno.id)||{};
+  // Simular quais dias têm exercícios marcados essa semana
+  const diasTreino=planoTreino?.dias||[];
+  const diasComTreino=diasTreino.filter(d=>d.tipo!=="descanso").length;
+
+  // Média de água (só temos hoje, mostrar o de hoje)
+  const pctAgua=Math.round((agua/meta)*100);
+
+  // Ícone da modalidade principal
+  const modIcons={musculacao:"🏋️",corrida:"🏃",natacao:"🏊",luta:"🥊",ciclismo:"🚴",funcional:"⚡",caminhada:"🚶"};
+  const modIcon=modIcons[planoTreino?.modalidade]||"🏋️";
+
+  return(
+    <div className="card" style={{cursor:"pointer"}} onClick={onVerCompleto}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:"1rem"}}>
+        <div>
+          <div style={{fontFamily:"var(--font-display)",fontSize:"1.3rem",letterSpacing:"0.05em"}}>{aluno.nome}</div>
+          {planoTreino&&<div style={{fontSize:"0.78rem",color:"var(--text2)",marginTop:"0.15rem"}}>{modIcon} {planoTreino.nome} • até {fmtDate(planoTreino.fim)}</div>}
+        </div>
+        <div style={{display:"flex",gap:"0.4rem",flexWrap:"wrap",alignItems:"center"}}>
+          {saude.doente&&<span className="tag tag-red">🤒 {diasDoente}d</span>}
+          {saude.dores&&saude.dores.length>0&&<span className="tag tag-orange">🔴 {saude.dores.length} dor{saude.dores.length>1?"es":""}</span>}
+          {saude.mens&&<span className="tag tag-orange">🔴 Ciclo</span>}
+        </div>
+      </div>
+
+      {/* LINHA DE RESUMO */}
+      <div className="grid-3" style={{marginBottom:"1rem"}}>
+        <div style={{background:"var(--bg2)",borderRadius:"var(--radius)",padding:"0.85rem",textAlign:"center"}}>
+          <div style={{fontSize:"0.65rem",color:"var(--text3)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:"0.25rem"}}>Água hoje</div>
+          <div style={{fontFamily:"var(--font-display)",fontSize:"1.5rem",color:"var(--blue)"}}>{pctAgua}%</div>
+          <div style={{fontSize:"0.7rem",color:"var(--text3)"}}>{(agua/1000).toFixed(1)}L / {(meta/1000).toFixed(1)}L</div>
+        </div>
+        <div style={{background:"var(--bg2)",borderRadius:"var(--radius)",padding:"0.85rem",textAlign:"center"}}>
+          <div style={{fontSize:"0.65rem",color:"var(--text3)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:"0.25rem"}}>Dias treino/sem</div>
+          <div style={{fontFamily:"var(--font-display)",fontSize:"1.5rem",color:"var(--green)"}}>{diasComTreino}</div>
+          <div style={{fontSize:"0.7rem",color:"var(--text3)"}}>dias com treino</div>
+        </div>
+        <div style={{background:"var(--bg2)",borderRadius:"var(--radius)",padding:"0.85rem",textAlign:"center"}}>
+          <div style={{fontSize:"0.65rem",color:"var(--text3)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:"0.25rem"}}>Último treino</div>
+          <div style={{fontSize:"1.2rem"}}>{av.rating>0?"★".repeat(av.rating):"—"}</div>
+          <div style={{fontSize:"0.7rem",color:"var(--text3)"}}>{av.rating>0?`nota ${av.rating}/5`:"Sem avaliação"}</div>
+        </div>
+      </div>
+
+      {/* DIAS DA SEMANA RESUMO */}
+      {planoTreino?.dias&&(
+        <div>
+          <div style={{fontSize:"0.7rem",color:"var(--text3)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:"0.5rem"}}>Semana de treinos</div>
+          <div style={{display:"flex",gap:"0.3rem"}}>
+            {planoTreino.dias.map((d,i)=>{
+              const tipoIcons={descanso:"😴",academia:"🏋️",corrida:"🏃",natacao:"🏊",luta:"🥊",ciclismo:"🚴",funcional:"⚡",caminhada:"🚶",treino:"🏋️"};
+              return(
+                <div key={i} style={{flex:1,textAlign:"center",padding:"0.4rem 0.2rem",background:"var(--bg2)",borderRadius:"8px",fontSize:"0.65rem"}}>
+                  <div style={{fontSize:"1rem",marginBottom:"0.15rem"}}>{tipoIcons[d.tipo]||"🏋️"}</div>
+                  <div style={{color:"var(--text3)"}}>{DIAS_SEMANA[i].slice(0,3)}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      <div style={{fontSize:"0.8rem",color:"var(--orange)",marginTop:"1rem"}}>Ver relatório completo do mês →</div>
+    </div>
+  );
+}
+
+// Diário completo — visão mensal
 function DiarioAluno({aluno,onBack}){
   const saude=DB.getData("saude",aluno.id)||{};
   const treino=DB.getData("treino_avaliacao",aluno.id)||{};
@@ -1087,32 +1203,152 @@ function DiarioAluno({aluno,onBack}){
   const planoTreino=DB.getData("plano_treino_aluno",aluno.id);
   const refeicoes=planoAlim?.refeicoes||[];
   const qtdComido=Object.values(alimCheck).filter(Boolean).length;
+  const diasDoente=saude.doente_desde?diffDays(saude.doente_desde):0;
+
+  const tipoIcons={descanso:"😴",academia:"🏋️",corrida:"🏃",natacao:"🏊",luta:"🥊",ciclismo:"🚴",funcional:"⚡",caminhada:"🚶",treino:"🏋️"};
+  const modIcons={musculacao:"🏋️",corrida:"🏃",natacao:"🏊",luta:"🥊",ciclismo:"🚴",funcional:"⚡",caminhada:"🚶"};
+
   return(
     <div className="page">
       <div style={{marginBottom:"1rem"}}><button className="btn btn-ghost btn-sm" onClick={onBack}>← Voltar</button></div>
       <div className="page-title" style={{color:"var(--text)"}}>{aluno.nome}</div>
-      <div className="page-sub">Diário completo</div>
+      <div className="page-sub">Relatório completo do mês</div>
+
+      {/* DADOS PESSOAIS */}
       <div className="card">
-        <div className="card-title">❤️ SAÚDE</div>
+        <div className="card-title">👤 PERFIL DO ALUNO</div>
+        <div className="grid-3">
+          <div className="diario-section"><div className="diario-label">Peso</div><div className="diario-val" style={{fontFamily:"var(--font-display)",fontSize:"1.5rem",color:"var(--green)"}}>{aval.peso||"—"}<span style={{fontSize:"0.8rem",color:"var(--text2)"}}>{aval.peso?" kg":""}</span></div></div>
+          <div className="diario-section"><div className="diario-label">% Gordura</div><div className="diario-val" style={{fontFamily:"var(--font-display)",fontSize:"1.5rem",color:"var(--orange)"}}>{aval.gordura||"—"}<span style={{fontSize:"0.8rem",color:"var(--text2)"}}>{aval.gordura?"%":""}</span></div></div>
+          <div className="diario-section"><div className="diario-label">Email</div><div className="diario-val" style={{fontSize:"0.85rem"}}>{aluno.email}</div></div>
+        </div>
+        {aval.cintura&&(
+          <div className="grid-4" style={{marginTop:"0.75rem",marginBottom:0}}>
+            {[["cintura","Cintura","cm"],["quadril","Quadril","cm"],["braco_d","Braço D","cm"],["perna_d","Perna D","cm"]].map(([k,l,u])=>
+              aval[k]?<div key={k} className="diario-section"><div className="diario-label">{l}</div><div className="diario-val">{aval[k]}{u}</div></div>:null
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* MODALIDADES QUE PRATICA */}
+      {planoTreino&&(
+        <div className="card">
+          <div className="card-title">🏅 MODALIDADES / PLANO ATIVO</div>
+          <div style={{display:"flex",alignItems:"center",gap:"1rem",marginBottom:"1rem",flexWrap:"wrap"}}>
+            <div style={{fontSize:"2.5rem"}}>{modIcons[planoTreino.modalidade]||"🏋️"}</div>
+            <div>
+              <div style={{fontWeight:600,fontSize:"1rem"}}>{planoTreino.nome}</div>
+              <div style={{fontSize:"0.8rem",color:"var(--text2)"}}>Modalidade: {MODALIDADES.find(m=>m.v===planoTreino.modalidade)?.l||planoTreino.modalidade}</div>
+              <div style={{fontSize:"0.8rem",color:"var(--text2)"}}>{fmtDate(planoTreino.inicio)} → {fmtDate(planoTreino.fim)} • {planoTreino.duracao} {planoTreino.duracao===1?"mês":"meses"}</div>
+            </div>
+          </div>
+
+          {/* SEMANA DETALHADA */}
+          <div style={{fontSize:"0.75rem",color:"var(--text3)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:"0.75rem"}}>Distribuição semanal</div>
+          <div style={{display:"flex",gap:"0.5rem",flexWrap:"wrap"}}>
+            {planoTreino.dias.map((d,i)=>(
+              <div key={i} style={{flex:"1",minWidth:"80px",background:d.tipo==="descanso"?"var(--bg2)":"var(--card2)",border:d.tipo==="descanso"?"1px solid var(--border)":"1px solid var(--green-dim)",borderRadius:"var(--radius)",padding:"0.65rem",textAlign:"center"}}>
+                <div style={{fontSize:"1.2rem",marginBottom:"0.2rem"}}>{tipoIcons[d.tipo]||"🏋️"}</div>
+                <div style={{fontSize:"0.7rem",fontWeight:600,color:d.tipo==="descanso"?"var(--text3)":"var(--text)"}}>{DIAS_SEMANA[i].slice(0,3)}</div>
+                <div style={{fontSize:"0.65rem",color:"var(--text3)",marginTop:"0.1rem"}}>{d.tipo==="descanso"?"Descanso":d.nome?.split("—")[0]?.trim()||d.tipo}</div>
+                {/* Campos específicos */}
+                {d.distancia&&<div style={{fontSize:"0.65rem",color:"var(--blue)",marginTop:"0.15rem"}}>{d.distancia}</div>}
+                {d.rounds&&<div style={{fontSize:"0.65rem",color:"var(--red)",marginTop:"0.15rem"}}>{d.rounds}</div>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* SAÚDE DO MÊS */}
+      <div className="card">
+        <div className="card-title">❤️ SAÚDE DO MÊS</div>
         <SaudeStatusCard status={saude} soLeitura={true}/>
-        <div style={{marginTop:"0.75rem",display:"flex",gap:"0.5rem",flexWrap:"wrap"}}>
-          {saude.mens&&<span className="tag tag-orange">🔴 Ciclo menstrual</span>}
-          {saude.meds&&<span className="tag tag-blue">💊 {saude.meds}</span>}
+
+        {/* HISTÓRICO DE DOENÇAS/DORES */}
+        <div style={{marginTop:"1rem",display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0.75rem"}}>
+          <div className="diario-section">
+            <div className="diario-label">🤒 Dias doente no mês</div>
+            <div className="diario-val" style={{fontFamily:"var(--font-display)",fontSize:"1.8rem",color:saude.doente?"var(--red)":"var(--green)"}}>{saude.doente?diasDoente:0}<span style={{fontSize:"0.8rem",color:"var(--text2)"}}> dias</span></div>
+            {saude.sintomas&&<div style={{fontSize:"0.8rem",color:"var(--text2)",marginTop:"0.25rem"}}>{saude.sintomas}</div>}
+          </div>
+          <div className="diario-section">
+            <div className="diario-label">🔴 Dores musculares ativas</div>
+            <div className="diario-val" style={{fontFamily:"var(--font-display)",fontSize:"1.8rem",color:saude.dores?.length?"var(--orange)":"var(--green)"}}>{saude.dores?.length||0}<span style={{fontSize:"0.8rem",color:"var(--text2)"}}> grupos</span></div>
+            {saude.dores?.length>0&&<div style={{fontSize:"0.8rem",color:"var(--text2)",marginTop:"0.25rem"}}>{saude.dores.map(d=>`${d.musculo} (${diffDays(d.desde)}d)`).join(", ")}</div>}
+          </div>
+          <div className="diario-section">
+            <div className="diario-label">🔴 Ciclo menstrual</div>
+            <div className="diario-val">{saude.mens?<span className="tag tag-orange">Semana menstrual ativa</span>:<span style={{color:"var(--text3)"}}>Não informado</span>}</div>
+          </div>
+          <div className="diario-section">
+            <div className="diario-label">💊 Medicamentos</div>
+            <div className="diario-val" style={{fontSize:"0.85rem"}}>{saude.meds||<span style={{color:"var(--text3)"}}>Nenhum</span>}</div>
+          </div>
         </div>
         {saude.obs&&<div className="diario-section" style={{marginTop:"0.75rem"}}><div className="diario-label">Observações</div><div className="diario-val">{saude.obs}</div></div>}
       </div>
-      {planoTreino&&<div className="card"><div className="card-title">🏋️ PLANO DE TREINO ATIVO</div><PeriodoBadge plano={planoTreino}/>{treino.rating>0&&<div style={{fontSize:"0.9rem",marginTop:"0.5rem"}}>Última avaliação: {"★".repeat(treino.rating)}{"☆".repeat(5-treino.rating)}{treino.feedback&&<div style={{color:"var(--text2)",marginTop:"0.25rem"}}>"{treino.feedback}"</div>}</div>}</div>}
+
+      {/* HIDRATAÇÃO */}
       <div className="card">
         <div className="card-title">💧 HIDRATAÇÃO</div>
-        <div className="prog-wrap"><div className="prog-hdr"><span>Água</span><span className="blue">{agua}ml / {metaAgua}ml</span></div><div className="prog-track"><div className="prog-fill blue" style={{width:`${Math.min((agua/metaAgua)*100,100)}%`}}/></div></div>
+        <div className="grid-2" style={{marginBottom:"1rem"}}>
+          <div className="diario-section" style={{textAlign:"center"}}>
+            <div className="diario-label">Consumo hoje</div>
+            <div style={{fontFamily:"var(--font-display)",fontSize:"2.5rem",color:"var(--blue)"}}>{(agua/1000).toFixed(1)}<span style={{fontSize:"0.9rem",color:"var(--text2)"}}>L</span></div>
+          </div>
+          <div className="diario-section" style={{textAlign:"center"}}>
+            <div className="diario-label">Meta diária</div>
+            <div style={{fontFamily:"var(--font-display)",fontSize:"2.5rem",color:"var(--text)"}}>{(metaAgua/1000).toFixed(1)}<span style={{fontSize:"0.9rem",color:"var(--text2)"}}>L</span></div>
+          </div>
+        </div>
+        <div className="prog-wrap">
+          <div className="prog-hdr"><span>Atingimento da meta hoje</span><span className="blue">{Math.round((agua/metaAgua)*100)}%</span></div>
+          <div className="prog-track"><div className="prog-fill blue" style={{width:`${Math.min((agua/metaAgua)*100,100)}%`}}/></div>
+        </div>
       </div>
-      {planoAlim&&<div className="card"><div className="card-title">🥗 ALIMENTAÇÃO</div><PeriodoBadge plano={planoAlim}/><div style={{fontSize:"0.9rem",color:"var(--text2)",marginTop:"0.5rem"}}>Refeições feitas hoje: <span style={{color:"var(--green)",fontWeight:600}}>{qtdComido}/{refeicoes.length}</span></div>{refeicoes.map((r,i)=><div key={i} className="meal-item" style={{background:alimCheck[i]?"var(--green-dim)":"var(--card2)",border:alimCheck[i]?"1px solid rgba(46,204,113,0.3)":"none"}}><div style={{color:"var(--text3)",fontFamily:"var(--font-mono)",fontSize:"0.75rem",minWidth:"45px"}}>{r.h}</div><div style={{flex:1,fontWeight:600,fontSize:"0.88rem"}}>{r.r}</div>{alimCheck[i]?<span className="tag tag-green">✓ Comeu</span>:<span style={{fontSize:"0.75rem",color:"var(--text3)"}}>Não marcado</span>}</div>)}</div>}
-      {Object.keys(aval).length>0&&<div className="card"><div className="card-title">📊 AVALIAÇÃO FÍSICA</div><div className="grid-2">{[["peso","Peso","kg"],["gordura","% Gordura","%"],["cintura","Cintura","cm"],["quadril","Quadril","cm"]].map(([k,l,u])=>aval[k]?<div key={k} className="diario-section"><div className="diario-label">{l}</div><div className="diario-val">{aval[k]}{u}</div></div>:null)}</div></div>}
-      {comps.length>0&&<div className="card"><div className="card-title">🏆 COMPETIÇÕES</div>{comps.map((c,i)=>{const d=new Date(c.data);return(<div key={i} className="comp-card" style={{background:"var(--bg2)"}}><div className="comp-date"><div className="comp-date-day">{d.getDate()}</div><div className="comp-date-month">{d.toLocaleDateString("pt-BR",{month:"short"})}</div></div><div style={{flex:1}}><div style={{fontWeight:600}}>{c.nome}</div><div style={{fontSize:"0.8rem",color:"var(--text2)"}}>{c.modalidade}</div></div><span className="tag tag-orange">{c.objetivo}</span></div>);})}</div>}
+
+      {/* TREINO — AVALIAÇÃO */}
+      {treino.rating>0&&(
+        <div className="card">
+          <div className="card-title">🏋️ AVALIAÇÃO DO ÚLTIMO TREINO</div>
+          <div className="grid-2">
+            <div className="diario-section"><div className="diario-label">Nota</div><div style={{fontSize:"1.8rem"}}>{"★".repeat(treino.rating)}{"☆".repeat(5-treino.rating)}</div></div>
+            <div className="diario-section"><div className="diario-label">Data</div><div className="diario-val">{treino.data?fmtDate(treino.data):"—"}</div></div>
+          </div>
+          {treino.feedback&&<div className="diario-section" style={{marginTop:"0.5rem"}}><div className="diario-label">Feedback do aluno</div><div className="diario-val">"{treino.feedback}"</div></div>}
+        </div>
+      )}
+
+      {/* ALIMENTAÇÃO */}
+      {planoAlim&&(
+        <div className="card">
+          <div className="card-title">🥗 PLANO ALIMENTAR</div>
+          <PeriodoBadge plano={planoAlim}/>
+          <div style={{fontSize:"0.9rem",color:"var(--text2)",marginTop:"0.5rem",marginBottom:"1rem"}}>
+            Refeições feitas hoje: <span style={{color:"var(--green)",fontWeight:600}}>{qtdComido}/{refeicoes.length}</span>
+          </div>
+          {refeicoes.map((r,i)=>(
+            <div key={i} className="meal-item" style={{background:alimCheck[i]?"var(--green-dim)":"var(--card2)",border:alimCheck[i]?"1px solid rgba(46,204,113,0.3)":"none"}}>
+              <div style={{color:"var(--text3)",fontFamily:"var(--font-mono)",fontSize:"0.75rem",minWidth:"45px"}}>{r.h}</div>
+              <div style={{flex:1,fontWeight:600,fontSize:"0.88rem"}}>{r.r}</div>
+              {alimCheck[i]?<span className="tag tag-green">✓ Comeu</span>:<span style={{fontSize:"0.75rem",color:"var(--text3)"}}>Não marcado</span>}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* COMPETIÇÕES */}
+      {comps.length>0&&(
+        <div className="card">
+          <div className="card-title">🏆 COMPETIÇÕES</div>
+          {comps.map((c,i)=>{const d=new Date(c.data);return(<div key={i} className="comp-card" style={{background:"var(--bg2)"}}><div className="comp-date"><div className="comp-date-day">{d.getDate()}</div><div className="comp-date-month">{d.toLocaleDateString("pt-BR",{month:"short"})}</div></div><div style={{flex:1}}><div style={{fontWeight:600}}>{c.nome}</div><div style={{fontSize:"0.8rem",color:"var(--text2)"}}>{c.modalidade}</div></div><span className="tag tag-orange">{c.objetivo}</span></div>);})}
+        </div>
+      )}
     </div>
   );
 }
-
 function TreinadorDash({user}){
   const alunos=DB.getAlunosDe(user.id);
   const [alunoVer,setAlunoVer]=useState(null);
@@ -1160,28 +1396,12 @@ function TreinadorAcompanhamento({user}){
   return(
     <div className="page">
       <div className="page-title orange">ACOMPANHAMENTO</div>
-      <div className="page-sub">Saúde e treinos dos alunos</div>
-      {alunos.length===0?<div className="card"><div style={{color:"var(--text2)"}}>Nenhum aluno vinculado. Código: <b style={{fontFamily:"var(--font-mono)",color:"var(--green)"}}>{gerarCodigo(user.id)}</b></div></div>:alunos.map(a=>{
-        const s=DB.getData("saude",a.id)||{};
-        const av=DB.getData("treino_avaliacao",a.id)||{};
-        const agua=DB.getData("agua_hoje",a.id)||0;
-        const meta=DB.getData("meta_agua",a.id)||3000;
-        const diasDoente=s.doente_desde?diffDays(s.doente_desde):0;
-        return(
-          <div key={a.id} className="card" style={{cursor:"pointer"}} onClick={()=>setAlunoVer(a)}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"1rem"}}>
-              <div className="card-title" style={{marginBottom:0}}>{a.nome}</div>
-              <div style={{display:"flex",gap:"0.4rem",flexWrap:"wrap"}}>
-                {s.doente&&<span className="tag tag-red">🤒 {diasDoente}d</span>}
-                {s.dores&&s.dores.length>0&&<span className="tag tag-orange">🔴 {s.dores.length} dor{s.dores.length>1?"es":""}</span>}
-              </div>
-            </div>
-            <div className="prog-wrap"><div className="prog-hdr"><span style={{fontSize:"0.8rem"}}>Hidratação</span><span className="blue" style={{fontSize:"0.8rem"}}>{Math.round((agua/meta)*100)}%</span></div><div className="prog-track"><div className="prog-fill blue" style={{width:`${Math.min((agua/meta)*100,100)}%`}}/></div></div>
-            {av.rating>0&&<div style={{fontSize:"0.85rem",color:"var(--text2)"}}>Último treino: {"★".repeat(av.rating)}{"☆".repeat(5-av.rating)}{av.feedback&&` — "${av.feedback}"`}</div>}
-            <div style={{fontSize:"0.8rem",color:"var(--green)",marginTop:"0.5rem"}}>Ver diário completo →</div>
-          </div>
-        );
-      })}
+      <div className="page-sub">Resumo semanal — clique para ver o relatório completo do mês</div>
+      {alunos.length===0?(
+        <div className="card"><div style={{color:"var(--text2)"}}>Nenhum aluno vinculado. Código: <b style={{fontFamily:"var(--font-mono)",color:"var(--green)"}}>{gerarCodigo(user.id)}</b></div></div>
+      ):alunos.map(a=>(
+        <ResumoSemanalAluno key={a.id} aluno={a} onVerCompleto={()=>setAlunoVer(a)}/>
+      ))}
     </div>
   );
 }
