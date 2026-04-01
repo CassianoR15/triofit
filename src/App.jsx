@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
   :root {
     --bg:#0a0f0d; --bg2:#111810; --card:#151e17; --card2:#1a241c; --border:#243028;
     --green:#2ecc71; --green2:#27ae60; --green-dim:#1a4a2a;
@@ -14,6 +14,8 @@ const styles = `
   }
   body { background:var(--bg); color:var(--text); font-family:var(--font-body); }
   .app { min-height:100vh; }
+
+  /* AUTH */
   .auth-wrap { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:2rem; background:var(--bg); position:relative; overflow:hidden; }
   .auth-wrap::before { content:''; position:absolute; width:500px; height:500px; background:radial-gradient(circle,rgba(46,204,113,0.07) 0%,transparent 70%); top:-100px; left:-100px; pointer-events:none; }
   .auth-wrap::after { content:''; position:absolute; width:400px; height:400px; background:radial-gradient(circle,rgba(243,156,18,0.05) 0%,transparent 70%); bottom:-50px; right:-50px; pointer-events:none; }
@@ -21,20 +23,22 @@ const styles = `
   .auth-logo { font-family:var(--font-display); font-size:3rem; letter-spacing:0.05em; background:linear-gradient(135deg,var(--green) 0%,var(--orange) 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; text-align:center; margin-bottom:0.25rem; }
   .auth-subtitle { text-align:center; font-size:0.8rem; color:var(--text3); letter-spacing:0.2em; text-transform:uppercase; margin-bottom:2rem; }
   .auth-tabs { display:flex; background:var(--bg2); border-radius:var(--radius); padding:4px; margin-bottom:1.75rem; gap:4px; }
-  .auth-tab { flex:1; padding:0.6rem; border-radius:8px; text-align:center; font-size:0.85rem; font-weight:600; cursor:pointer; transition:all 0.2s; color:var(--text2); }
+  .auth-tab { flex:1; padding:0.6rem; border-radius:8px; text-align:center; font-size:0.85rem; font-weight:600; cursor:pointer; color:var(--text2); transition:all 0.2s; }
   .auth-tab.active { background:var(--card2); color:var(--text); }
   .auth-error { background:var(--red-dim); border:1px solid rgba(231,76,60,0.3); color:var(--red); padding:0.75rem 1rem; border-radius:var(--radius); font-size:0.85rem; margin-bottom:1rem; }
   .auth-success { background:var(--green-dim); border:1px solid rgba(46,204,113,0.3); color:var(--green); padding:0.75rem 1rem; border-radius:var(--radius); font-size:0.85rem; margin-bottom:1rem; }
   .auth-switch { text-align:center; font-size:0.85rem; color:var(--text2); margin-top:1.25rem; }
   .auth-switch span { color:var(--green); cursor:pointer; font-weight:600; }
   .role-selector { display:grid; grid-template-columns:repeat(3,1fr); gap:0.5rem; margin-bottom:1rem; }
-  .role-opt { padding:0.75rem 0.5rem; border-radius:var(--radius); border:1px solid var(--border); text-align:center; cursor:pointer; transition:all 0.2s; font-size:0.8rem; color:var(--text2); }
+  .role-opt { padding:0.75rem 0.5rem; border-radius:var(--radius); border:1px solid var(--border); text-align:center; cursor:pointer; font-size:0.8rem; color:var(--text2); transition:all 0.2s; }
   .role-opt.sel-aluno { border-color:var(--green); background:var(--green-dim); color:var(--green); }
   .role-opt.sel-treinador { border-color:var(--orange); background:var(--orange-dim); color:var(--orange); }
   .role-opt.sel-nutri { border-color:var(--blue); background:rgba(52,152,219,0.1); color:var(--blue); }
   .role-opt-icon { font-size:1.5rem; margin-bottom:0.25rem; }
   .demo-box { margin-top:1.5rem; padding:1rem; background:var(--bg2); border-radius:var(--radius); font-size:0.78rem; color:var(--text3); line-height:1.9; }
   .demo-box b { color:var(--text2); }
+
+  /* SHELL */
   .shell { display:flex; min-height:100vh; }
   .sidebar { width:240px; min-height:100vh; background:var(--card); border-right:1px solid var(--border); display:flex; flex-direction:column; padding:1.5rem 1rem; position:sticky; top:0; height:100vh; overflow-y:auto; }
   .sidebar-logo { font-family:var(--font-display); font-size:2rem; letter-spacing:0.05em; background:linear-gradient(135deg,var(--green),var(--orange)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; padding:0 0.5rem; margin-bottom:0.1rem; }
@@ -42,19 +46,21 @@ const styles = `
   .sidebar-role { padding:0 0.5rem; font-size:0.7rem; color:var(--text3); letter-spacing:0.15em; text-transform:uppercase; margin-bottom:1.5rem; }
   .nav-section { margin-bottom:1.5rem; }
   .nav-label { font-size:0.65rem; color:var(--text3); letter-spacing:0.2em; text-transform:uppercase; padding:0 0.5rem; margin-bottom:0.5rem; }
-  .nav-item { display:flex; align-items:center; gap:0.75rem; padding:0.65rem 0.75rem; border-radius:var(--radius); cursor:pointer; transition:all 0.2s; font-size:0.9rem; color:var(--text2); border:1px solid transparent; margin-bottom:2px; }
+  .nav-item { display:flex; align-items:center; gap:0.75rem; padding:0.65rem 0.75rem; border-radius:var(--radius); cursor:pointer; font-size:0.9rem; color:var(--text2); border:1px solid transparent; margin-bottom:2px; transition:all 0.2s; }
   .nav-item:hover { background:var(--bg2); color:var(--text); }
   .nav-item.active { background:var(--green-dim); color:var(--green); border-color:rgba(46,204,113,0.2); }
   .nav-item.active.orange { background:var(--orange-dim); color:var(--orange); border-color:rgba(243,156,18,0.2); }
   .nav-item.active.blue { background:rgba(52,152,219,0.1); color:var(--blue); border-color:rgba(52,152,219,0.2); }
   .nav-icon { font-size:1.1rem; width:20px; text-align:center; }
   .sidebar-footer { margin-top:auto; padding-top:1rem; border-top:1px solid var(--border); }
-  .logout-btn { display:flex; align-items:center; gap:0.5rem; font-size:0.85rem; color:var(--text3); cursor:pointer; padding:0.6rem 0.5rem; border-radius:var(--radius); transition:all 0.2s; width:100%; }
+  .logout-btn { display:flex; align-items:center; gap:0.5rem; font-size:0.85rem; color:var(--text3); cursor:pointer; padding:0.6rem 0.5rem; border-radius:var(--radius); width:100%; transition:all 0.2s; }
   .logout-btn:hover { color:var(--red); background:var(--red-dim); }
   .main { flex:1; overflow-y:auto; background:var(--bg); }
-  .page { padding:2rem; max-width:1000px; }
+  .page { padding:2rem; max-width:1100px; }
   .page-title { font-family:var(--font-display); font-size:2.5rem; letter-spacing:0.05em; line-height:1; }
   .page-sub { color:var(--text2); font-size:0.9rem; margin-top:0.25rem; margin-bottom:2rem; }
+
+  /* CARDS */
   .card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius-lg); padding:1.5rem; margin-bottom:1.5rem; }
   .card-title { font-family:var(--font-display); font-size:1.3rem; letter-spacing:0.05em; margin-bottom:1rem; }
   .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
@@ -65,18 +71,25 @@ const styles = `
   .stat-value { font-family:var(--font-display); font-size:2.2rem; letter-spacing:0.05em; line-height:1; }
   .stat-unit { font-size:0.8rem; color:var(--text2); }
   .green{color:var(--green);} .orange{color:var(--orange);} .blue{color:var(--blue);} .red{color:var(--red);}
+
+  /* PROGRESS */
   .prog-wrap { margin-bottom:1rem; }
   .prog-hdr { display:flex; justify-content:space-between; margin-bottom:0.5rem; font-size:0.85rem; }
   .prog-track { height:8px; background:var(--border); border-radius:999px; overflow:hidden; }
   .prog-fill { height:100%; border-radius:999px; transition:width 0.5s; }
   .prog-fill.green { background:linear-gradient(90deg,var(--green2),var(--green)); }
   .prog-fill.blue { background:linear-gradient(90deg,#2980b9,var(--blue)); }
+  .prog-fill.orange { background:linear-gradient(90deg,var(--orange2),var(--orange)); }
+
+  /* FORM */
   .form-group { margin-bottom:1rem; }
   .form-label { display:block; font-size:0.8rem; color:var(--text2); letter-spacing:0.1em; text-transform:uppercase; margin-bottom:0.4rem; }
   .form-input,.form-select,.form-textarea { width:100%; background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); color:var(--text); font-family:var(--font-body); font-size:0.95rem; padding:0.75rem 1rem; outline:none; transition:border-color 0.2s; }
   .form-input:focus,.form-select:focus,.form-textarea:focus { border-color:var(--green); }
   .form-textarea { resize:vertical; min-height:80px; }
   .form-select option { background:var(--card); }
+
+  /* BUTTONS */
   .btn { display:inline-flex; align-items:center; gap:0.5rem; padding:0.75rem 1.5rem; border-radius:var(--radius); font-family:var(--font-body); font-size:0.9rem; font-weight:600; cursor:pointer; border:none; transition:all 0.2s; }
   .btn-primary { background:var(--green); color:#0a0f0d; }
   .btn-primary:hover { background:var(--green2); transform:translateY(-1px); }
@@ -91,62 +104,135 @@ const styles = `
   .btn-green-out:hover { background:var(--green-dim); }
   .btn-sm { padding:0.5rem 1rem; font-size:0.8rem; }
   .btn-full { width:100%; justify-content:center; }
+
+  /* ALERTS */
   .alert { padding:0.85rem 1rem; border-radius:var(--radius); font-size:0.85rem; margin-bottom:1rem; }
   .alert-success { background:var(--green-dim); color:var(--green); border:1px solid rgba(46,204,113,0.3); }
   .alert-warn { background:var(--orange-dim); color:var(--orange); border:1px solid rgba(243,156,18,0.3); }
   .alert-info { background:rgba(52,152,219,0.1); color:var(--blue); border:1px solid rgba(52,152,219,0.3); }
   .alert-danger { background:var(--red-dim); color:var(--red); border:1px solid rgba(231,76,60,0.3); }
-  .check-item { display:flex; align-items:center; gap:0.75rem; padding:0.75rem; border-radius:var(--radius); cursor:pointer; transition:background 0.2s; font-size:0.9rem; }
+
+  /* CHECK */
+  .check-item { display:flex; align-items:center; gap:0.75rem; padding:0.75rem; border-radius:var(--radius); cursor:pointer; font-size:0.9rem; transition:background 0.2s; }
   .check-item:hover { background:var(--card2); }
-  .check-box { width:20px; height:20px; border:2px solid var(--border); border-radius:6px; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:all 0.2s; font-size:0.75rem; }
+  .check-box { width:20px; height:20px; border:2px solid var(--border); border-radius:6px; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:0.75rem; transition:all 0.2s; }
   .check-box.checked { background:var(--green); border-color:var(--green); color:#0a0f0d; }
-  .quick-btns { display:flex; gap:0.75rem; flex-wrap:wrap; margin-top:1rem; }
-  .quick-btn { background:var(--card2); border:1px solid var(--border); border-radius:var(--radius); padding:0.75rem 1rem; cursor:pointer; font-size:0.85rem; color:var(--text2); transition:all 0.2s; display:flex; flex-direction:column; align-items:center; gap:0.25rem; min-width:80px; }
-  .quick-btn:hover { border-color:var(--green); color:var(--green); }
-  .quick-btn-icon { font-size:1.5rem; }
-  .pain-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:0.5rem; }
-  .muscle-btn { padding:0.5rem; border-radius:var(--radius); background:var(--card2); border:1px solid var(--border); font-size:0.75rem; text-align:center; cursor:pointer; transition:all 0.2s; color:var(--text2); }
-  .muscle-btn.selected { background:var(--red-dim); border-color:var(--red); color:var(--red); }
-  .meal-item { display:flex; align-items:center; justify-content:space-between; padding:0.75rem; background:var(--card2); border-radius:var(--radius); margin-bottom:0.5rem; }
-  .meal-time { font-family:var(--font-mono); font-size:0.75rem; color:var(--text3); }
-  .comp-card { background:var(--card2); border:1px solid var(--border); border-radius:var(--radius); padding:1rem; margin-bottom:0.75rem; display:flex; align-items:center; gap:1rem; }
-  .comp-date { text-align:center; min-width:50px; font-family:var(--font-display); line-height:1.1; }
-  .comp-date-day { font-size:1.8rem; color:var(--orange); }
-  .comp-date-month { font-size:0.7rem; color:var(--text3); text-transform:uppercase; }
+  .check-box.checked-orange { background:var(--orange); border-color:var(--orange); color:#0a0f0d; }
+
+  /* TAGS */
   .tag { display:inline-flex; align-items:center; padding:0.3rem 0.75rem; border-radius:999px; font-size:0.75rem; font-weight:600; }
   .tag-green { background:var(--green-dim); color:var(--green); }
   .tag-orange { background:var(--orange-dim); color:var(--orange); }
   .tag-red { background:var(--red-dim); color:var(--red); }
   .tag-blue { background:rgba(52,152,219,0.15); color:var(--blue); }
+
+  /* QUICK BTNS */
+  .quick-btns { display:flex; gap:0.75rem; flex-wrap:wrap; margin-top:1rem; }
+  .quick-btn { background:var(--card2); border:1px solid var(--border); border-radius:var(--radius); padding:0.75rem 1rem; cursor:pointer; font-size:0.85rem; color:var(--text2); display:flex; flex-direction:column; align-items:center; gap:0.25rem; min-width:80px; transition:all 0.2s; }
+  .quick-btn:hover { border-color:var(--green); color:var(--green); }
+  .quick-btn-icon { font-size:1.5rem; }
+
+  /* PAIN */
+  .pain-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:0.5rem; }
+  .muscle-btn { padding:0.5rem; border-radius:var(--radius); background:var(--card2); border:1px solid var(--border); font-size:0.75rem; text-align:center; cursor:pointer; color:var(--text2); transition:all 0.2s; }
+  .muscle-btn.selected { background:var(--red-dim); border-color:var(--red); color:var(--red); }
+
+  /* MEAL */
+  .meal-item { display:flex; align-items:center; justify-content:space-between; padding:0.75rem; background:var(--card2); border-radius:var(--radius); margin-bottom:0.5rem; }
+  .meal-time { font-family:var(--font-mono); font-size:0.75rem; color:var(--text3); }
+
+  /* COMP */
+  .comp-card { background:var(--card2); border:1px solid var(--border); border-radius:var(--radius); padding:1rem; margin-bottom:0.75rem; display:flex; align-items:center; gap:1rem; }
+  .comp-date { text-align:center; min-width:50px; font-family:var(--font-display); line-height:1.1; }
+  .comp-date-day { font-size:1.8rem; color:var(--orange); }
+  .comp-date-month { font-size:0.7rem; color:var(--text3); text-transform:uppercase; }
+
+  /* TOGGLE */
   .toggle-wrap { display:flex; gap:0.5rem; margin-bottom:1.5rem; flex-wrap:wrap; }
   .toggle-btn { padding:0.5rem 1rem; border-radius:999px; font-size:0.85rem; font-weight:600; cursor:pointer; border:1px solid var(--border); background:transparent; color:var(--text2); transition:all 0.2s; }
+  .toggle-btn.active-green { background:var(--green-dim); border-color:var(--green); color:var(--green); }
+  .toggle-btn.active-orange { background:var(--orange-dim); border-color:var(--orange); color:var(--orange); }
   .toggle-btn.active-blue { background:rgba(52,152,219,0.15); border-color:var(--blue); color:var(--blue); }
-  .aluno-row { display:flex; align-items:center; gap:1rem; padding:0.85rem; border-radius:var(--radius); border-bottom:1px solid var(--border); transition:background 0.2s; cursor:pointer; }
+
+  /* ALUNO ROW */
+  .aluno-row { display:flex; align-items:center; gap:1rem; padding:0.85rem; border-radius:var(--radius); border-bottom:1px solid var(--border); cursor:pointer; transition:background 0.2s; }
   .aluno-row:hover { background:var(--card2); }
   .aluno-avatar { width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.95rem; font-weight:700; flex-shrink:0; background:var(--green-dim); color:var(--green); font-family:var(--font-display); }
+
+  /* STARS */
   .stars { display:flex; gap:0.25rem; }
+
+  /* SPINNER */
   .spinner { width:20px; height:20px; border:2px solid var(--border); border-top-color:var(--green); border-radius:50%; animation:spin 0.7s linear infinite; display:inline-block; }
   @keyframes spin { to { transform:rotate(360deg); } }
-  /* CÓDIGO DO PROFISSIONAL */
+
+  /* CÓDIGO */
   .codigo-box { background:var(--bg2); border:2px dashed var(--border); border-radius:var(--radius-lg); padding:1.5rem; text-align:center; margin-bottom:1rem; }
   .codigo-val { font-family:var(--font-mono); font-size:2.2rem; letter-spacing:0.3em; color:var(--green); font-weight:700; margin:0.5rem 0; }
   .codigo-label { font-size:0.75rem; color:var(--text3); letter-spacing:0.15em; text-transform:uppercase; }
+
   /* SAÚDE STATUS */
-  .saude-status-box { border-radius:var(--radius-lg); padding:1.25rem; margin-bottom:1rem; display:flex; align-items:center; gap:1rem; }
+  .saude-status-box { border-radius:var(--radius-lg); padding:1.25rem; margin-bottom:0.75rem; display:flex; align-items:center; gap:1rem; }
   .saude-status-box.doente { background:var(--red-dim); border:1px solid rgba(231,76,60,0.4); }
   .saude-status-box.dor { background:var(--orange-dim); border:1px solid rgba(243,156,18,0.4); }
   .saude-status-box.bem { background:var(--green-dim); border:1px solid rgba(46,204,113,0.4); }
   .saude-status-icon { font-size:2.5rem; flex-shrink:0; }
-  .saude-status-info { flex:1; }
   .saude-status-titulo { font-family:var(--font-display); font-size:1.4rem; letter-spacing:0.05em; }
   .saude-status-dias { font-size:0.85rem; margin-top:0.15rem; }
+
+  /* DIÁRIO */
   .diario-section { background:var(--bg2); border-radius:var(--radius); padding:1rem; margin-bottom:0.75rem; }
   .diario-label { font-size:0.7rem; color:var(--text3); text-transform:uppercase; letter-spacing:0.15em; margin-bottom:0.5rem; }
   .diario-val { font-size:0.9rem; color:var(--text); }
-  /* VINCULO INPUT */
+
+  /* VÍNCULO */
   .vinc-input-wrap { display:flex; gap:0.75rem; align-items:flex-end; }
   .vinc-resultado { background:var(--green-dim); border:1px solid rgba(46,204,113,0.3); border-radius:var(--radius); padding:0.85rem 1rem; display:flex; align-items:center; gap:0.75rem; margin-top:0.75rem; }
   .vinc-avatar { width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.9rem; font-weight:700; flex-shrink:0; font-family:var(--font-display); background:var(--border); }
+
+  /* SEMANA DE TREINO */
+  .week-tabs { display:flex; gap:0.4rem; margin-bottom:1.5rem; flex-wrap:wrap; }
+  .week-tab { padding:0.5rem 1rem; border-radius:999px; font-size:0.82rem; font-weight:700; cursor:pointer; border:1px solid var(--border); background:transparent; color:var(--text2); transition:all 0.2s; font-family:var(--font-display); letter-spacing:0.05em; }
+  .week-tab.active { background:var(--green-dim); border-color:var(--green); color:var(--green); }
+  .week-tab.done { background:var(--card2); border-color:var(--green2); color:var(--green2); }
+  .week-tab.active.orange { background:var(--orange-dim); border-color:var(--orange); color:var(--orange); }
+
+  .treino-card { background:var(--card2); border:1px solid var(--border); border-radius:var(--radius-lg); padding:1.25rem; margin-bottom:1rem; }
+  .treino-card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem; }
+  .treino-nome { font-family:var(--font-display); font-size:1.5rem; letter-spacing:0.05em; }
+  .treino-periodo { font-size:0.75rem; color:var(--text3); }
+  .treino-modalidade { display:inline-flex; align-items:center; gap:0.4rem; padding:0.3rem 0.75rem; border-radius:999px; font-size:0.75rem; font-weight:600; }
+
+  .ex-item { display:flex; align-items:center; gap:0.75rem; padding:0.65rem 0.75rem; border-radius:var(--radius); cursor:pointer; transition:background 0.2s; border-bottom:1px solid var(--border); }
+  .ex-item:last-child { border-bottom:none; }
+  .ex-item:hover { background:var(--bg2); }
+  .ex-item.done-ex { opacity:0.6; }
+  .ex-nome { font-weight:600; font-size:0.9rem; flex:1; }
+  .ex-info { font-size:0.78rem; color:var(--text2); }
+
+  /* REFEIÇÃO CHECKBOX */
+  .refeicao-item { display:flex; align-items:center; gap:1rem; padding:0.85rem; border-radius:var(--radius-lg); margin-bottom:0.5rem; border:1px solid var(--border); transition:all 0.2s; cursor:pointer; }
+  .refeicao-item:hover { background:var(--card2); }
+  .refeicao-item.comido { background:var(--green-dim); border-color:rgba(46,204,113,0.3); }
+  .refeicao-hora { font-family:var(--font-mono); font-size:0.8rem; color:var(--text3); min-width:45px; }
+  .refeicao-info { flex:1; }
+  .refeicao-nome { font-weight:600; font-size:0.9rem; margin-bottom:0.15rem; }
+  .refeicao-itens { font-size:0.78rem; color:var(--text2); }
+  .refeicao-kcal { font-size:0.8rem; font-weight:600; color:var(--green); flex-shrink:0; }
+
+  /* ALUNO SELECTOR */
+  .aluno-sel-wrap { display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1.5rem; }
+  .aluno-sel-btn { display:flex; align-items:center; gap:0.5rem; padding:0.5rem 0.85rem; border-radius:999px; border:1px solid var(--border); background:transparent; color:var(--text2); cursor:pointer; font-size:0.85rem; font-family:var(--font-body); transition:all 0.2s; }
+  .aluno-sel-btn:hover { border-color:var(--green); color:var(--green); }
+  .aluno-sel-btn.sel { background:var(--green-dim); border-color:var(--green); color:var(--green); }
+  .aluno-sel-btn.sel-orange { background:var(--orange-dim); border-color:var(--orange); color:var(--orange); }
+  .aluno-sel-btn.sel-blue { background:rgba(52,152,219,0.15); border-color:var(--blue); color:var(--blue); }
+  .aluno-sel-avatar { width:24px; height:24px; border-radius:50%; background:var(--border); display:flex; align-items:center; justify-content:center; font-size:0.65rem; font-weight:700; font-family:var(--font-display); }
+
+  /* PERÍODO */
+  .periodo-card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); padding:1rem; margin-bottom:1rem; }
+  .periodo-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.3rem 0.75rem; border-radius:999px; font-size:0.78rem; font-weight:700; background:var(--green-dim); color:var(--green); font-family:var(--font-mono); }
+
   @media(max-width:768px){ .sidebar{display:none;} .grid-2,.grid-4{grid-template-columns:1fr 1fr;} .pain-grid{grid-template-columns:repeat(3,1fr);} }
 `;
 
@@ -157,17 +243,15 @@ function getGreeting(){const h=new Date().getHours();if(h<12)return"BOM DIA";if(
 function getDateStr(){return new Date().toLocaleDateString("pt-BR",{weekday:"long",day:"numeric",month:"long",year:"numeric"}).replace(/^\w/,c=>c.toUpperCase());}
 function firstName(n){return n?n.trim().split(" ")[0].toUpperCase():"";}
 function initials(n){if(!n)return"?";const p=n.trim().split(" ");return p.length>=2?(p[0][0]+p[p.length-1][0]).toUpperCase():p[0][0].toUpperCase();}
-function diffDays(dateStr){if(!dateStr)return 0;const d=Math.floor((Date.now()-new Date(dateStr).getTime())/(1000*60*60*24));return Math.max(d,0);}
+function diffDays(d){if(!d)return 0;return Math.max(Math.floor((Date.now()-new Date(d).getTime())/(864e5)),0);}
 function pluralDia(n){return n===1?"dia":"dias";}
+function gerarCodigo(seed){const c="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";let r="",s=seed%999999;for(let i=0;i<6;i++){r+=c[s%c.length];s=Math.floor(s/c.length)+7;}return r.slice(0,6);}
+function addMonths(date,n){const d=new Date(date);d.setMonth(d.getMonth()+n);return d;}
+function fmtDate(d){return new Date(d).toLocaleDateString("pt-BR");}
 
-// Gera código único de 6 chars alfanumérico
-function gerarCodigo(seed){
-  const chars="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let result="";
-  let s=seed%999999;
-  for(let i=0;i<6;i++){result+=chars[s%chars.length];s=Math.floor(s/chars.length)+7;}
-  return result.slice(0,6);
-}
+const DIAS_SEMANA=["Segunda","Terça","Quarta","Quinta","Sexta","Sábado","Domingo"];
+const MODALIDADES=[{v:"musculacao",l:"💪 Musculação"},{v:"corrida",l:"🏃 Corrida"},{v:"natacao",l:"🏊 Natação"},{v:"luta",l:"🥊 Luta / Artes Marciais"},{v:"ciclismo",l:"🚴 Ciclismo"},{v:"caminhada",l:"🚶 Caminhada"},{v:"funcional",l:"⚡ Funcional"}];
+const MUSCLES=["Ombro D","Ombro E","Bíceps D","Bíceps E","Tríceps D","Tríceps E","Peitoral","Costas","Lombar","Abdômen","Glúteo","Quadríceps D","Quadríceps E","Panturrilha D","Panturrilha E","Isquio"];
 
 // ============================================================
 // LOCAL DB
@@ -178,30 +262,22 @@ const DB={
   getSession:()=>JSON.parse(localStorage.getItem("tf_session")||"null"),
   saveSession:u=>localStorage.setItem("tf_session",JSON.stringify(u)),
   clearSession:()=>localStorage.removeItem("tf_session"),
-
   register(nome,email,senha,role){
     const users=this.getUsers();
     if(users.find(u=>u.email.toLowerCase()===email.toLowerCase()))return{ok:false,msg:"Email já cadastrado."};
     const user={id:Date.now(),nome,email:email.toLowerCase(),senha,role};
-    users.push(user);this.saveUsers(users);
-    return{ok:true,user};
+    users.push(user);this.saveUsers(users);return{ok:true,user};
   },
   login(email,senha){
     const user=this.getUsers().find(u=>u.email.toLowerCase()===email.toLowerCase()&&u.senha===senha);
     if(!user)return{ok:false,msg:"Email ou senha incorretos."};
     return{ok:true,user};
   },
-
-  // Pega usuário pelo código
-  getUserByCodigo(codigo){
-    return this.getUsers().find(u=>gerarCodigo(u.id)===codigo.toUpperCase())||null;
-  },
-
-  // Vínculos: { alunoId, treinadorId, nutriId }
+  getUserByCodigo(c){return this.getUsers().find(u=>gerarCodigo(u.id)===c.toUpperCase())||null;},
+  getUserById(id){return this.getUsers().find(u=>u.id===id)||null;},
   getVinculos:()=>JSON.parse(localStorage.getItem("tf_vinculos")||"[]"),
   saveVinculos:v=>localStorage.setItem("tf_vinculos",JSON.stringify(v)),
-
-  getVinculoAluno(alunoId){return this.getVinculos().find(v=>v.alunoId===alunoId)||null;},
+  getVinculoAluno(id){return this.getVinculos().find(v=>v.alunoId===id)||null;},
   setVinculoAluno(alunoId,treinadorId,nutriId){
     const vs=this.getVinculos().filter(v=>v.alunoId!==alunoId);
     vs.push({alunoId,treinadorId:treinadorId||null,nutriId:nutriId||null});
@@ -211,15 +287,9 @@ const DB={
     const ids=this.getVinculos().filter(v=>v.treinadorId===profId||v.nutriId===profId).map(v=>v.alunoId);
     return this.getUsers().filter(u=>ids.includes(u.id));
   },
-  getUserById(id){return this.getUsers().find(u=>u.id===id)||null;},
-
-  getData:(key,uid)=>JSON.parse(localStorage.getItem(`tf_${key}_${uid}`)||"null"),
-  setData:(key,uid,val)=>localStorage.setItem(`tf_${key}_${uid}`,JSON.stringify(val)),
+  getData:(k,uid)=>JSON.parse(localStorage.getItem(`tf_${k}_${uid}`)||"null"),
+  setData:(k,uid,val)=>localStorage.setItem(`tf_${k}_${uid}`,JSON.stringify(val)),
 };
-
-const MUSCLES=["Ombro D","Ombro E","Bíceps D","Bíceps E","Tríceps D","Tríceps E","Peitoral","Costas","Lombar","Abdômen","Glúteo","Quadríceps D","Quadríceps E","Panturrilha D","Panturrilha E","Isquio"];
-const TREINO_BASE=[{nome:"Supino Reto",series:4,reps:"8-10",carga:"80kg"},{nome:"Crucifixo",series:3,reps:"12",carga:"14kg"},{nome:"Tríceps Pulley",series:3,reps:"12-15",carga:"25kg"},{nome:"Mergulho",series:3,reps:"Falha",carga:"Corporal"}];
-const NUTRI_PLANO=[{h:"07:00",r:"Café da manhã",i:"3 ovos + pão integral + banana + café",k:480},{h:"10:00",r:"Lanche manhã",i:"Iogurte grego + castanhas",k:280},{h:"12:30",r:"Almoço",i:"Frango grelhado + arroz integral + salada",k:580},{h:"16:00",r:"Pré-treino",i:"Batata doce + whey",k:320},{h:"19:00",r:"Pós-treino",i:"Tilápia + arroz + brócolis",k:450},{h:"21:30",r:"Ceia",i:"Cottage + pasta de amendoim",k:220}];
 
 // ============================================================
 // AUTH
@@ -234,29 +304,8 @@ function AuthScreen({onLogin}){
   const [loading,setLoading]=useState(false);
   const [error,setError]=useState("");
   const [success,setSuccess]=useState("");
-
-  function handleLogin(e){
-    e.preventDefault();setError("");setLoading(true);
-    setTimeout(()=>{
-      const res=DB.login(email,senha);setLoading(false);
-      if(!res.ok){setError(res.msg);return;}
-      DB.saveSession(res.user);onLogin(res.user);
-    },500);
-  }
-  function handleRegister(e){
-    e.preventDefault();setError("");setSuccess("");
-    if(!nome.trim()){setError("Informe seu nome completo.");return;}
-    if(senha.length<6){setError("Senha: mínimo 6 caracteres.");return;}
-    if(senha!==confirma){setError("Senhas não conferem.");return;}
-    setLoading(true);
-    setTimeout(()=>{
-      const res=DB.register(nome.trim(),email,senha,role);setLoading(false);
-      if(!res.ok){setError(res.msg);return;}
-      setSuccess("Conta criada! Faça login.");setTab("login");
-      setNome("");setSenha("");setConfirma("");
-    },500);
-  }
-
+  function handleLogin(e){e.preventDefault();setError("");setLoading(true);setTimeout(()=>{const res=DB.login(email,senha);setLoading(false);if(!res.ok){setError(res.msg);return;}DB.saveSession(res.user);onLogin(res.user);},500);}
+  function handleRegister(e){e.preventDefault();setError("");setSuccess("");if(!nome.trim()){setError("Informe seu nome.");return;}if(senha.length<6){setError("Senha: mínimo 6 caracteres.");return;}if(senha!==confirma){setError("Senhas não conferem.");return;}setLoading(true);setTimeout(()=>{const res=DB.register(nome.trim(),email,senha,role);setLoading(false);if(!res.ok){setError(res.msg);return;}setSuccess("Conta criada! Faça login.");setTab("login");setNome("");setSenha("");setConfirma("");},500);}
   return(
     <div className="auth-wrap">
       <div className="auth-box">
@@ -276,13 +325,10 @@ function AuthScreen({onLogin}){
           </form>
         ):(
           <form onSubmit={handleRegister}>
-            <div className="form-group">
-              <label className="form-label">Você é...</label>
+            <div className="form-group"><label className="form-label">Você é...</label>
               <div className="role-selector">
                 {[["aluno","🏃","Aluno"],["treinador","🏋️","Treinador"],["nutri","🥗","Nutricionista"]].map(([v,icon,lbl])=>(
-                  <div key={v} className={`role-opt ${role===v?`sel-${v}`:""}`} onClick={()=>setRole(v)}>
-                    <div className="role-opt-icon">{icon}</div><div>{lbl}</div>
-                  </div>
+                  <div key={v} className={`role-opt ${role===v?`sel-${v}`:""}`} onClick={()=>setRole(v)}><div className="role-opt-icon">{icon}</div><div>{lbl}</div></div>
                 ))}
               </div>
             </div>
@@ -293,15 +339,8 @@ function AuthScreen({onLogin}){
             <button className="btn btn-primary btn-full" type="submit" disabled={loading}>{loading?<span className="spinner"/>:"Criar conta grátis"}</button>
           </form>
         )}
-        <div className="auth-switch">
-          {tab==="login"?<>Não tem conta? <span onClick={()=>{setTab("register");setError("");}}>Cadastre-se grátis</span></>:<>Já tem conta? <span onClick={()=>{setTab("login");setError("");}}>Entrar</span></>}
-        </div>
-        <div className="demo-box">
-          <b>🔑 Contas demo:</b><br/>
-          aluno@demo.com • 123456<br/>
-          treinador@demo.com • 123456<br/>
-          nutri@demo.com • 123456
-        </div>
+        <div className="auth-switch">{tab==="login"?<>Não tem conta? <span onClick={()=>{setTab("register");setError("");}}>Cadastre-se grátis</span></>:<>Já tem conta? <span onClick={()=>{setTab("login");setError("");}}>Entrar</span></>}</div>
+        <div className="demo-box"><b>🔑 Contas demo:</b><br/>aluno@demo.com • 123456<br/>treinador@demo.com • 123456<br/>nutri@demo.com • 123456</div>
       </div>
     </div>
   );
@@ -328,9 +367,7 @@ function Shell({user,onLogout,nav,active,setActive,accent,children}){
             ))}
           </div>
         ))}
-        <div className="sidebar-footer">
-          <div className="logout-btn" onClick={onLogout}>🚪 Sair da conta</div>
-        </div>
+        <div className="sidebar-footer"><div className="logout-btn" onClick={onLogout}>🚪 Sair da conta</div></div>
       </div>
       <div className="main">{children}</div>
     </div>
@@ -338,7 +375,7 @@ function Shell({user,onLogout,nav,active,setActive,accent,children}){
 }
 
 // ============================================================
-// COMPONENTE: CÓDIGO DO PROFISSIONAL
+// SHARED COMPONENTS
 // ============================================================
 function CodigoProfissional({user}){
   const codigo=gerarCodigo(user.id);
@@ -346,72 +383,41 @@ function CodigoProfissional({user}){
   function copiar(){navigator.clipboard&&navigator.clipboard.writeText(codigo);setCopiado(true);setTimeout(()=>setCopiado(false),2000);}
   return(
     <div className="codigo-box">
-      <div className="codigo-label">Seu código de acesso</div>
+      <div className="codigo-label">Seu código — passe para seus {user.role==="treinador"?"alunos":"pacientes"}</div>
       <div className="codigo-val">{codigo}</div>
-      <div style={{fontSize:"0.8rem",color:"var(--text3)",marginBottom:"0.75rem"}}>Passe este código para seus {user.role==="treinador"?"alunos":"pacientes"} se vincularem a você</div>
       <button className="btn btn-green-out btn-sm" onClick={copiar}>{copiado?"✅ Copiado!":"📋 Copiar código"}</button>
     </div>
   );
 }
 
-// ============================================================
-// COMPONENTE: VÍNCULO POR CÓDIGO (Aluno)
-// ============================================================
 function VinculoPorCodigo({label,tipo,atual,onVincular}){
   const [codigo,setCodigo]=useState("");
   const [encontrado,setEncontrado]=useState(null);
   const [erro,setErro]=useState("");
-
-  function buscar(){
-    setErro("");setEncontrado(null);
-    if(codigo.trim().length<6){setErro("Digite os 6 caracteres do código.");return;}
-    const u=DB.getUserByCodigo(codigo.trim());
-    if(!u){setErro("Código não encontrado. Verifique com seu "+label.toLowerCase()+".");return;}
-    if(u.role!==tipo){setErro(`Este código pertence a um ${u.role}, não a um ${label.toLowerCase()}.`);return;}
-    setEncontrado(u);
-  }
-
-  function confirmar(){
-    if(encontrado) onVincular(encontrado);
-    setCodigo("");setEncontrado(null);
-  }
-
-  const corTipo=tipo==="treinador"?"var(--orange)":tipo==="nutri"?"var(--blue)":"var(--green)";
-
+  function buscar(){setErro("");setEncontrado(null);if(codigo.trim().length<6){setErro("Digite os 6 caracteres.");return;}const u=DB.getUserByCodigo(codigo.trim());if(!u){setErro("Código não encontrado.");return;}if(u.role!==tipo){setErro(`Este código é de um ${u.role}, não de um ${label.toLowerCase()}.`);return;}setEncontrado(u);}
+  function confirmar(){if(encontrado)onVincular(encontrado);setCodigo("");setEncontrado(null);}
+  const cor=tipo==="treinador"?"var(--orange)":tipo==="nutri"?"var(--blue)":"var(--green)";
   return(
     <div>
       {atual&&(
         <div style={{display:"flex",alignItems:"center",gap:"0.75rem",padding:"0.85rem",background:"var(--card2)",borderRadius:"var(--radius)",marginBottom:"1rem",border:"1px solid var(--border)"}}>
-          <div className="vinc-avatar" style={{background:tipo==="treinador"?"var(--orange-dim)":"rgba(52,152,219,0.15)",color:corTipo}}>{initials(atual.nome)}</div>
-          <div style={{flex:1}}>
-            <div style={{fontWeight:600,fontSize:"0.95rem"}}>{atual.nome}</div>
-            <div style={{fontSize:"0.78rem",color:"var(--text2)"}}>{label} atual • Código: {gerarCodigo(atual.id)}</div>
-          </div>
-          <span className="tag" style={{background:tipo==="treinador"?"var(--orange-dim)":"rgba(52,152,219,0.1)",color:corTipo}}>✓ Vinculado</span>
+          <div className="vinc-avatar" style={{background:tipo==="treinador"?"var(--orange-dim)":"rgba(52,152,219,0.15)",color:cor}}>{initials(atual.nome)}</div>
+          <div style={{flex:1}}><div style={{fontWeight:600}}>{atual.nome}</div><div style={{fontSize:"0.78rem",color:"var(--text2)"}}>Código: {gerarCodigo(atual.id)}</div></div>
+          <span className="tag" style={{background:tipo==="treinador"?"var(--orange-dim)":"rgba(52,152,219,0.1)",color:cor}}>✓ Vinculado</span>
         </div>
       )}
       <div className="form-group">
         <label className="form-label">Código do {label}</label>
         <div className="vinc-input-wrap">
-          <input
-            className="form-input"
-            placeholder="Ex: AB3X7K"
-            value={codigo}
-            onChange={e=>setCodigo(e.target.value.toUpperCase())}
-            maxLength={6}
-            style={{fontFamily:"var(--font-mono)",fontSize:"1.1rem",letterSpacing:"0.2em",textTransform:"uppercase"}}
-          />
+          <input className="form-input" placeholder="Ex: AB3X7K" value={codigo} onChange={e=>setCodigo(e.target.value.toUpperCase())} maxLength={6} style={{fontFamily:"var(--font-mono)",fontSize:"1.1rem",letterSpacing:"0.2em"}}/>
           <button className="btn btn-ghost" onClick={buscar}>Buscar</button>
         </div>
         {erro&&<div style={{color:"var(--red)",fontSize:"0.82rem",marginTop:"0.4rem"}}>⚠️ {erro}</div>}
       </div>
       {encontrado&&(
         <div className="vinc-resultado">
-          <div className="vinc-avatar" style={{background:tipo==="treinador"?"var(--orange-dim)":"rgba(52,152,219,0.15)",color:corTipo}}>{initials(encontrado.nome)}</div>
-          <div style={{flex:1}}>
-            <div style={{fontWeight:600}}>{encontrado.nome}</div>
-            <div style={{fontSize:"0.8rem",color:"var(--text2)"}}>{label} encontrado!</div>
-          </div>
+          <div className="vinc-avatar" style={{background:tipo==="treinador"?"var(--orange-dim)":"rgba(52,152,219,0.15)",color:cor}}>{initials(encontrado.nome)}</div>
+          <div style={{flex:1}}><div style={{fontWeight:600}}>{encontrado.nome}</div><div style={{fontSize:"0.8rem",color:"var(--text2)"}}>{label} encontrado!</div></div>
           <button className="btn btn-primary btn-sm" onClick={confirmar}>Vincular ✓</button>
         </div>
       )}
@@ -419,108 +425,233 @@ function VinculoPorCodigo({label,tipo,atual,onVincular}){
   );
 }
 
-// ============================================================
-// PÁGINA: MINHA EQUIPE (Aluno)
-// ============================================================
-function AlunoVinculo({user}){
-  const [vinculo,setVinculo]=useState(()=>DB.getVinculoAluno(user.id)||{});
-  const [ok,setOk]=useState("");
-
-  const treinador=vinculo.treinadorId?DB.getUserById(vinculo.treinadorId):null;
-  const nutri=vinculo.nutriId?DB.getUserById(vinculo.nutriId):null;
-
-  function vincularTreinador(u){
-    const novo={...vinculo,treinadorId:u.id};
-    DB.setVinculoAluno(user.id,novo.treinadorId,novo.nutriId);
-    setVinculo(novo);setOk("Treinador vinculado com sucesso!");setTimeout(()=>setOk(""),3000);
-  }
-  function vincularNutri(u){
-    const novo={...vinculo,nutriId:u.id};
-    DB.setVinculoAluno(user.id,novo.treinadorId,novo.nutriId);
-    setVinculo(novo);setOk("Nutricionista vinculada com sucesso!");setTimeout(()=>setOk(""),3000);
-  }
-  function desvincularTreinador(){
-    const novo={...vinculo,treinadorId:null};
-    DB.setVinculoAluno(user.id,null,novo.nutriId);
-    setVinculo(novo);setOk("Treinador desvinculado.");setTimeout(()=>setOk(""),3000);
-  }
-  function desvincularNutri(){
-    const novo={...vinculo,nutriId:null};
-    DB.setVinculoAluno(user.id,novo.treinadorId,null);
-    setVinculo(novo);setOk("Nutricionista desvinculada.");setTimeout(()=>setOk(""),3000);
-  }
-
-  return(
-    <div className="page">
-      <div className="page-title green">MINHA EQUIPE</div>
-      <div className="page-sub">Conecte-se ao seu treinador e nutricionista usando o código deles</div>
-      {ok&&<div className="alert alert-success">✅ {ok}</div>}
-
-      <div className="alert alert-info">
-        🔐 <b>Como funciona:</b> Peça o código de 6 letras para seu treinador e sua nutricionista. Digite abaixo para se conectar com segurança — apenas quem tem o código pode se vincular.
-      </div>
-
-      <div className="card">
-        <div className="card-title">🏋️ TREINADOR</div>
-        <VinculoPorCodigo label="Treinador" tipo="treinador" atual={treinador} onVincular={vincularTreinador}/>
-        {treinador&&<button className="btn btn-ghost btn-sm" style={{marginTop:"0.5rem",color:"var(--red)",borderColor:"var(--red-dim)"}} onClick={desvincularTreinador}>Desvincular treinador</button>}
-      </div>
-
-      <div className="card">
-        <div className="card-title">🥗 NUTRICIONISTA</div>
-        <VinculoPorCodigo label="Nutricionista" tipo="nutri" atual={nutri} onVincular={vincularNutri}/>
-        {nutri&&<button className="btn btn-ghost btn-sm" style={{marginTop:"0.5rem",color:"var(--red)",borderColor:"var(--red-dim)"}} onClick={desvincularNutri}>Desvincular nutricionista</button>}
-      </div>
-    </div>
-  );
-}
-
-// ============================================================
-// COMPONENTE: STATUS DE SAÚDE (com contador de dias)
-// ============================================================
 function SaudeStatusCard({status,onRecuperado,onDorRecuperado,soLeitura}){
-  // status.doente, status.doente_desde, status.sintomas
-  // status.dores = [{musculo, desde}]
   const diasDoente=status.doente_desde?diffDays(status.doente_desde):0;
-
   return(
     <div>
       {status.doente&&(
         <div className="saude-status-box doente">
           <div className="saude-status-icon">🤒</div>
-          <div className="saude-status-info">
-            <div className="saude-status-titulo" style={{color:"var(--red)"}}>
-              {diasDoente} {pluralDia(diasDoente)} {diasDoente===1?"gripado/doente":"gripado/doente"}
-            </div>
+          <div style={{flex:1}}>
+            <div className="saude-status-titulo" style={{color:"var(--red)"}}>{diasDoente} {pluralDia(diasDoente)} doente/gripado</div>
             {status.sintomas&&<div className="saude-status-dias" style={{color:"var(--red)"}}>{status.sintomas}</div>}
             {!soLeitura&&<button className="btn btn-sm" style={{marginTop:"0.75rem",background:"var(--red)",color:"#fff"}} onClick={onRecuperado}>✅ Estou recuperado!</button>}
           </div>
         </div>
       )}
-      {status.dores&&status.dores.length>0&&status.dores.map((d,i)=>{
-        const dias=d.desde?diffDays(d.desde):0;
-        return(
-          <div key={i} className="saude-status-box dor">
-            <div className="saude-status-icon">🔴</div>
-            <div className="saude-status-info">
-              <div className="saude-status-titulo" style={{color:"var(--orange)"}}>
-                Dor — {d.musculo}
-              </div>
-              <div className="saude-status-dias" style={{color:"var(--orange)"}}>
-                {dias} {pluralDia(dias)} com dor{d.intensidade?` • Intensidade: ${d.intensidade}/10`:""}
-              </div>
-              {!soLeitura&&<button className="btn btn-sm" style={{marginTop:"0.75rem",background:"var(--orange)",color:"#0a0f0d"}} onClick={()=>onDorRecuperado(i)}>✅ Recuperado desta dor</button>}
-            </div>
+      {status.dores&&status.dores.map((d,i)=>(
+        <div key={i} className="saude-status-box dor">
+          <div className="saude-status-icon">🔴</div>
+          <div style={{flex:1}}>
+            <div className="saude-status-titulo" style={{color:"var(--orange)"}}>Dor — {d.musculo}</div>
+            <div className="saude-status-dias" style={{color:"var(--orange)"}}>{diffDays(d.desde)} {pluralDia(diffDays(d.desde))} com dor{d.intensidade?` • ${d.intensidade}/10`:""}</div>
+            {!soLeitura&&<button className="btn btn-sm" style={{marginTop:"0.75rem",background:"var(--orange)",color:"#0a0f0d"}} onClick={()=>onDorRecuperado(i)}>✅ Recuperado</button>}
           </div>
-        );
-      })}
+        </div>
+      ))}
       {!status.doente&&(!status.dores||status.dores.length===0)&&(
         <div className="saude-status-box bem">
           <div className="saude-status-icon">💪</div>
-          <div className="saude-status-info">
-            <div className="saude-status-titulo" style={{color:"var(--green)"}}>Saudável</div>
-            <div className="saude-status-dias" style={{color:"var(--green)"}}>Nenhuma ocorrência registrada</div>
+          <div style={{flex:1}}><div className="saude-status-titulo" style={{color:"var(--green)"}}>Saudável</div><div className="saude-status-dias" style={{color:"var(--green)"}}>Nenhuma ocorrência registrada</div></div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Seletor de aluno para prof
+function AlunoSelector({alunos,selecionado,onSelect,accentClass}){
+  if(alunos.length===0)return null;
+  return(
+    <div>
+      <div style={{fontSize:"0.8rem",color:"var(--text3)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:"0.75rem"}}>Selecionar aluno / paciente</div>
+      <div className="aluno-sel-wrap">
+        {alunos.map(a=>(
+          <button key={a.id} className={`aluno-sel-btn ${selecionado?.id===a.id?accentClass:""}`} onClick={()=>onSelect(a)}>
+            <div className="aluno-sel-avatar">{initials(a.nome)}</div>
+            {a.nome.split(" ")[0]}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Badge de período do plano
+function PeriodoBadge({plano}){
+  if(!plano||!plano.inicio)return null;
+  const fim=new Date(plano.fim);
+  const hoje=new Date();
+  const ativo=hoje<=fim;
+  const diasRestantes=Math.max(Math.ceil((fim-hoje)/(864e5)),0);
+  return(
+    <div className="periodo-card">
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:"0.5rem"}}>
+        <div>
+          <div style={{fontSize:"0.75rem",color:"var(--text3)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:"0.3rem"}}>Vigência do plano</div>
+          <div style={{fontWeight:600,fontSize:"0.9rem"}}>{fmtDate(plano.inicio)} → {fmtDate(plano.fim)}</div>
+          <div style={{fontSize:"0.8rem",color:"var(--text2)",marginTop:"0.15rem"}}>{plano.duracao} {plano.duracao===1?"mês":"meses"} • {plano.nome}</div>
+        </div>
+        <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:"0.3rem"}}>
+          <span className="periodo-badge" style={{background:ativo?"var(--green-dim)":"var(--red-dim)",color:ativo?"var(--green)":"var(--red)"}}>
+            {ativo?`✓ Ativo — ${diasRestantes}d restantes`:"⚠️ Expirado"}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// ALUNO — MINHA EQUIPE
+// ============================================================
+function AlunoVinculo({user}){
+  const [vinculo,setVinculo]=useState(()=>DB.getVinculoAluno(user.id)||{});
+  const [ok,setOk]=useState("");
+  const treinador=vinculo.treinadorId?DB.getUserById(vinculo.treinadorId):null;
+  const nutri=vinculo.nutriId?DB.getUserById(vinculo.nutriId):null;
+  function vincT(u){const n={...vinculo,treinadorId:u.id};DB.setVinculoAluno(user.id,n.treinadorId,n.nutriId);setVinculo(n);setOk("Treinador vinculado!");setTimeout(()=>setOk(""),3000);}
+  function vincN(u){const n={...vinculo,nutriId:u.id};DB.setVinculoAluno(user.id,n.treinadorId,n.nutriId);setVinculo(n);setOk("Nutricionista vinculada!");setTimeout(()=>setOk(""),3000);}
+  function desT(){const n={...vinculo,treinadorId:null};DB.setVinculoAluno(user.id,null,n.nutriId);setVinculo(n);setOk("Treinador desvinculado.");setTimeout(()=>setOk(""),3000);}
+  function desN(){const n={...vinculo,nutriId:null};DB.setVinculoAluno(user.id,n.treinadorId,null);setVinculo(n);setOk("Nutricionista desvinculada.");setTimeout(()=>setOk(""),3000);}
+  return(
+    <div className="page">
+      <div className="page-title green">MINHA EQUIPE</div>
+      <div className="page-sub">Use o código de 6 letras do seu profissional para se conectar</div>
+      {ok&&<div className="alert alert-success">✅ {ok}</div>}
+      <div className="alert alert-info">🔐 Peça o código para seu treinador e nutricionista. Só quem tem o código pode se vincular — suas informações ficam protegidas.</div>
+      <div className="card"><div className="card-title">🏋️ TREINADOR</div><VinculoPorCodigo label="Treinador" tipo="treinador" atual={treinador} onVincular={vincT}/>{treinador&&<button className="btn btn-ghost btn-sm" style={{marginTop:"0.5rem",color:"var(--red)"}} onClick={desT}>Desvincular</button>}</div>
+      <div className="card"><div className="card-title">🥗 NUTRICIONISTA</div><VinculoPorCodigo label="Nutricionista" tipo="nutri" atual={nutri} onVincular={vincN}/>{nutri&&<button className="btn btn-ghost btn-sm" style={{marginTop:"0.5rem",color:"var(--red)"}} onClick={desN}>Desvincular</button>}</div>
+    </div>
+  );
+}
+
+// ============================================================
+// ALUNO — SEMANA DE TREINOS
+// ============================================================
+function AlunoTreinos({user}){
+  const planoTreino=DB.getData("plano_treino_aluno",user.id);
+  const [diaAtivo,setDiaAtivo]=useState(0);
+  const [checked,setChecked]=useState(()=>DB.getData("treino_check_hoje",user.id)||{});
+  const [rating,setRating]=useState(0);
+  const [feedback,setFeedback]=useState("");
+  const [ok,setOk]=useState(false);
+
+  // Determina o dia atual da semana (0=seg)
+  const hoje=new Date().getDay();
+  const diaHoje=hoje===0?6:hoje-1;
+
+  useEffect(()=>setDiaAtivo(diaHoje),[]);
+
+  function toggleEx(diaIdx,exIdx){
+    const key=`${diaIdx}_${exIdx}`;
+    const novo={...checked,[key]:!checked[key]};
+    setChecked(novo);
+    DB.setData("treino_check_hoje",user.id,novo);
+  }
+
+  function salvarAvaliacao(){
+    DB.setData("treino_avaliacao",user.id,{rating,feedback,data:new Date().toISOString()});
+    setOk(true);setTimeout(()=>setOk(false),3000);
+  }
+
+  if(!planoTreino||!planoTreino.dias){
+    return(
+      <div className="page">
+        <div className="page-title green">TREINOS</div>
+        <div className="page-sub">Semana completa de treinos</div>
+        <div className="card">
+          <div className="card-title">📋 AGUARDANDO PLANO</div>
+          <div style={{color:"var(--text2)",fontSize:"0.9rem",lineHeight:1.7}}>Seu treinador ainda não enviou um plano de treino.<br/>Assim que ele criar e atribuir a você, aparecerá aqui com todos os dias da semana.</div>
+        </div>
+      </div>
+    );
+  }
+
+  const {dias,nome,modalidade,inicio,fim,duracao}=planoTreino;
+  const diaInfo=dias[diaAtivo];
+  const modLabel=MODALIDADES.find(m=>m.v===modalidade)?.l||modalidade;
+
+  return(
+    <div className="page">
+      <div className="page-title green">TREINOS</div>
+      <div className="page-sub">Semana completa — clique no dia para ver os exercícios</div>
+      {ok&&<div className="alert alert-success">✅ Avaliação salva!</div>}
+
+      <PeriodoBadge plano={planoTreino}/>
+
+      {/* ABAS DOS DIAS */}
+      <div className="week-tabs">
+        {dias.map((d,i)=>{
+          const temEx=d.exercicios&&d.exercicios.length>0;
+          const feitos=d.exercicios?d.exercicios.filter((_,j)=>checked[`${i}_${j}`]).length:0;
+          const todos=d.exercicios?d.exercicios.length:0;
+          const completo=temEx&&feitos===todos;
+          return(
+            <button key={i} className={`week-tab ${diaAtivo===i?(d.tipo==="descanso"?"active orange":"active"):(completo?"done":"")}`} onClick={()=>setDiaAtivo(i)}>
+              {DIAS_SEMANA[i].slice(0,3)}
+              {completo&&" ✓"}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* TREINO DO DIA */}
+      {diaInfo.tipo==="descanso"?(
+        <div className="treino-card" style={{textAlign:"center",padding:"2.5rem"}}>
+          <div style={{fontSize:"3rem",marginBottom:"0.75rem"}}>😴</div>
+          <div style={{fontFamily:"var(--font-display)",fontSize:"1.8rem",color:"var(--orange)",letterSpacing:"0.05em"}}>DIA DE DESCANSO</div>
+          <div style={{color:"var(--text2)",fontSize:"0.9rem",marginTop:"0.5rem"}}>{DIAS_SEMANA[diaAtivo]} — recuperação é parte do treino!</div>
+        </div>
+      ):(
+        <div className="treino-card">
+          <div className="treino-card-header">
+            <div>
+              <div className="treino-nome">{diaInfo.nome||`Treino ${diaAtivo+1}`}</div>
+              <div className="treino-periodo">{DIAS_SEMANA[diaAtivo]} • {modLabel}</div>
+            </div>
+            {diaInfo.exercicios&&(
+              <div style={{textAlign:"right"}}>
+                <div style={{fontFamily:"var(--font-display)",fontSize:"1.8rem",color:"var(--green)"}}>
+                  {diaInfo.exercicios.filter((_,j)=>checked[`${diaAtivo}_${j}`]).length}/{diaInfo.exercicios.length}
+                </div>
+                <div style={{fontSize:"0.7rem",color:"var(--text3)"}}>exercícios</div>
+              </div>
+            )}
           </div>
+
+          {diaInfo.obs&&<div style={{background:"rgba(52,152,219,0.1)",border:"1px solid rgba(52,152,219,0.2)",borderRadius:"var(--radius)",padding:"0.75rem",fontSize:"0.85rem",color:"var(--blue)",marginBottom:"1rem"}}>📌 {diaInfo.obs}</div>}
+
+          {diaInfo.exercicios&&diaInfo.exercicios.length>0?(
+            <>
+              <div className="prog-wrap">
+                <div className="prog-hdr"><span>Progresso</span><span className="green">{diaInfo.exercicios.filter((_,j)=>checked[`${diaAtivo}_${j}`]).length}/{diaInfo.exercicios.length}</span></div>
+                <div className="prog-track"><div className="prog-fill green" style={{width:`${(diaInfo.exercicios.filter((_,j)=>checked[`${diaAtivo}_${j}`]).length/diaInfo.exercicios.length)*100}%`}}/></div>
+              </div>
+              {diaInfo.exercicios.map((ex,j)=>(
+                <div key={j} className={`ex-item ${checked[`${diaAtivo}_${j}`]?"done-ex":""}`} onClick={()=>toggleEx(diaAtivo,j)}>
+                  <div className={`check-box ${checked[`${diaAtivo}_${j}`]?"checked":""}`}>{checked[`${diaAtivo}_${j}`]&&"✓"}</div>
+                  <div style={{flex:1}}>
+                    <div className="ex-nome" style={{textDecoration:checked[`${diaAtivo}_${j}`]?"line-through":"none"}}>{ex.nome}</div>
+                    <div className="ex-info">{ex.series&&`${ex.series} séries`}{ex.reps&&` × ${ex.reps}`}{ex.carga&&` • ${ex.carga}`}{ex.duracao&&` • ${ex.duracao}`}</div>
+                  </div>
+                </div>
+              ))}
+            </>
+          ):<div style={{color:"var(--text3)",fontSize:"0.85rem",padding:"1rem 0"}}>Nenhum exercício cadastrado para este dia.</div>}
+        </div>
+      )}
+
+      {/* AVALIAÇÃO */}
+      {diaInfo.tipo!=="descanso"&&(
+        <div className="card">
+          <div className="card-title">⭐ AVALIAR TREINO DE HOJE</div>
+          <div className="form-group">
+            <label className="form-label">Nota geral</label>
+            <div className="stars">{[1,2,3,4,5].map(s=><div key={s} style={{fontSize:"2rem",cursor:"pointer",color:s<=rating?"var(--orange)":"var(--border)"}} onClick={()=>setRating(s)}>★</div>)}</div>
+          </div>
+          <div className="form-group"><label className="form-label">Feedback para o treinador</label><textarea className="form-textarea" placeholder="Como foi o treino? Dificuldades? Observações?" value={feedback} onChange={e=>setFeedback(e.target.value)}/></div>
+          <button className="btn btn-primary btn-full" onClick={salvarAvaliacao}>✅ Registrar avaliação</button>
         </div>
       )}
     </div>
@@ -528,204 +659,82 @@ function SaudeStatusCard({status,onRecuperado,onDorRecuperado,soLeitura}){
 }
 
 // ============================================================
-// ALUNO PAGES
+// ALUNO — ALIMENTAÇÃO (checkbox)
 // ============================================================
-function AlunoDash({user}){
-  const vinculo=DB.getVinculoAluno(user.id)||{};
-  const treinador=vinculo.treinadorId?DB.getUserById(vinculo.treinadorId):null;
-  const nutri=vinculo.nutriId?DB.getUserById(vinculo.nutriId):null;
-  const agua=DB.getData("agua_hoje",user.id)||0;
-  const meta=DB.getData("meta_agua",user.id)||3000;
-  const pct=Math.min((agua/meta)*100,100);
-  const saude=DB.getData("saude",user.id)||{};
+function AlunoAlimentacao({user}){
+  const planoAlim=DB.getData("plano_alim_aluno",user.id);
+  const [comido,setComido]=useState(()=>DB.getData("alim_check_hoje",user.id)||{});
+  const [obs,setObs]=useState("");
+
+  function toggleRefeicao(i){
+    const novo={...comido,[i]:!comido[i]};
+    setComido(novo);
+    DB.setData("alim_check_hoje",user.id,novo);
+  }
+
+  const refeicoes=planoAlim?.refeicoes||[
+    {h:"07:00",r:"Café da manhã",i:"3 ovos + pão integral + banana + café",k:480},
+    {h:"10:00",r:"Lanche manhã",i:"Iogurte grego + castanhas",k:280},
+    {h:"12:30",r:"Almoço",i:"Frango grelhado + arroz integral + salada",k:580},
+    {h:"16:00",r:"Pré-treino",i:"Batata doce + whey",k:320},
+    {h:"19:00",r:"Pós-treino",i:"Tilápia + arroz + brócolis",k:450},
+    {h:"21:30",r:"Ceia",i:"Cottage + pasta de amendoim",k:220},
+  ];
+
+  const totalPrescrito=refeicoes.reduce((s,r)=>s+r.k,0);
+  const totalComido=refeicoes.filter((_,i)=>comido[i]).reduce((s,r)=>s+r.k,0);
+  const qtdComido=Object.values(comido).filter(Boolean).length;
 
   return(
     <div className="page">
-      <div className="page-title green">{getGreeting()}, {firstName(user.nome)} 👋</div>
-      <div className="page-sub">{getDateStr()}</div>
-      {!treinador&&!nutri&&<div className="alert alert-warn">⚠️ Sem equipe vinculada. Vá em <b>Minha Equipe</b> e insira o código do seu treinador e nutricionista!</div>}
-      <div className="grid-4">
-        <div className="stat-tile"><div className="stat-label">Treinador</div><div style={{marginTop:"0.5rem",fontWeight:600,fontSize:"0.9rem",color:"var(--orange)"}}>{treinador?treinador.nome.split(" ")[0]:"—"}</div></div>
-        <div className="stat-tile"><div className="stat-label">Nutricionista</div><div style={{marginTop:"0.5rem",fontWeight:600,fontSize:"0.9rem",color:"var(--blue)"}}>{nutri?nutri.nome.split(" ")[0]:"—"}</div></div>
-        <div className="stat-tile"><div className="stat-label">Água hoje</div><div className="stat-value blue">{(agua/1000).toFixed(1)}<span className="stat-unit">L</span></div></div>
-        <div className="stat-tile"><div className="stat-label">Meta água</div><div className="stat-value orange">{(meta/1000).toFixed(1)}<span className="stat-unit">L</span></div></div>
-      </div>
-      <div className="card">
-        <div className="card-title">❤️ STATUS DE SAÚDE</div>
-        <SaudeStatusCard status={saude} soLeitura={true}/>
-      </div>
-      <div className="card">
-        <div className="card-title">💧 HIDRATAÇÃO DE HOJE</div>
-        <div className="prog-wrap">
-          <div className="prog-hdr"><span>Progresso</span><span className="blue">{agua}ml / {meta}ml</span></div>
-          <div className="prog-track"><div className="prog-fill blue" style={{width:`${pct}%`}}/></div>
+      <div className="page-title green">ALIMENTAÇÃO</div>
+      <div className="page-sub">Marque o que você já comeu hoje</div>
+
+      {planoAlim&&<PeriodoBadge plano={planoAlim}/>}
+
+      <div className="grid-2" style={{marginBottom:"1.5rem"}}>
+        <div className="stat-tile">
+          <div className="stat-label">Refeições feitas</div>
+          <div className="stat-value green">{qtdComido}<span className="stat-unit">/{refeicoes.length}</span></div>
         </div>
-        <div style={{fontSize:"0.85rem",color:pct>=100?"var(--green)":"var(--text2)"}}>{pct>=100?"🎉 Meta atingida!":`Faltam ${((meta-agua)/1000).toFixed(1)}L`}</div>
+        <div className="stat-tile">
+          <div className="stat-label">Kcal consumidas</div>
+          <div className="stat-value orange">{totalComido}<span className="stat-unit">/{totalPrescrito}</span></div>
+        </div>
       </div>
+
+      <div className="prog-wrap" style={{marginBottom:"1.5rem"}}>
+        <div className="prog-hdr"><span>Progresso do dia</span><span className="green">{Math.round((qtdComido/refeicoes.length)*100)}%</span></div>
+        <div className="prog-track"><div className="prog-fill green" style={{width:`${(qtdComido/refeicoes.length)*100}%`}}/></div>
+      </div>
+
       <div className="card">
-        <div className="card-title">📋 TREINO DE HOJE</div>
-        {TREINO_BASE.map((ex,i)=>(
-          <div key={i} style={{display:"flex",justifyContent:"space-between",padding:"0.65rem 0",borderBottom:i<TREINO_BASE.length-1?"1px solid var(--border)":"none",fontSize:"0.9rem"}}>
-            <span style={{fontWeight:600}}>{ex.nome}</span>
-            <span style={{color:"var(--text2)"}}>{ex.series}x {ex.reps} • {ex.carga}</span>
+        <div className="card-title">🥗 REFEIÇÕES DO DIA — marque o que comeu</div>
+        {refeicoes.map((r,i)=>(
+          <div key={i} className={`refeicao-item ${comido[i]?"comido":""}`} onClick={()=>toggleRefeicao(i)}>
+            <div className={`check-box ${comido[i]?"checked":""}`} style={{width:"24px",height:"24px",borderRadius:"8px"}}>{comido[i]&&"✓"}</div>
+            <div className="refeicao-hora">{r.h}</div>
+            <div className="refeicao-info">
+              <div className="refeicao-nome" style={{textDecoration:comido[i]?"line-through":"none"}}>{r.r}</div>
+              <div className="refeicao-itens">{r.i}</div>
+            </div>
+            <div className="refeicao-kcal">{r.k}kcal</div>
           </div>
         ))}
       </div>
-    </div>
-  );
-}
 
-function AlunoSaude({user}){
-  const s=DB.getData("saude",user.id)||{};
-  const [doente,setDoente]=useState(s.doente||false);
-  const [sintomas,setSintomas]=useState(s.sintomas||"");
-  const [doenteDe,setDoenteDe]=useState(s.doente_desde||null);
-  const [mens,setMens]=useState(s.mens||false);
-  const [meds,setMeds]=useState(s.meds||"");
-  const [obs,setObs]=useState(s.obs||"");
-  // dores: [{musculo, desde, intensidade}]
-  const [dores,setDores]=useState(s.dores||[]);
-  const [musculoSel,setMusculoSel]=useState([]);
-  const [ok,setOk]=useState(false);
-
-  function salvar(overrides={}){
-    const data={doente,sintomas,doente_desde:doenteDe,mens,meds,obs,dores,...overrides};
-    DB.setData("saude",user.id,data);setOk(true);setTimeout(()=>setOk(false),3000);
-  }
-
-  function marcarDoente(){
-    const agora=new Date().toISOString();
-    setDoente(true);setDoenteDe(agora);
-    salvar({doente:true,doente_desde:agora});
-  }
-  function marcarRecuperado(){
-    setDoente(false);setDoenteDe(null);setSintomas("");
-    salvar({doente:false,doente_desde:null,sintomas:""});
-  }
-  function adicionarDor(){
-    if(musculoSel.length===0)return;
-    const agora=new Date().toISOString();
-    const novasDores=[...dores,...musculoSel.filter(m=>!dores.find(d=>d.musculo===m)).map(m=>({musculo:m,desde:agora,intensidade:5}))];
-    setDores(novasDores);setMusculoSel([]);
-    salvar({dores:novasDores});
-  }
-  function removerDor(idx){
-    const novas=dores.filter((_,i)=>i!==idx);
-    setDores(novas);salvar({dores:novas});
-  }
-  function toggleMusculo(m){setMusculoSel(p=>p.includes(m)?p.filter(x=>x!==m):[...p,m]);}
-
-  return(
-    <div className="page">
-      <div className="page-title green">SAÚDE</div>
-      <div className="page-sub">Treinador e nutricionista verão estas informações</div>
-      {ok&&<div className="alert alert-success">✅ Salvo com sucesso!</div>}
-
-      {/* STATUS ATUAL */}
       <div className="card">
-        <div className="card-title">📊 STATUS ATUAL</div>
-        <SaudeStatusCard
-          status={{doente,doente_desde:doenteDe,sintomas,dores}}
-          onRecuperado={marcarRecuperado}
-          onDorRecuperado={removerDor}
-          soLeitura={false}
-        />
-      </div>
-
-      {/* MARCAR DOENÇA */}
-      <div className="card">
-        <div className="card-title">🤒 REGISTRAR DOENÇA</div>
-        {!doente?(
-          <>
-            <div className="form-group"><label className="form-label">Sintomas</label><input className="form-input" placeholder="Ex: Gripe, febre, dor de garganta..." value={sintomas} onChange={e=>setSintomas(e.target.value)}/></div>
-            <button className="btn btn-ghost" onClick={marcarDoente} style={{color:"var(--red)",borderColor:"rgba(231,76,60,0.4)"}}>🤒 Estou doente / me machuquei</button>
-          </>
-        ):(
-          <div style={{color:"var(--text2)",fontSize:"0.85rem"}}>Você está com {diffDays(doenteDe)} {pluralDia(diffDays(doenteDe))} de doença. Clique em "Estou recuperado!" no status acima quando melhorar.</div>
-        )}
-      </div>
-
-      {/* DORES MUSCULARES */}
-      <div className="card">
-        <div className="card-title">🔴 REGISTRAR DOR MUSCULAR</div>
-        {dores.length>0&&(
-          <div style={{marginBottom:"1rem"}}>
-            <div style={{fontSize:"0.8rem",color:"var(--text3)",marginBottom:"0.5rem",textTransform:"uppercase",letterSpacing:"0.1em"}}>Dores ativas</div>
-            {dores.map((d,i)=>(
-              <div key={i} style={{display:"flex",alignItems:"center",gap:"0.75rem",padding:"0.65rem",background:"var(--red-dim)",borderRadius:"var(--radius)",marginBottom:"0.5rem",border:"1px solid rgba(231,76,60,0.3)"}}>
-                <span style={{color:"var(--red)",fontWeight:600,fontSize:"0.9rem"}}>{d.musculo}</span>
-                <span style={{flex:1,fontSize:"0.8rem",color:"var(--text2)"}}>{diffDays(d.desde)} {pluralDia(diffDays(d.desde))}</span>
-                <button className="btn btn-sm" style={{background:"var(--green)",color:"#0a0f0d",padding:"0.3rem 0.75rem",fontSize:"0.75rem"}} onClick={()=>removerDor(i)}>✅ Recuperado</button>
-              </div>
-            ))}
-          </div>
-        )}
-        <div style={{fontSize:"0.85rem",color:"var(--text2)",marginBottom:"0.75rem"}}>Selecione os músculos com dor:</div>
-        <div className="pain-grid" style={{marginBottom:"1rem"}}>
-          {MUSCLES.map(m=><div key={m} className={`muscle-btn ${musculoSel.includes(m)?"selected":""}`} onClick={()=>toggleMusculo(m)}>{m}</div>)}
-        </div>
-        {musculoSel.length>0&&<button className="btn btn-ghost" style={{color:"var(--red)",borderColor:"rgba(231,76,60,0.4)"}} onClick={adicionarDor}>🔴 Registrar dor em: {musculoSel.join(", ")}</button>}
-      </div>
-
-      {/* OUTROS */}
-      <div className="card">
-        <div className="card-title">🔢 OUTRAS INFORMAÇÕES</div>
-        <div className="check-item" onClick={()=>{setMens(!mens);salvar({mens:!mens});}}>
-          <div className={`check-box ${mens?"checked":""}`}>{mens&&"✓"}</div>
-          <span>Semana menstrual</span>
-        </div>
-        <div className="form-group" style={{marginTop:"0.75rem"}}>
-          <label className="form-label">💊 Medicamentos em uso</label>
-          <textarea className="form-textarea" placeholder="Ex: Vitamina D 2000UI, Creatina 5g..." value={meds} onChange={e=>setMeds(e.target.value)}/>
-        </div>
-        <div className="form-group">
-          <label className="form-label">📝 Observações</label>
-          <textarea className="form-textarea" placeholder="Qualquer informação para treinador e nutricionista..." value={obs} onChange={e=>setObs(e.target.value)}/>
-        </div>
-        <button className="btn btn-primary" onClick={()=>salvar()}>💾 Salvar</button>
+        <div className="card-title">📝 OBSERVAÇÕES PARA A NUTRICIONISTA</div>
+        <textarea className="form-textarea" placeholder="Substituições, dificuldades, como se sentiu..." value={obs} onChange={e=>setObs(e.target.value)}/>
+        <button className="btn btn-primary" style={{marginTop:"0.75rem"}} onClick={()=>{DB.setData("alim_obs_hoje",user.id,{obs,data:new Date().toISOString()});}}>💾 Salvar observação</button>
       </div>
     </div>
   );
 }
 
-function AlunoTreinos({user}){
-  const [checked,setChecked]=useState({});
-  const [rating,setRating]=useState(0);
-  const [feedback,setFeedback]=useState("");
-  const [ok,setOk]=useState(false);
-  const done=Object.values(checked).filter(Boolean).length;
-  function salvar(){DB.setData("treino_hoje",user.id,{checked,rating,feedback,data:new Date().toISOString()});setOk(true);setTimeout(()=>setOk(false),3000);}
-  return(
-    <div className="page">
-      <div className="page-title green">TREINOS</div>
-      <div className="page-sub">Registre e avalie seus treinos</div>
-      {ok&&<div className="alert alert-success">✅ Treino registrado!</div>}
-      <div className="card">
-        <div className="card-title">🏋️ TREINO DE HOJE</div>
-        <div className="prog-wrap">
-          <div className="prog-hdr"><span>Progresso</span><span className="green">{done}/{TREINO_BASE.length}</span></div>
-          <div className="prog-track"><div className="prog-fill green" style={{width:`${(done/TREINO_BASE.length)*100}%`}}/></div>
-        </div>
-        {TREINO_BASE.map((ex,i)=>(
-          <div key={i} className="check-item" onClick={()=>setChecked(p=>({...p,[i]:!p[i]}))}>
-            <div className={`check-box ${checked[i]?"checked":""}`}>{checked[i]&&"✓"}</div>
-            <div style={{flex:1}}><div style={{fontWeight:600}}>{ex.nome}</div><div style={{fontSize:"0.78rem",color:"var(--text2)"}}>{ex.series} séries × {ex.reps} • {ex.carga}</div></div>
-          </div>
-        ))}
-      </div>
-      <div className="card">
-        <div className="card-title">⭐ AVALIAR TREINO</div>
-        <div className="form-group">
-          <label className="form-label">Nota geral</label>
-          <div className="stars">{[1,2,3,4,5].map(s=><div key={s} style={{fontSize:"2rem",cursor:"pointer",color:s<=rating?"var(--orange)":"var(--border)"}} onClick={()=>setRating(s)}>★</div>)}</div>
-        </div>
-        <div className="form-group"><label className="form-label">Feedback para o treinador</label><textarea className="form-textarea" placeholder="Como foi o treino?" value={feedback} onChange={e=>setFeedback(e.target.value)}/></div>
-        <button className="btn btn-primary btn-full" onClick={salvar}>✅ Registrar Treino</button>
-      </div>
-    </div>
-  );
-}
-
+// ============================================================
+// ALUNO — HIDRATAÇÃO
+// ============================================================
 function AlunoHidratacao({user}){
   const [ml,setMl]=useState(()=>DB.getData("agua_hoje",user.id)||0);
   const [meta,setMeta]=useState(()=>DB.getData("meta_agua",user.id)||3000);
@@ -758,56 +767,69 @@ function AlunoHidratacao({user}){
   );
 }
 
-function AlunoAlimentacao({user}){
-  const [regs,setRegs]=useState(()=>DB.getData("alimentacao",user.id)||[]);
-  const [hora,setHora]=useState("12:00");
-  const [desc,setDesc]=useState("");
-  const [kcal,setKcal]=useState("");
-  const total=regs.reduce((s,r)=>s+r.kcal,0);
-  function add(){
-    if(!desc.trim())return;
-    const novo=[...regs,{hora,desc,kcal:Number(kcal)||0}];
-    setRegs(novo);DB.setData("alimentacao",user.id,novo);setDesc("");setKcal("");
-  }
+// ============================================================
+// ALUNO — SAÚDE
+// ============================================================
+function AlunoSaude({user}){
+  const s=DB.getData("saude",user.id)||{};
+  const [doente,setDoente]=useState(s.doente||false);
+  const [sintomas,setSintomas]=useState(s.sintomas||"");
+  const [doenteDe,setDoenteDe]=useState(s.doente_desde||null);
+  const [mens,setMens]=useState(s.mens||false);
+  const [meds,setMeds]=useState(s.meds||"");
+  const [obs,setObs]=useState(s.obs||"");
+  const [dores,setDores]=useState(s.dores||[]);
+  const [musculoSel,setMusculoSel]=useState([]);
+  const [ok,setOk]=useState(false);
+  function salvar(ov={}){DB.setData("saude",user.id,{doente,sintomas,doente_desde:doenteDe,mens,meds,obs,dores,...ov});setOk(true);setTimeout(()=>setOk(false),2000);}
+  function marcarDoente(){const agora=new Date().toISOString();setDoente(true);setDoenteDe(agora);salvar({doente:true,doente_desde:agora});}
+  function marcarRecuperado(){setDoente(false);setDoenteDe(null);setSintomas("");salvar({doente:false,doente_desde:null,sintomas:""});}
+  function adicionarDor(){if(!musculoSel.length)return;const agora=new Date().toISOString();const novas=[...dores,...musculoSel.filter(m=>!dores.find(d=>d.musculo===m)).map(m=>({musculo:m,desde:agora,intensidade:5}))];setDores(novas);setMusculoSel([]);salvar({dores:novas});}
+  function removerDor(idx){const novas=dores.filter((_,i)=>i!==idx);setDores(novas);salvar({dores:novas});}
   return(
     <div className="page">
-      <div className="page-title green">ALIMENTAÇÃO</div>
-      <div className="page-sub">Registre o que você comeu hoje</div>
-      <div className="grid-2" style={{marginBottom:"1.5rem"}}>
-        <div className="stat-tile"><div className="stat-label">Kcal registradas</div><div className="stat-value green">{total}<span className="stat-unit">kcal</span></div></div>
-        <div className="stat-tile"><div className="stat-label">Refeições hoje</div><div className="stat-value orange">{regs.length}</div></div>
+      <div className="page-title green">SAÚDE</div>
+      <div className="page-sub">Treinador e nutricionista verão estas informações</div>
+      {ok&&<div className="alert alert-success">✅ Salvo!</div>}
+      <div className="card">
+        <div className="card-title">📊 STATUS ATUAL</div>
+        <SaudeStatusCard status={{doente,doente_desde:doenteDe,sintomas,dores}} onRecuperado={marcarRecuperado} onDorRecuperado={removerDor} soLeitura={false}/>
       </div>
       <div className="card">
-        <div className="card-title">🥗 PLANO DA NUTRICIONISTA</div>
-        {NUTRI_PLANO.map((r,i)=>(
-          <div key={i} className="meal-item">
-            <div><div style={{fontWeight:600,fontSize:"0.9rem"}}>{r.r}</div><div style={{fontSize:"0.78rem",color:"var(--text2)"}}>{r.i}</div></div>
-            <div style={{textAlign:"right",flexShrink:0}}><div className="meal-time">{r.h}</div><div style={{fontSize:"0.75rem",color:"var(--green)"}}>{r.k}kcal</div></div>
-          </div>
-        ))}
+        <div className="card-title">🤒 REGISTRAR DOENÇA</div>
+        {!doente?(
+          <><div className="form-group"><label className="form-label">Sintomas</label><input className="form-input" placeholder="Ex: Gripe, febre..." value={sintomas} onChange={e=>setSintomas(e.target.value)}/></div>
+          <button className="btn btn-ghost" onClick={marcarDoente} style={{color:"var(--red)",borderColor:"rgba(231,76,60,0.4)"}}>🤒 Estou doente</button></>
+        ):<div style={{color:"var(--text2)",fontSize:"0.85rem"}}>{diffDays(doenteDe)} {pluralDia(diffDays(doenteDe))} de doença. Clique "Estou recuperado!" no status acima.</div>}
       </div>
       <div className="card">
-        <div className="card-title">✏️ O QUE EU COMI</div>
-        {regs.length===0&&<div style={{color:"var(--text3)",fontSize:"0.85rem",marginBottom:"1rem"}}>Nenhuma refeição registrada ainda.</div>}
-        {regs.map((r,i)=>(
-          <div key={i} className="meal-item">
-            <div><div style={{fontWeight:600}}>{r.desc}</div><div className="meal-time">{r.hora}</div></div>
-            <div style={{color:"var(--green)",fontWeight:600}}>~{r.kcal}kcal</div>
+        <div className="card-title">🔴 REGISTRAR DOR MUSCULAR</div>
+        {dores.length>0&&<div style={{marginBottom:"1rem"}}>{dores.map((d,i)=>(
+          <div key={i} style={{display:"flex",alignItems:"center",gap:"0.75rem",padding:"0.65rem",background:"var(--red-dim)",borderRadius:"var(--radius)",marginBottom:"0.5rem",border:"1px solid rgba(231,76,60,0.3)"}}>
+            <span style={{color:"var(--red)",fontWeight:600,fontSize:"0.9rem",flex:1}}>{d.musculo} — {diffDays(d.desde)} {pluralDia(diffDays(d.desde))}</span>
+            <button className="btn btn-sm" style={{background:"var(--green)",color:"#0a0f0d",padding:"0.3rem 0.75rem",fontSize:"0.75rem"}} onClick={()=>removerDor(i)}>✅ Recuperado</button>
           </div>
-        ))}
-        <div style={{marginTop:"1rem"}}>
-          <div className="grid-2">
-            <div className="form-group"><label className="form-label">Horário</label><input className="form-input" type="time" value={hora} onChange={e=>setHora(e.target.value)}/></div>
-            <div className="form-group"><label className="form-label">Calorias (kcal)</label><input className="form-input" type="number" placeholder="0" value={kcal} onChange={e=>setKcal(e.target.value)}/></div>
-          </div>
-          <div className="form-group"><label className="form-label">O que você comeu</label><textarea className="form-textarea" placeholder="Descreva a refeição..." value={desc} onChange={e=>setDesc(e.target.value)}/></div>
-          <button className="btn btn-primary" onClick={add}>+ Adicionar refeição</button>
+        ))}</div>}
+        <div style={{fontSize:"0.85rem",color:"var(--text2)",marginBottom:"0.75rem"}}>Selecione os músculos com dor:</div>
+        <div className="pain-grid" style={{marginBottom:"1rem"}}>
+          {MUSCLES.map(m=><div key={m} className={`muscle-btn ${musculoSel.includes(m)?"selected":""}`} onClick={()=>setMusculoSel(p=>p.includes(m)?p.filter(x=>x!==m):[...p,m])}>{m}</div>)}
         </div>
+        {musculoSel.length>0&&<button className="btn btn-ghost" style={{color:"var(--red)",borderColor:"rgba(231,76,60,0.4)"}} onClick={adicionarDor}>🔴 Registrar dor em: {musculoSel.join(", ")}</button>}
+      </div>
+      <div className="card">
+        <div className="card-title">🔢 OUTRAS INFORMAÇÕES</div>
+        <div className="check-item" onClick={()=>{setMens(!mens);salvar({mens:!mens});}}><div className={`check-box ${mens?"checked":""}`}>{mens&&"✓"}</div><span>Semana menstrual</span></div>
+        <div className="form-group" style={{marginTop:"0.75rem"}}><label className="form-label">💊 Medicamentos</label><textarea className="form-textarea" placeholder="Ex: Vitamina D 2000UI, Creatina 5g..." value={meds} onChange={e=>setMeds(e.target.value)}/></div>
+        <div className="form-group"><label className="form-label">📝 Observações</label><textarea className="form-textarea" placeholder="Qualquer informação para sua equipe..." value={obs} onChange={e=>setObs(e.target.value)}/></div>
+        <button className="btn btn-primary" onClick={()=>salvar()}>💾 Salvar</button>
       </div>
     </div>
   );
 }
 
+// ============================================================
+// ALUNO — AVALIAÇÃO E COMPETIÇÕES
+// ============================================================
 function AlunoAvaliacao({user}){
   const saved=DB.getData("avaliacao",user.id)||{};
   const [f,setF]=useState(saved);
@@ -817,14 +839,13 @@ function AlunoAvaliacao({user}){
   return(
     <div className="page">
       <div className="page-title green">AVALIAÇÃO FÍSICA</div>
-      <div className="page-sub">Seus dados ficam visíveis para treinador e nutricionista</div>
+      <div className="page-sub">Visível para treinador e nutricionista</div>
       {ok&&<div className="alert alert-success">✅ Avaliação salva!</div>}
       <div className="card">
         <div className="card-title">📏 MEDIDAS CORPORAIS</div>
         <div className="grid-2">
           {[["peso","Peso","kg"],["gordura","% Gordura","%"],["cintura","Cintura","cm"],["quadril","Quadril","cm"],["braco_d","Braço D","cm"],["braco_e","Braço E","cm"],["perna_d","Perna D","cm"],["perna_e","Perna E","cm"]].map(([k,l,u])=>(
-            <div key={k} className="form-group">
-              <label className="form-label">{l}</label>
+            <div key={k} className="form-group"><label className="form-label">{l}</label>
               <div style={{display:"flex",gap:"0.5rem",alignItems:"center"}}>
                 <input className="form-input" type="number" placeholder="0" value={f[k]||""} onChange={e=>set(k,e.target.value)}/>
                 <span style={{color:"var(--text2)",flexShrink:0}}>{u}</span>
@@ -844,50 +865,22 @@ function AlunoCompeticoes({user}){
   const [f,setF]=useState({nome:"",modalidade:"Corrida",data:"",local:"",objetivo:"Completar"});
   const [ok,setOk]=useState(false);
   function set(k,v){setF(p=>({...p,[k]:v}));}
-  function add(){
-    if(!f.nome||!f.data)return;
-    const novo=[...comps,{...f,id:Date.now()}];
-    setComps(novo);DB.setData("competicoes",user.id,novo);
-    setF({nome:"",modalidade:"Corrida",data:"",local:"",objetivo:"Completar"});
-    setOk(true);setTimeout(()=>setOk(false),3000);
-  }
+  function add(){if(!f.nome||!f.data)return;const novo=[...comps,{...f,id:Date.now()}];setComps(novo);DB.setData("competicoes",user.id,novo);setF({nome:"",modalidade:"Corrida",data:"",local:"",objetivo:"Completar"});setOk(true);setTimeout(()=>setOk(false),3000);}
   return(
     <div className="page">
       <div className="page-title green">COMPETIÇÕES</div>
-      <div className="page-sub">Treinador e nutricionista também verão seus eventos</div>
+      <div className="page-sub">Visível para treinador e nutricionista</div>
       {ok&&<div className="alert alert-success">✅ Competição cadastrada!</div>}
-      {comps.length>0&&(
-        <div className="card">
-          <div className="card-title">📅 MEUS EVENTOS</div>
-          {comps.map((c,i)=>{
-            const d=new Date(c.data);
-            return(
-              <div key={i} className="comp-card" style={{background:"var(--bg2)"}}>
-                <div className="comp-date"><div className="comp-date-day">{d.getDate()}</div><div className="comp-date-month">{d.toLocaleDateString("pt-BR",{month:"short"})}</div></div>
-                <div style={{flex:1}}><div style={{fontWeight:600}}>{c.nome}</div><div style={{fontSize:"0.8rem",color:"var(--text2)"}}>{c.modalidade} • {c.local}</div></div>
-                <span className="tag tag-orange">{c.objetivo.toUpperCase()}</span>
-              </div>
-            );
-          })}
-        </div>
-      )}
+      {comps.length>0&&<div className="card"><div className="card-title">📅 MEUS EVENTOS</div>{comps.map((c,i)=>{const d=new Date(c.data);return(<div key={i} className="comp-card" style={{background:"var(--bg2)"}}><div className="comp-date"><div className="comp-date-day">{d.getDate()}</div><div className="comp-date-month">{d.toLocaleDateString("pt-BR",{month:"short"})}</div></div><div style={{flex:1}}><div style={{fontWeight:600}}>{c.nome}</div><div style={{fontSize:"0.8rem",color:"var(--text2)"}}>{c.modalidade} • {c.local}</div></div><span className="tag tag-orange">{c.objetivo.toUpperCase()}</span></div>);})}</div>}
       <div className="card">
         <div className="card-title">➕ CADASTRAR COMPETIÇÃO</div>
         <div className="grid-2">
           <div className="form-group"><label className="form-label">Nome do evento</label><input className="form-input" placeholder="Ex: Ironman Florianópolis" value={f.nome} onChange={e=>set("nome",e.target.value)}/></div>
-          <div className="form-group"><label className="form-label">Modalidade</label>
-            <select className="form-select" value={f.modalidade} onChange={e=>set("modalidade",e.target.value)}>
-              {["Corrida","Natação","Triathlon / Ironman","Luta","Fisiculturismo","Ciclismo","Caminhada"].map(m=><option key={m}>{m}</option>)}
-            </select>
-          </div>
+          <div className="form-group"><label className="form-label">Modalidade</label><select className="form-select" value={f.modalidade} onChange={e=>set("modalidade",e.target.value)}>{["Corrida","Natação","Triathlon / Ironman","Luta","Fisiculturismo","Ciclismo","Caminhada"].map(m=><option key={m}>{m}</option>)}</select></div>
           <div className="form-group"><label className="form-label">Data</label><input className="form-input" type="date" value={f.data} onChange={e=>set("data",e.target.value)}/></div>
           <div className="form-group"><label className="form-label">Local</label><input className="form-input" placeholder="Cidade / Local" value={f.local} onChange={e=>set("local",e.target.value)}/></div>
         </div>
-        <div className="form-group"><label className="form-label">Objetivo</label>
-          <select className="form-select" value={f.objetivo} onChange={e=>set("objetivo",e.target.value)}>
-            {["Completar","Bater meu recorde","Subir no pódio","Subir no palco","Definição de peso"].map(o=><option key={o}>{o}</option>)}
-          </select>
-        </div>
+        <div className="form-group"><label className="form-label">Objetivo</label><select className="form-select" value={f.objetivo} onChange={e=>set("objetivo",e.target.value)}>{["Completar","Bater meu recorde","Subir no pódio","Subir no palco","Definição de peso"].map(o=><option key={o}>{o}</option>)}</select></div>
         <button className="btn btn-primary" onClick={add}>+ Cadastrar evento</button>
       </div>
     </div>
@@ -895,91 +888,47 @@ function AlunoCompeticoes({user}){
 }
 
 // ============================================================
-// DIÁRIO COMPLETO (visto pelo prof)
+// ALUNO — DASHBOARD
 // ============================================================
-function DiarioAluno({aluno,onBack}){
-  const saude=DB.getData("saude",aluno.id)||{};
-  const treino=DB.getData("treino_hoje",aluno.id)||{};
-  const alim=DB.getData("alimentacao",aluno.id)||[];
-  const agua=DB.getData("agua_hoje",aluno.id)||0;
-  const metaAgua=DB.getData("meta_agua",aluno.id)||3000;
-  const aval=DB.getData("avaliacao",aluno.id)||{};
-  const comps=DB.getData("competicoes",aluno.id)||[];
-
+function AlunoDash({user}){
+  const vinculo=DB.getVinculoAluno(user.id)||{};
+  const treinador=vinculo.treinadorId?DB.getUserById(vinculo.treinadorId):null;
+  const nutri=vinculo.nutriId?DB.getUserById(vinculo.nutriId):null;
+  const agua=DB.getData("agua_hoje",user.id)||0;
+  const meta=DB.getData("meta_agua",user.id)||3000;
+  const saude=DB.getData("saude",user.id)||{};
+  const planoTreino=DB.getData("plano_treino_aluno",user.id);
+  const hoje=new Date().getDay();const diaHoje=hoje===0?6:hoje-1;
+  const treinoHoje=planoTreino?.dias?.[diaHoje];
   return(
     <div className="page">
-      <div style={{marginBottom:"1rem"}}><button className="btn btn-ghost btn-sm" onClick={onBack}>← Voltar</button></div>
-      <div className="page-title" style={{color:"var(--text)"}}>{aluno.nome}</div>
-      <div className="page-sub">Diário completo</div>
-
+      <div className="page-title green">{getGreeting()}, {firstName(user.nome)} 👋</div>
+      <div className="page-sub">{getDateStr()}</div>
+      {!treinador&&!nutri&&<div className="alert alert-warn">⚠️ Sem equipe vinculada. Vá em <b>Minha Equipe</b> e insira o código do seu treinador e nutricionista!</div>}
+      <div className="grid-4">
+        <div className="stat-tile"><div className="stat-label">Treinador</div><div style={{marginTop:"0.5rem",fontWeight:600,fontSize:"0.9rem",color:"var(--orange)"}}>{treinador?treinador.nome.split(" ")[0]:"—"}</div></div>
+        <div className="stat-tile"><div className="stat-label">Nutricionista</div><div style={{marginTop:"0.5rem",fontWeight:600,fontSize:"0.9rem",color:"var(--blue)"}}>{nutri?nutri.nome.split(" ")[0]:"—"}</div></div>
+        <div className="stat-tile"><div className="stat-label">Água hoje</div><div className="stat-value blue">{(agua/1000).toFixed(1)}<span className="stat-unit">L</span></div></div>
+        <div className="stat-tile"><div className="stat-label">Meta água</div><div className="stat-value orange">{(meta/1000).toFixed(1)}<span className="stat-unit">L</span></div></div>
+      </div>
       <div className="card">
-        <div className="card-title">❤️ SAÚDE DA SEMANA</div>
+        <div className="card-title">❤️ STATUS DE SAÚDE</div>
         <SaudeStatusCard status={saude} soLeitura={true}/>
-        <div style={{marginTop:"1rem",display:"flex",gap:"0.5rem",flexWrap:"wrap"}}>
-          {saude.mens&&<span className="tag tag-orange">🔴 Ciclo menstrual</span>}
-          {saude.meds&&<span className="tag tag-blue">💊 Medicamentos</span>}
-        </div>
-        {saude.meds&&<div className="diario-section" style={{marginTop:"0.75rem"}}><div className="diario-label">Medicamentos</div><div className="diario-val">{saude.meds}</div></div>}
-        {saude.obs&&<div className="diario-section" style={{marginTop:"0.5rem"}}><div className="diario-label">Observações</div><div className="diario-val">{saude.obs}</div></div>}
       </div>
-
-      <div className="card">
-        <div className="card-title">🏋️ TREINO DE HOJE</div>
-        {treino.checked?(
-          <>
-            <div className="grid-2" style={{marginBottom:"1rem"}}>
-              <div className="diario-section"><div className="diario-label">Nota</div><div style={{fontSize:"1.5rem"}}>{"★".repeat(treino.rating||0)}{"☆".repeat(5-(treino.rating||0))}</div></div>
-              <div className="diario-section"><div className="diario-label">Exercícios feitos</div><div className="diario-val">{Object.values(treino.checked).filter(Boolean).length} / {TREINO_BASE.length}</div></div>
-            </div>
-            {treino.feedback&&<div className="diario-section"><div className="diario-label">Feedback do aluno</div><div className="diario-val">"{treino.feedback}"</div></div>}
-          </>
-        ):<div style={{color:"var(--text3)",fontSize:"0.85rem"}}>Nenhum treino registrado hoje.</div>}
-      </div>
-
-      <div className="card">
-        <div className="card-title">💧 HIDRATAÇÃO</div>
-        <div className="prog-wrap">
-          <div className="prog-hdr"><span>Ingestão de água</span><span className="blue">{agua}ml / {metaAgua}ml</span></div>
-          <div className="prog-track"><div className="prog-fill blue" style={{width:`${Math.min((agua/metaAgua)*100,100)}%`}}/></div>
-        </div>
-      </div>
-
-      <div className="card">
-        <div className="card-title">🥗 ALIMENTAÇÃO</div>
-        {alim.length===0?<div style={{color:"var(--text3)",fontSize:"0.85rem"}}>Nenhuma refeição registrada.</div>:
-          alim.map((r,i)=>(
-            <div key={i} className="meal-item">
-              <div><div style={{fontWeight:600}}>{r.desc}</div><div className="meal-time">{r.hora}</div></div>
-              <div style={{color:"var(--green)",fontWeight:600}}>~{r.kcal}kcal</div>
-            </div>
-          ))
-        }
-      </div>
-
-      {Object.keys(aval).length>0&&(
+      {treinoHoje&&(
         <div className="card">
-          <div className="card-title">📊 AVALIAÇÃO FÍSICA</div>
-          <div className="grid-2">
-            {[["peso","Peso","kg"],["gordura","% Gordura","%"],["cintura","Cintura","cm"],["quadril","Quadril","cm"]].map(([k,l,u])=>
-              aval[k]?<div key={k} className="diario-section"><div className="diario-label">{l}</div><div className="diario-val">{aval[k]}{u}</div></div>:null
-            )}
-          </div>
-        </div>
-      )}
-
-      {comps.length>0&&(
-        <div className="card">
-          <div className="card-title">🏆 COMPETIÇÕES</div>
-          {comps.map((c,i)=>{
-            const d=new Date(c.data);
-            return(
-              <div key={i} className="comp-card" style={{background:"var(--bg2)"}}>
-                <div className="comp-date"><div className="comp-date-day">{d.getDate()}</div><div className="comp-date-month">{d.toLocaleDateString("pt-BR",{month:"short"})}</div></div>
-                <div style={{flex:1}}><div style={{fontWeight:600}}>{c.nome}</div><div style={{fontSize:"0.8rem",color:"var(--text2)"}}>{c.modalidade}</div></div>
-                <span className="tag tag-orange">{c.objetivo}</span>
-              </div>
-            );
-          })}
+          <div className="card-title">🏋️ TREINO DE HOJE — {DIAS_SEMANA[diaHoje]}</div>
+          {treinoHoje.tipo==="descanso"?<div style={{color:"var(--orange)",fontWeight:600}}>😴 Dia de descanso</div>:(
+            <div>
+              <div style={{fontWeight:600,marginBottom:"0.5rem"}}>{treinoHoje.nome}</div>
+              {treinoHoje.exercicios&&treinoHoje.exercicios.map((ex,i)=>(
+                <div key={i} style={{display:"flex",justifyContent:"space-between",padding:"0.5rem 0",borderBottom:i<treinoHoje.exercicios.length-1?"1px solid var(--border)":"none",fontSize:"0.88rem"}}>
+                  <span style={{fontWeight:600}}>{ex.nome}</span>
+                  <span style={{color:"var(--text2)"}}>{ex.series&&`${ex.series}x`} {ex.reps} {ex.carga&&`• ${ex.carga}`}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -987,8 +936,183 @@ function DiarioAluno({aluno,onBack}){
 }
 
 // ============================================================
-// TREINADOR PAGES
+// TREINADOR — PRESCREVER TREINO
 // ============================================================
+function TreinadorPrescrever({user}){
+  const alunos=DB.getAlunosDe(user.id);
+  const [alunoSel,setAlunoSel]=useState(null);
+  const [nomePlano,setNomePlano]=useState("Treino A/B/C");
+  const [modalidade,setModalidade]=useState("musculacao");
+  const [duracao,setDuracao]=useState(1);
+  const [inicio,setInicio]=useState(()=>new Date().toISOString().split("T")[0]);
+  const [dias,setDias]=useState(()=>DIAS_SEMANA.map((d,i)=>({nome:`Treino ${String.fromCharCode(65+i)}`,tipo:"treino",obs:"",exercicios:[]})));
+  const [diaEdit,setDiaEdit]=useState(0);
+  const [novoEx,setNovoEx]=useState({nome:"",series:"",reps:"",carga:"",duracao:""});
+  const [ok,setOk]=useState(false);
+
+  function setDiaTipo(i,tipo){setDias(p=>{const n=[...p];n[i]={...n[i],tipo};return n;});}
+  function setDiaNome(i,nome){setDias(p=>{const n=[...p];n[i]={...n[i],nome};return n;});}
+  function setDiaObs(i,obs){setDias(p=>{const n=[...p];n[i]={...n[i],obs};return n;});}
+  function addEx(diaIdx){
+    if(!novoEx.nome.trim())return;
+    setDias(p=>{const n=[...p];n[diaIdx]={...n[diaIdx],exercicios:[...(n[diaIdx].exercicios||[]),{...novoEx}]};return n;});
+    setNovoEx({nome:"",series:"",reps:"",carga:"",duracao:""});
+  }
+  function removeEx(diaIdx,exIdx){setDias(p=>{const n=[...p];n[diaIdx]={...n[diaIdx],exercicios:n[diaIdx].exercicios.filter((_,i)=>i!==exIdx)};return n;});}
+
+  function salvar(){
+    if(!alunoSel)return;
+    const fimDate=addMonths(new Date(inicio),duracao);
+    const plano={nome:nomePlano,modalidade,duracao,inicio,fim:fimDate.toISOString(),dias,criadoEm:new Date().toISOString()};
+    DB.setData("plano_treino_aluno",alunoSel.id,plano);
+    setOk(true);setTimeout(()=>setOk(false),3000);
+  }
+
+  const diaAtual=dias[diaEdit];
+
+  return(
+    <div className="page">
+      <div className="page-title orange">PRESCREVER TREINO</div>
+      <div className="page-sub">Monte a semana completa de treinos para um aluno</div>
+      {ok&&<div className="alert alert-success">✅ Plano enviado para {alunoSel?.nome}!</div>}
+      {alunos.length===0&&<div className="alert alert-warn">⚠️ Nenhum aluno vinculado. Código: <b style={{fontFamily:"var(--font-mono)"}}>{gerarCodigo(user.id)}</b></div>}
+
+      {/* SELECIONAR ALUNO */}
+      <div className="card">
+        <div className="card-title">👤 SELECIONAR ALUNO</div>
+        <AlunoSelector alunos={alunos} selecionado={alunoSel} onSelect={setAlunoSel} accentClass="sel-orange"/>
+        {!alunoSel&&alunos.length>0&&<div style={{color:"var(--text3)",fontSize:"0.85rem"}}>Selecione um aluno acima para montar o plano.</div>}
+      </div>
+
+      {alunoSel&&(
+        <>
+          {/* CONFIGURAÇÕES DO PLANO */}
+          <div className="card">
+            <div className="card-title">⚙️ CONFIGURAÇÕES DO PLANO</div>
+            <div className="grid-2">
+              <div className="form-group"><label className="form-label">Nome do plano</label><input className="form-input" value={nomePlano} onChange={e=>setNomePlano(e.target.value)} placeholder="Ex: Treino A/B/C, Hipertrofia..."/></div>
+              <div className="form-group"><label className="form-label">Modalidade principal</label>
+                <select className="form-select" value={modalidade} onChange={e=>setModalidade(e.target.value)}>
+                  {MODALIDADES.map(m=><option key={m.v} value={m.v}>{m.l}</option>)}
+                </select>
+              </div>
+              <div className="form-group"><label className="form-label">Data de início</label><input className="form-input" type="date" value={inicio} onChange={e=>setInicio(e.target.value)}/></div>
+              <div className="form-group"><label className="form-label">Duração do plano</label>
+                <select className="form-select" value={duracao} onChange={e=>setDuracao(Number(e.target.value))}>
+                  <option value={1}>1 mês</option><option value={2}>2 meses</option><option value={3}>3 meses</option>
+                </select>
+              </div>
+            </div>
+            <div className="periodo-card">
+              <div style={{fontSize:"0.8rem",color:"var(--text3)",marginBottom:"0.25rem"}}>Vigência do plano</div>
+              <div style={{fontWeight:600}}>{fmtDate(inicio)} → {fmtDate(addMonths(new Date(inicio),duracao))}</div>
+              <div style={{fontSize:"0.8rem",color:"var(--text2)",marginTop:"0.15rem"}}>{duracao} {duracao===1?"mês":"meses"} para {alunoSel.nome.split(" ")[0]}</div>
+            </div>
+          </div>
+
+          {/* DIAS DA SEMANA */}
+          <div className="card">
+            <div className="card-title">📅 MONTAR OS DIAS DA SEMANA</div>
+            <div className="week-tabs">
+              {DIAS_SEMANA.map((d,i)=>(
+                <button key={i} className={`week-tab ${diaEdit===i?"active orange":""}`} onClick={()=>setDiaEdit(i)}>
+                  {d.slice(0,3)}{dias[i].tipo==="descanso"?" 💤":""}
+                </button>
+              ))}
+            </div>
+
+            {/* EDIT DIA */}
+            <div style={{background:"var(--bg2)",borderRadius:"var(--radius-lg)",padding:"1.25rem"}}>
+              <div style={{fontFamily:"var(--font-display)",fontSize:"1.3rem",color:"var(--orange)",marginBottom:"1rem"}}>{DIAS_SEMANA[diaEdit]}</div>
+              <div className="form-group">
+                <label className="form-label">Tipo do dia</label>
+                <div style={{display:"flex",gap:"0.5rem"}}>
+                  <button className={`toggle-btn ${diaAtual.tipo==="treino"?"active-orange":""}`} onClick={()=>setDiaTipo(diaEdit,"treino")}>🏋️ Treino</button>
+                  <button className={`toggle-btn ${diaAtual.tipo==="descanso"?"active-orange":""}`} onClick={()=>setDiaTipo(diaEdit,"descanso")}>😴 Descanso</button>
+                </div>
+              </div>
+              {diaAtual.tipo==="treino"&&(
+                <>
+                  <div className="form-group"><label className="form-label">Nome do treino</label><input className="form-input" value={diaAtual.nome} onChange={e=>setDiaNome(diaEdit,e.target.value)} placeholder="Ex: Treino A — Peito + Tríceps"/></div>
+                  <div className="form-group"><label className="form-label">Observações do dia</label><input className="form-input" value={diaAtual.obs} onChange={e=>setDiaObs(diaEdit,e.target.value)} placeholder="Instruções específicas..."/></div>
+
+                  {/* EXERCÍCIOS */}
+                  {diaAtual.exercicios&&diaAtual.exercicios.length>0&&(
+                    <div style={{marginBottom:"1rem"}}>
+                      {diaAtual.exercicios.map((ex,j)=>(
+                        <div key={j} style={{display:"flex",alignItems:"center",gap:"0.75rem",padding:"0.65rem",background:"var(--card)",borderRadius:"var(--radius)",marginBottom:"0.4rem",fontSize:"0.85rem"}}>
+                          <span style={{fontWeight:600,flex:1}}>{ex.nome}</span>
+                          <span style={{color:"var(--text2)"}}>{ex.series&&`${ex.series}x`} {ex.reps} {ex.carga&&`• ${ex.carga}`} {ex.duracao&&`• ${ex.duracao}`}</span>
+                          <button className="btn btn-sm btn-ghost" onClick={()=>removeEx(diaEdit,j)}>✕</button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* ADD EXERCÍCIO */}
+                  <div style={{background:"var(--card)",borderRadius:"var(--radius)",padding:"1rem"}}>
+                    <div style={{fontSize:"0.8rem",color:"var(--text3)",marginBottom:"0.75rem",textTransform:"uppercase",letterSpacing:"0.1em"}}>+ Adicionar exercício</div>
+                    <div className="grid-2">
+                      <div className="form-group"><label className="form-label">Nome</label><input className="form-input" placeholder="Ex: Supino Reto" value={novoEx.nome} onChange={e=>setNovoEx(p=>({...p,nome:e.target.value}))}/></div>
+                      <div className="form-group"><label className="form-label">Séries</label><input className="form-input" placeholder="Ex: 4" value={novoEx.series} onChange={e=>setNovoEx(p=>({...p,series:e.target.value}))}/></div>
+                      <div className="form-group"><label className="form-label">Reps / Tempo</label><input className="form-input" placeholder="Ex: 8-10 ou 30min" value={novoEx.reps} onChange={e=>setNovoEx(p=>({...p,reps:e.target.value}))}/></div>
+                      <div className="form-group"><label className="form-label">Carga / Intensidade</label><input className="form-input" placeholder="Ex: 80kg ou Z2" value={novoEx.carga} onChange={e=>setNovoEx(p=>({...p,carga:e.target.value}))}/></div>
+                    </div>
+                    <button className="btn btn-orange btn-sm" onClick={()=>addEx(diaEdit)}>+ Adicionar</button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+
+          <button className="btn btn-orange btn-full" onClick={salvar}>📤 Enviar plano para {alunoSel.nome.split(" ")[0]}</button>
+        </>
+      )}
+    </div>
+  );
+}
+
+// ============================================================
+// TREINADOR — DASHBOARD + ACOMPANHAMENTO
+// ============================================================
+function DiarioAluno({aluno,onBack}){
+  const saude=DB.getData("saude",aluno.id)||{};
+  const treino=DB.getData("treino_avaliacao",aluno.id)||{};
+  const alimCheck=DB.getData("alim_check_hoje",aluno.id)||{};
+  const planoAlim=DB.getData("plano_alim_aluno",aluno.id);
+  const agua=DB.getData("agua_hoje",aluno.id)||0;
+  const metaAgua=DB.getData("meta_agua",aluno.id)||3000;
+  const aval=DB.getData("avaliacao",aluno.id)||{};
+  const comps=DB.getData("competicoes",aluno.id)||[];
+  const planoTreino=DB.getData("plano_treino_aluno",aluno.id);
+  const refeicoes=planoAlim?.refeicoes||[];
+  const qtdComido=Object.values(alimCheck).filter(Boolean).length;
+  return(
+    <div className="page">
+      <div style={{marginBottom:"1rem"}}><button className="btn btn-ghost btn-sm" onClick={onBack}>← Voltar</button></div>
+      <div className="page-title" style={{color:"var(--text)"}}>{aluno.nome}</div>
+      <div className="page-sub">Diário completo</div>
+      <div className="card">
+        <div className="card-title">❤️ SAÚDE</div>
+        <SaudeStatusCard status={saude} soLeitura={true}/>
+        <div style={{marginTop:"0.75rem",display:"flex",gap:"0.5rem",flexWrap:"wrap"}}>
+          {saude.mens&&<span className="tag tag-orange">🔴 Ciclo menstrual</span>}
+          {saude.meds&&<span className="tag tag-blue">💊 {saude.meds}</span>}
+        </div>
+        {saude.obs&&<div className="diario-section" style={{marginTop:"0.75rem"}}><div className="diario-label">Observações</div><div className="diario-val">{saude.obs}</div></div>}
+      </div>
+      {planoTreino&&<div className="card"><div className="card-title">🏋️ PLANO DE TREINO ATIVO</div><PeriodoBadge plano={planoTreino}/>{treino.rating>0&&<div style={{fontSize:"0.9rem",marginTop:"0.5rem"}}>Última avaliação: {"★".repeat(treino.rating)}{"☆".repeat(5-treino.rating)}{treino.feedback&&<div style={{color:"var(--text2)",marginTop:"0.25rem"}}>"{treino.feedback}"</div>}</div>}</div>}
+      <div className="card">
+        <div className="card-title">💧 HIDRATAÇÃO</div>
+        <div className="prog-wrap"><div className="prog-hdr"><span>Água</span><span className="blue">{agua}ml / {metaAgua}ml</span></div><div className="prog-track"><div className="prog-fill blue" style={{width:`${Math.min((agua/metaAgua)*100,100)}%`}}/></div></div>
+      </div>
+      {planoAlim&&<div className="card"><div className="card-title">🥗 ALIMENTAÇÃO</div><PeriodoBadge plano={planoAlim}/><div style={{fontSize:"0.9rem",color:"var(--text2)",marginTop:"0.5rem"}}>Refeições feitas hoje: <span style={{color:"var(--green)",fontWeight:600}}>{qtdComido}/{refeicoes.length}</span></div>{refeicoes.map((r,i)=><div key={i} className="meal-item" style={{background:alimCheck[i]?"var(--green-dim)":"var(--card2)",border:alimCheck[i]?"1px solid rgba(46,204,113,0.3)":"none"}}><div style={{color:"var(--text3)",fontFamily:"var(--font-mono)",fontSize:"0.75rem",minWidth:"45px"}}>{r.h}</div><div style={{flex:1,fontWeight:600,fontSize:"0.88rem"}}>{r.r}</div>{alimCheck[i]?<span className="tag tag-green">✓ Comeu</span>:<span style={{fontSize:"0.75rem",color:"var(--text3)"}}>Não marcado</span>}</div>)}</div>}
+      {Object.keys(aval).length>0&&<div className="card"><div className="card-title">📊 AVALIAÇÃO FÍSICA</div><div className="grid-2">{[["peso","Peso","kg"],["gordura","% Gordura","%"],["cintura","Cintura","cm"],["quadril","Quadril","cm"]].map(([k,l,u])=>aval[k]?<div key={k} className="diario-section"><div className="diario-label">{l}</div><div className="diario-val">{aval[k]}{u}</div></div>:null)}</div></div>}
+      {comps.length>0&&<div className="card"><div className="card-title">🏆 COMPETIÇÕES</div>{comps.map((c,i)=>{const d=new Date(c.data);return(<div key={i} className="comp-card" style={{background:"var(--bg2)"}}><div className="comp-date"><div className="comp-date-day">{d.getDate()}</div><div className="comp-date-month">{d.toLocaleDateString("pt-BR",{month:"short"})}</div></div><div style={{flex:1}}><div style={{fontWeight:600}}>{c.nome}</div><div style={{fontSize:"0.8rem",color:"var(--text2)"}}>{c.modalidade}</div></div><span className="tag tag-orange">{c.objetivo}</span></div>);})}</div>}
+    </div>
+  );
+}
+
 function TreinadorDash({user}){
   const alunos=DB.getAlunosDe(user.id);
   const [alunoVer,setAlunoVer]=useState(null);
@@ -998,65 +1122,33 @@ function TreinadorDash({user}){
     <div className="page">
       <div className="page-title orange">{getGreeting()}, {firstName(user.nome)} 👋</div>
       <div className="page-sub">{getDateStr()}</div>
-      <div className="card" style={{marginBottom:"1.5rem",padding:"1rem 1.5rem"}}>
-        <CodigoProfissional user={user}/>
-      </div>
+      <div className="card" style={{padding:"1rem 1.5rem"}}><CodigoProfissional user={user}/></div>
       <div className="grid-4">
-        <div className="stat-tile"><div className="stat-label">Meus alunos</div><div className="stat-value orange">{alunos.length}</div></div>
-        <div className="stat-tile"><div className="stat-label">Alertas saúde</div><div className="stat-value red">{comAlerta.length}</div></div>
-        <div className="stat-tile"><div className="stat-label">Perfil</div><div style={{marginTop:"0.5rem",color:"var(--orange)",fontWeight:600,fontSize:"0.9rem"}}>Treinador</div></div>
+        <div className="stat-tile"><div className="stat-label">Alunos</div><div className="stat-value orange">{alunos.length}</div></div>
+        <div className="stat-tile"><div className="stat-label">Alertas</div><div className="stat-value red">{comAlerta.length}</div></div>
         <div className="stat-tile"><div className="stat-label">Código</div><div style={{marginTop:"0.35rem",fontFamily:"var(--font-mono)",fontSize:"1.1rem",color:"var(--green)",letterSpacing:"0.1em"}}>{gerarCodigo(user.id)}</div></div>
+        <div className="stat-tile"><div className="stat-label">Planos ativos</div><div className="stat-value green">{alunos.filter(a=>DB.getData("plano_treino_aluno",a.id)).length}</div></div>
       </div>
-      {comAlerta.length>0&&<div className="alert alert-danger">🔴 Alertas: {comAlerta.map(a=>a.nome.split(" ")[0]).join(", ")} — verificar saúde desta semana!</div>}
+      {comAlerta.length>0&&<div className="alert alert-danger">🔴 {comAlerta.map(a=>a.nome.split(" ")[0]).join(", ")} — verificar saúde!</div>}
       {alunos.length===0?(
-        <div className="card">
-          <div className="card-title">👥 MEUS ALUNOS</div>
-          <div style={{color:"var(--text2)",fontSize:"0.9rem",lineHeight:1.7}}>Nenhum aluno vinculado ainda.<br/>Compartilhe seu código <b style={{color:"var(--green)",fontFamily:"var(--font-mono)"}}>{gerarCodigo(user.id)}</b> para seus alunos se conectarem em "Minha Equipe".</div>
-        </div>
+        <div className="card"><div className="card-title">👥 MEUS ALUNOS</div><div style={{color:"var(--text2)",fontSize:"0.9rem",lineHeight:1.7}}>Compartilhe seu código <b style={{color:"var(--green)",fontFamily:"var(--font-mono)"}}>{gerarCodigo(user.id)}</b> para seus alunos se conectarem.</div></div>
       ):(
         <div className="card">
-          <div className="card-title">👥 MEUS ALUNOS — clique para ver o diário</div>
+          <div className="card-title">👥 MEUS ALUNOS</div>
           {alunos.map(a=>{
             const s=DB.getData("saude",a.id)||{};
+            const plano=DB.getData("plano_treino_aluno",a.id);
             const temAlerta=s.doente||(s.dores&&s.dores.length>0);
             return(
               <div key={a.id} className="aluno-row" onClick={()=>setAlunoVer(a)}>
                 <div className="aluno-avatar">{initials(a.nome)}</div>
-                <div style={{flex:1}}><div style={{fontWeight:600,fontSize:"0.95rem"}}>{a.nome}</div><div style={{fontSize:"0.78rem",color:"var(--text2)"}}>{a.email}</div></div>
-                {temAlerta&&<span className="tag tag-red">⚠️ Alerta</span>}
-                <span style={{color:"var(--text3)",fontSize:"0.8rem"}}>Ver →</span>
+                <div style={{flex:1}}><div style={{fontWeight:600}}>{a.nome}</div><div style={{fontSize:"0.78rem",color:"var(--text2)"}}>{plano?`Plano: ${plano.nome} — até ${fmtDate(plano.fim)}`:"Sem plano ativo"}</div></div>
+                <div style={{display:"flex",gap:"0.4rem"}}>{temAlerta&&<span className="tag tag-red">⚠️</span>}{plano&&<span className="tag tag-green">✓ Plano</span>}</div>
               </div>
             );
           })}
         </div>
       )}
-    </div>
-  );
-}
-
-function TreinadorPrescrever({user}){
-  const alunos=DB.getAlunosDe(user.id);
-  const [ok,setOk]=useState(false);
-  const [nomeT,setNomeT]=useState("Peito + Tríceps");
-  function salvar(){DB.setData("treino_prescrito",user.id,{nome:nomeT,exercicios:TREINO_BASE,data:new Date().toISOString()});setOk(true);setTimeout(()=>setOk(false),3000);}
-  return(
-    <div className="page">
-      <div className="page-title orange">PRESCREVER TREINO</div>
-      <div className="page-sub">Monte planos para seus alunos</div>
-      {ok&&<div className="alert alert-success">✅ Treino salvo!</div>}
-      {alunos.length===0&&<div className="alert alert-warn">⚠️ Nenhum aluno vinculado. Compartilhe seu código: <b style={{fontFamily:"var(--font-mono)"}}>{gerarCodigo(user.id)}</b></div>}
-      <div className="card">
-        <div className="card-title">🏋️ MONTAR TREINO</div>
-        <div className="form-group"><label className="form-label">Nome do treino</label><input className="form-input" value={nomeT} onChange={e=>setNomeT(e.target.value)}/></div>
-        {TREINO_BASE.map((ex,i)=>(
-          <div key={i} style={{display:"flex",justifyContent:"space-between",padding:"0.65rem",background:"var(--card2)",borderRadius:"var(--radius)",marginBottom:"0.5rem",fontSize:"0.85rem"}}>
-            <span style={{fontWeight:600}}>{ex.nome}</span>
-            <span style={{color:"var(--text2)"}}>{ex.series}x {ex.reps} • {ex.carga}</span>
-          </div>
-        ))}
-        <button className="btn btn-ghost" style={{marginTop:"0.5rem"}}>+ Adicionar exercício</button>
-      </div>
-      <button className="btn btn-orange btn-full" onClick={salvar}>💾 Salvar treino</button>
     </div>
   );
 }
@@ -1069,28 +1161,23 @@ function TreinadorAcompanhamento({user}){
     <div className="page">
       <div className="page-title orange">ACOMPANHAMENTO</div>
       <div className="page-sub">Saúde e treinos dos alunos</div>
-      {alunos.length===0?(
-        <div className="card"><div style={{color:"var(--text2)",fontSize:"0.9rem"}}>Nenhum aluno vinculado ainda. Seu código: <b style={{fontFamily:"var(--font-mono)",color:"var(--green)"}}>{gerarCodigo(user.id)}</b></div></div>
-      ):alunos.map(a=>{
+      {alunos.length===0?<div className="card"><div style={{color:"var(--text2)"}}>Nenhum aluno vinculado. Código: <b style={{fontFamily:"var(--font-mono)",color:"var(--green)"}}>{gerarCodigo(user.id)}</b></div></div>:alunos.map(a=>{
         const s=DB.getData("saude",a.id)||{};
-        const t=DB.getData("treino_hoje",a.id)||{};
+        const av=DB.getData("treino_avaliacao",a.id)||{};
         const agua=DB.getData("agua_hoje",a.id)||0;
         const meta=DB.getData("meta_agua",a.id)||3000;
         const diasDoente=s.doente_desde?diffDays(s.doente_desde):0;
         return(
           <div key={a.id} className="card" style={{cursor:"pointer"}} onClick={()=>setAlunoVer(a)}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"1rem"}}>
-              <div><div className="card-title" style={{marginBottom:"0.1rem"}}>{a.nome}</div></div>
-              <div style={{display:"flex",gap:"0.5rem",flexWrap:"wrap"}}>
-                {s.doente&&<span className="tag tag-red">🤒 {diasDoente}d doente</span>}
+              <div className="card-title" style={{marginBottom:0}}>{a.nome}</div>
+              <div style={{display:"flex",gap:"0.4rem",flexWrap:"wrap"}}>
+                {s.doente&&<span className="tag tag-red">🤒 {diasDoente}d</span>}
                 {s.dores&&s.dores.length>0&&<span className="tag tag-orange">🔴 {s.dores.length} dor{s.dores.length>1?"es":""}</span>}
               </div>
             </div>
-            <div className="prog-wrap">
-              <div className="prog-hdr"><span style={{fontSize:"0.8rem"}}>Hidratação</span><span className="blue" style={{fontSize:"0.8rem"}}>{Math.round((agua/meta)*100)}%</span></div>
-              <div className="prog-track"><div className="prog-fill blue" style={{width:`${Math.min((agua/meta)*100,100)}%`}}/></div>
-            </div>
-            {t.rating>0&&<div style={{fontSize:"0.85rem",color:"var(--text2)"}}>Último treino: {"★".repeat(t.rating)}{"☆".repeat(5-t.rating)}</div>}
+            <div className="prog-wrap"><div className="prog-hdr"><span style={{fontSize:"0.8rem"}}>Hidratação</span><span className="blue" style={{fontSize:"0.8rem"}}>{Math.round((agua/meta)*100)}%</span></div><div className="prog-track"><div className="prog-fill blue" style={{width:`${Math.min((agua/meta)*100,100)}%`}}/></div></div>
+            {av.rating>0&&<div style={{fontSize:"0.85rem",color:"var(--text2)"}}>Último treino: {"★".repeat(av.rating)}{"☆".repeat(5-av.rating)}{av.feedback&&` — "${av.feedback}"`}</div>}
             <div style={{fontSize:"0.8rem",color:"var(--green)",marginTop:"0.5rem"}}>Ver diário completo →</div>
           </div>
         );
@@ -1100,7 +1187,111 @@ function TreinadorAcompanhamento({user}){
 }
 
 // ============================================================
-// NUTRI PAGES
+// NUTRICIONISTA — PRESCREVER PLANO ALIMENTAR
+// ============================================================
+function NutriPrescrever({user}){
+  const alunos=DB.getAlunosDe(user.id);
+  const [alunoSel,setAlunoSel]=useState(null);
+  const [nomePlano,setNomePlano]=useState("Plano Alimentar");
+  const [protocolo,setProtocolo]=useState("normal");
+  const [duracao,setDuracao]=useState(1);
+  const [inicio,setInicio]=useState(()=>new Date().toISOString().split("T")[0]);
+  const [refeicoes,setRefeicoes]=useState([
+    {h:"07:00",r:"Café da manhã",i:"3 ovos + pão integral + banana + café",k:480},
+    {h:"10:00",r:"Lanche manhã",i:"Iogurte grego + castanhas",k:280},
+    {h:"12:30",r:"Almoço",i:"Frango grelhado + arroz integral + salada",k:580},
+    {h:"16:00",r:"Pré-treino",i:"Batata doce + whey",k:320},
+    {h:"19:00",r:"Pós-treino",i:"Tilápia + arroz + brócolis",k:450},
+    {h:"21:30",r:"Ceia",i:"Cottage + pasta de amendoim",k:220},
+  ]);
+  const [ok,setOk]=useState(false);
+  const fases={normal:2330,carga:3100,cutting:1800,peak:2000};
+  const totalKcal=refeicoes.reduce((s,r)=>s+Number(r.k),0);
+
+  function updateRef(i,campo,val){setRefeicoes(p=>{const n=[...p];n[i]={...n[i],[campo]:campo==="k"?Number(val):val};return n;});}
+  function removeRef(i){setRefeicoes(p=>p.filter((_,j)=>j!==i));}
+  function addRef(){setRefeicoes(p=>[...p,{h:"",r:"Nova refeição",i:"",k:0}]);}
+
+  function salvar(){
+    if(!alunoSel)return;
+    const fimDate=addMonths(new Date(inicio),duracao);
+    const plano={nome:nomePlano,protocolo,duracao,inicio,fim:fimDate.toISOString(),refeicoes,kcalMeta:fases[protocolo],criadoEm:new Date().toISOString()};
+    DB.setData("plano_alim_aluno",alunoSel.id,plano);
+    setOk(true);setTimeout(()=>setOk(false),3000);
+  }
+
+  return(
+    <div className="page">
+      <div className="page-title blue">PLANO ALIMENTAR</div>
+      <div className="page-sub">Monte e atribua planos alimentares com período de validade</div>
+      {ok&&<div className="alert alert-success">✅ Plano enviado para {alunoSel?.nome}!</div>}
+      {alunos.length===0&&<div className="alert alert-warn">⚠️ Sem pacientes vinculados. Código: <b style={{fontFamily:"var(--font-mono)"}}>{gerarCodigo(user.id)}</b></div>}
+
+      {/* SELECIONAR PACIENTE */}
+      <div className="card">
+        <div className="card-title">👤 SELECIONAR PACIENTE</div>
+        <AlunoSelector alunos={alunos} selecionado={alunoSel} onSelect={setAlunoSel} accentClass="sel-blue"/>
+        {!alunoSel&&alunos.length>0&&<div style={{color:"var(--text3)",fontSize:"0.85rem"}}>Selecione um paciente para montar o plano.</div>}
+      </div>
+
+      {alunoSel&&(
+        <>
+          {/* CONFIG */}
+          <div className="card">
+            <div className="card-title">⚙️ CONFIGURAÇÕES</div>
+            <div className="grid-2">
+              <div className="form-group"><label className="form-label">Nome do plano</label><input className="form-input" value={nomePlano} onChange={e=>setNomePlano(e.target.value)} placeholder="Ex: Dieta Hipertrofia"/></div>
+              <div className="form-group"><label className="form-label">Duração</label>
+                <select className="form-select" value={duracao} onChange={e=>setDuracao(Number(e.target.value))}>
+                  <option value={1}>1 mês</option><option value={2}>2 meses</option><option value={3}>3 meses</option>
+                </select>
+              </div>
+              <div className="form-group"><label className="form-label">Data de início</label><input className="form-input" type="date" value={inicio} onChange={e=>setInicio(e.target.value)}/></div>
+              <div className="form-group"><label className="form-label">Protocolo</label>
+                <select className="form-select" value={protocolo} onChange={e=>setProtocolo(e.target.value)}>
+                  <option value="normal">Normal / Manutenção</option>
+                  <option value="carga">Semana de Carga (Ironman/Maratona)</option>
+                  <option value="cutting">Cutting / Seca (Pesagem)</option>
+                  <option value="peak">Peak Week (Palco)</option>
+                </select>
+              </div>
+            </div>
+            <div className="periodo-card">
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:"0.5rem"}}>
+                <div><div style={{fontWeight:600}}>{fmtDate(inicio)} → {fmtDate(addMonths(new Date(inicio),duracao))}</div><div style={{fontSize:"0.8rem",color:"var(--text2)",marginTop:"0.15rem"}}>{duracao} {duracao===1?"mês":"meses"} para {alunoSel.nome.split(" ")[0]}</div></div>
+                <div style={{textAlign:"right"}}><div style={{fontFamily:"var(--font-display)",fontSize:"1.8rem",color:"var(--blue)"}}>{totalKcal}<span style={{fontSize:"0.9rem",color:"var(--text2)"}}> kcal/dia</span></div><div style={{fontSize:"0.75rem",color:"var(--text3)"}}>Meta protocolo: {fases[protocolo]}kcal</div></div>
+              </div>
+            </div>
+          </div>
+
+          {/* REFEIÇÕES */}
+          <div className="card">
+            <div className="card-title">🥗 REFEIÇÕES DO PLANO</div>
+            {refeicoes.map((r,i)=>(
+              <div key={i} style={{background:"var(--card2)",borderRadius:"var(--radius)",padding:"0.85rem",marginBottom:"0.75rem",border:"1px solid var(--border)"}}>
+                <div className="grid-2" style={{marginBottom:"0.5rem"}}>
+                  <div className="form-group" style={{marginBottom:0}}><label className="form-label">Horário</label><input className="form-input" type="time" value={r.h} onChange={e=>updateRef(i,"h",e.target.value)}/></div>
+                  <div className="form-group" style={{marginBottom:0}}><label className="form-label">Nome</label><input className="form-input" value={r.r} onChange={e=>updateRef(i,"r",e.target.value)}/></div>
+                </div>
+                <div className="form-group" style={{marginBottom:"0.5rem"}}><label className="form-label">Itens</label><textarea className="form-textarea" style={{minHeight:"60px"}} value={r.i} onChange={e=>updateRef(i,"i",e.target.value)}/></div>
+                <div style={{display:"flex",gap:"0.75rem",alignItems:"center"}}>
+                  <div style={{flex:1}}><label className="form-label">Kcal</label><input className="form-input" type="number" value={r.k} onChange={e=>updateRef(i,"k",e.target.value)}/></div>
+                  <button className="btn btn-ghost btn-sm" style={{color:"var(--red)",alignSelf:"flex-end"}} onClick={()=>removeRef(i)}>✕ Remover</button>
+                </div>
+              </div>
+            ))}
+            <button className="btn btn-ghost" onClick={addRef}>+ Adicionar refeição</button>
+          </div>
+
+          <button className="btn btn-blue btn-full" onClick={salvar}>📤 Enviar plano para {alunoSel.nome.split(" ")[0]}</button>
+        </>
+      )}
+    </div>
+  );
+}
+
+// ============================================================
+// NUTRI — DASHBOARD + ACOMPANHAMENTO
 // ============================================================
 function NutriDash({user}){
   const pacientes=DB.getAlunosDe(user.id);
@@ -1110,87 +1301,38 @@ function NutriDash({user}){
     <div className="page">
       <div className="page-title blue">{getGreeting()}, {firstName(user.nome)} 👋</div>
       <div className="page-sub">{getDateStr()}</div>
-      <div className="card" style={{marginBottom:"1.5rem",padding:"1rem 1.5rem"}}>
-        <CodigoProfissional user={user}/>
-      </div>
+      <div className="card" style={{padding:"1rem 1.5rem"}}><CodigoProfissional user={user}/></div>
       <div className="grid-4">
-        <div className="stat-tile"><div className="stat-label">Meus pacientes</div><div className="stat-value blue">{pacientes.length}</div></div>
-        <div className="stat-tile"><div className="stat-label">Planos ativos</div><div className="stat-value green">{pacientes.length}</div></div>
-        <div className="stat-tile"><div className="stat-label">Perfil</div><div style={{marginTop:"0.5rem",color:"var(--blue)",fontWeight:600,fontSize:"0.9rem"}}>Nutricionista</div></div>
+        <div className="stat-tile"><div className="stat-label">Pacientes</div><div className="stat-value blue">{pacientes.length}</div></div>
+        <div className="stat-tile"><div className="stat-label">Planos ativos</div><div className="stat-value green">{pacientes.filter(p=>DB.getData("plano_alim_aluno",p.id)).length}</div></div>
         <div className="stat-tile"><div className="stat-label">Código</div><div style={{marginTop:"0.35rem",fontFamily:"var(--font-mono)",fontSize:"1.1rem",color:"var(--green)",letterSpacing:"0.1em"}}>{gerarCodigo(user.id)}</div></div>
+        <div className="stat-tile"><div className="stat-label">Alertas</div><div className="stat-value orange">{pacientes.filter(p=>{const s=DB.getData("saude",p.id)||{};return s.doente||s.mens;}).length}</div></div>
       </div>
       {pacientes.length===0?(
-        <div className="card">
-          <div className="card-title">👥 MEUS PACIENTES</div>
-          <div style={{color:"var(--text2)",fontSize:"0.9rem",lineHeight:1.7}}>Nenhum paciente vinculado ainda.<br/>Compartilhe seu código <b style={{color:"var(--green)",fontFamily:"var(--font-mono)"}}>{gerarCodigo(user.id)}</b> para seus pacientes se conectarem.</div>
-        </div>
+        <div className="card"><div className="card-title">👥 MEUS PACIENTES</div><div style={{color:"var(--text2)",lineHeight:1.7}}>Compartilhe o código <b style={{color:"var(--green)",fontFamily:"var(--font-mono)"}}>{gerarCodigo(user.id)}</b> para seus pacientes se conectarem.</div></div>
       ):(
         <div className="card">
-          <div className="card-title">👥 MEUS PACIENTES — clique para ver o diário</div>
+          <div className="card-title">👥 MEUS PACIENTES</div>
           {pacientes.map(p=>{
             const s=DB.getData("saude",p.id)||{};
-            const agua=DB.getData("agua_hoje",p.id)||0;
-            const meta=DB.getData("meta_agua",p.id)||3000;
-            const diasDoente=s.doente_desde?diffDays(s.doente_desde):0;
+            const plano=DB.getData("plano_alim_aluno",p.id);
+            const alimCheck=DB.getData("alim_check_hoje",p.id)||{};
+            const qtdComido=Object.values(alimCheck).filter(Boolean).length;
+            const totalRef=plano?.refeicoes?.length||0;
             return(
               <div key={p.id} className="aluno-row" onClick={()=>setPacVer(p)}>
                 <div className="aluno-avatar" style={{background:"rgba(52,152,219,0.15)",color:"var(--blue)"}}>{initials(p.nome)}</div>
-                <div style={{flex:1}}>
-                  <div style={{fontWeight:600}}>{p.nome}</div>
-                  <div style={{fontSize:"0.78rem",color:"var(--text2)"}}>Hidratação: {Math.round((agua/meta)*100)}%{s.mens?" • 🔴 Ciclo":""}</div>
+                <div style={{flex:1}}><div style={{fontWeight:600}}>{p.nome}</div><div style={{fontSize:"0.78rem",color:"var(--text2)"}}>{plano?`Plano: ${plano.nome} — até ${fmtDate(plano.fim)}`:"Sem plano ativo"}{totalRef>0?` • ${qtdComido}/${totalRef} refeições`:""}</div></div>
+                <div style={{display:"flex",gap:"0.4rem"}}>
+                  {s.doente&&<span className="tag tag-red">🤒</span>}
+                  {s.mens&&<span className="tag tag-orange">🔴</span>}
+                  {plano&&<span className="tag tag-blue">✓</span>}
                 </div>
-                <div style={{display:"flex",gap:"0.4rem",flexWrap:"wrap"}}>
-                  {s.doente&&<span className="tag tag-red">🤒 {diasDoente}d</span>}
-                  {s.dores&&s.dores.length>0&&<span className="tag tag-orange">🔴 Dor</span>}
-                </div>
-                <span style={{color:"var(--text3)",fontSize:"0.8rem"}}>Ver →</span>
               </div>
             );
           })}
         </div>
       )}
-    </div>
-  );
-}
-
-function NutriPlano({user}){
-  const pacientes=DB.getAlunosDe(user.id);
-  const [fase,setFase]=useState("normal");
-  const [ok,setOk]=useState(false);
-  const fases={normal:2330,carga:3100,cutting:1800,peak:2000};
-  function salvar(){DB.setData("plano_nutri",user.id,{fase,kcal:fases[fase]});setOk(true);setTimeout(()=>setOk(false),3000);}
-  return(
-    <div className="page">
-      <div className="page-title blue">PLANO ALIMENTAR</div>
-      <div className="page-sub">Configure o protocolo nutricional</div>
-      {ok&&<div className="alert alert-success">✅ Plano salvo!</div>}
-      {pacientes.length===0&&<div className="alert alert-warn">⚠️ Sem pacientes vinculados. Código: <b style={{fontFamily:"var(--font-mono)"}}>{gerarCodigo(user.id)}</b></div>}
-      <div className="card">
-        <div className="card-title">🎯 PROTOCOLO / FASE</div>
-        <div className="toggle-wrap">
-          {[["normal","Normal"],["carga","Semana de Carga"],["cutting","Cutting"],["peak","Peak Week"]].map(([v,l])=>(
-            <button key={v} className={`toggle-btn ${fase===v?"active-blue":""}`} onClick={()=>setFase(v)}>{l}</button>
-          ))}
-        </div>
-        <div style={{background:"rgba(52,152,219,0.1)",border:"1px solid rgba(52,152,219,0.3)",color:"var(--blue)",padding:"0.85rem 1rem",borderRadius:"var(--radius)",fontSize:"0.85rem",marginBottom:"1rem"}}>
-          {fase==="normal"&&"📋 Dieta padrão — manutenção com déficit leve"}
-          {fase==="carga"&&"⚡ Alto carboidrato para prova longa (Ironman, maratona)"}
-          {fase==="cutting"&&"⚖️ Déficit calórico controlado para pesagem"}
-          {fase==="peak"&&"🏆 Ajuste fino para subir no palco"}
-        </div>
-        <div className="stat-tile"><div className="stat-label">Meta calórica</div><div className="stat-value blue">{fases[fase].toLocaleString()}<span className="stat-unit">kcal/dia</span></div></div>
-      </div>
-      <div className="card">
-        <div className="card-title">🥗 REFEIÇÕES PRESCRITAS</div>
-        {NUTRI_PLANO.map((r,i)=>(
-          <div key={i} style={{display:"flex",gap:"0.75rem",padding:"0.75rem 0",borderBottom:i<NUTRI_PLANO.length-1?"1px solid var(--border)":"none"}}>
-            <div style={{fontFamily:"var(--font-mono)",fontSize:"0.75rem",color:"var(--text3)",flexShrink:0,paddingTop:"0.15rem",minWidth:"45px"}}>{r.h}</div>
-            <div style={{flex:1}}><div style={{fontWeight:600,fontSize:"0.9rem"}}>{r.r}</div><div style={{fontSize:"0.78rem",color:"var(--text2)"}}>{r.i}</div></div>
-            <div style={{color:"var(--green)",fontSize:"0.85rem",fontWeight:600,flexShrink:0}}>{r.k}kcal</div>
-          </div>
-        ))}
-      </div>
-      <button className="btn btn-blue btn-full" onClick={salvar}>💾 Salvar plano</button>
     </div>
   );
 }
@@ -1202,32 +1344,29 @@ function NutriAcompanhamento({user}){
   return(
     <div className="page">
       <div className="page-title blue">ACOMPANHAMENTO</div>
-      <div className="page-sub">Saúde e alimentação dos pacientes</div>
-      {pacientes.length===0?(
-        <div className="card"><div style={{color:"var(--text2)",fontSize:"0.9rem"}}>Sem pacientes vinculados. Código: <b style={{fontFamily:"var(--font-mono)",color:"var(--green)"}}>{gerarCodigo(user.id)}</b></div></div>
-      ):pacientes.map(p=>{
+      <div className="page-sub">Alimentação e saúde dos pacientes</div>
+      {pacientes.length===0?<div className="card"><div style={{color:"var(--text2)"}}>Sem pacientes. Código: <b style={{fontFamily:"var(--font-mono)",color:"var(--green)"}}>{gerarCodigo(user.id)}</b></div></div>:pacientes.map(p=>{
         const s=DB.getData("saude",p.id)||{};
-        const alim=DB.getData("alimentacao",p.id)||[];
+        const alimCheck=DB.getData("alim_check_hoje",p.id)||{};
+        const plano=DB.getData("plano_alim_aluno",p.id);
+        const totalRef=plano?.refeicoes?.length||0;
+        const qtdComido=Object.values(alimCheck).filter(Boolean).length;
         const agua=DB.getData("agua_hoje",p.id)||0;
         const meta=DB.getData("meta_agua",p.id)||3000;
-        const totalKcal=alim.reduce((acc,r)=>acc+r.kcal,0);
         const diasDoente=s.doente_desde?diffDays(s.doente_desde):0;
         return(
           <div key={p.id} className="card" style={{cursor:"pointer"}} onClick={()=>setPacVer(p)}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"1rem"}}>
-              <div><div className="card-title" style={{marginBottom:"0.1rem"}}>{p.nome}</div></div>
-              <div style={{display:"flex",gap:"0.5rem",flexWrap:"wrap"}}>
+              <div className="card-title" style={{marginBottom:0}}>{p.nome}</div>
+              <div style={{display:"flex",gap:"0.4rem",flexWrap:"wrap"}}>
                 {s.mens&&<span className="tag tag-orange">🔴 Ciclo</span>}
-                {s.doente&&<span className="tag tag-red">🤒 {diasDoente}d doente</span>}
-                {s.meds&&<span className="tag tag-blue">💊 Meds</span>}
-                {s.dores&&s.dores.length>0&&<span className="tag tag-orange">🔴 Dor muscular</span>}
+                {s.doente&&<span className="tag tag-red">🤒 {diasDoente}d</span>}
+                {s.meds&&<span className="tag tag-blue">💊</span>}
+                {s.dores&&s.dores.length>0&&<span className="tag tag-orange">🔴 Dor</span>}
               </div>
             </div>
-            <div className="prog-wrap">
-              <div className="prog-hdr"><span style={{fontSize:"0.8rem"}}>Hidratação</span><span className="blue" style={{fontSize:"0.8rem"}}>{agua}ml / {meta}ml</span></div>
-              <div className="prog-track"><div className="prog-fill blue" style={{width:`${Math.min((agua/meta)*100,100)}%`}}/></div>
-            </div>
-            <div style={{fontSize:"0.85rem",color:"var(--text2)"}}>Kcal hoje: <span style={{color:"var(--green)",fontWeight:600}}>{totalKcal}kcal</span> • {alim.length} refeições</div>
+            {totalRef>0&&<div className="prog-wrap"><div className="prog-hdr"><span style={{fontSize:"0.8rem"}}>Refeições hoje</span><span className="green" style={{fontSize:"0.8rem"}}>{qtdComido}/{totalRef}</span></div><div className="prog-track"><div className="prog-fill green" style={{width:`${totalRef>0?(qtdComido/totalRef)*100:0}%`}}/></div></div>}
+            <div className="prog-wrap"><div className="prog-hdr"><span style={{fontSize:"0.8rem"}}>Hidratação</span><span className="blue" style={{fontSize:"0.8rem"}}>{agua}ml / {meta}ml</span></div><div className="prog-track"><div className="prog-fill blue" style={{width:`${Math.min((agua/meta)*100,100)}%`}}/></div></div>
             <div style={{fontSize:"0.8rem",color:"var(--blue)",marginTop:"0.5rem"}}>Ver diário completo →</div>
           </div>
         );
@@ -1237,11 +1376,11 @@ function NutriAcompanhamento({user}){
 }
 
 // ============================================================
-// NAV CONFIGS
+// NAV
 // ============================================================
 const NAV_ALUNO=[
   {section:"VISÃO GERAL",items:[{id:"dashboard",icon:"🏠",label:"Dashboard"}]},
-  {section:"DIÁRIO",items:[{id:"treinos",icon:"🏋️",label:"Treinos"},{id:"alimentacao",icon:"🥗",label:"Alimentação"},{id:"hidratacao",icon:"💧",label:"Hidratação"},{id:"saude",icon:"❤️",label:"Saúde"}]},
+  {section:"DIÁRIO",items:[{id:"treinos",icon:"🏋️",label:"Treinos da Semana"},{id:"alimentacao",icon:"🥗",label:"Alimentação"},{id:"hidratacao",icon:"💧",label:"Hidratação"},{id:"saude",icon:"❤️",label:"Saúde"}]},
   {section:"PROGRESSO",items:[{id:"avaliacao",icon:"📊",label:"Avaliação Física"},{id:"competicoes",icon:"🏆",label:"Competições"}]},
   {section:"EQUIPE",items:[{id:"vinculo",icon:"🔗",label:"Minha Equipe"}]},
 ];
@@ -1251,7 +1390,7 @@ const NAV_TREINADOR=[
 ];
 const NAV_NUTRI=[
   {section:"VISÃO GERAL",items:[{id:"dashboard",icon:"🏠",label:"Dashboard"}]},
-  {section:"PACIENTES",items:[{id:"acompanhamento",icon:"👁️",label:"Acompanhamento"},{id:"plano",icon:"🥗",label:"Plano Alimentar"}]},
+  {section:"PACIENTES",items:[{id:"acompanhamento",icon:"👁️",label:"Acompanhamento"},{id:"prescrever",icon:"🥗",label:"Plano Alimentar"}]},
 ];
 
 // ============================================================
@@ -1259,12 +1398,7 @@ const NAV_NUTRI=[
 // ============================================================
 function AlunoApp({user,onLogout}){
   const [page,setPage]=useState("dashboard");
-  const pages={
-    dashboard:<AlunoDash user={user}/>,saude:<AlunoSaude user={user}/>,
-    treinos:<AlunoTreinos user={user}/>,alimentacao:<AlunoAlimentacao user={user}/>,
-    hidratacao:<AlunoHidratacao user={user}/>,competicoes:<AlunoCompeticoes user={user}/>,
-    avaliacao:<AlunoAvaliacao user={user}/>,vinculo:<AlunoVinculo user={user}/>,
-  };
+  const pages={dashboard:<AlunoDash user={user}/>,saude:<AlunoSaude user={user}/>,treinos:<AlunoTreinos user={user}/>,alimentacao:<AlunoAlimentacao user={user}/>,hidratacao:<AlunoHidratacao user={user}/>,competicoes:<AlunoCompeticoes user={user}/>,avaliacao:<AlunoAvaliacao user={user}/>,vinculo:<AlunoVinculo user={user}/>};
   return<Shell user={user} onLogout={onLogout} nav={NAV_ALUNO} active={page} setActive={setPage} accent="">{pages[page]}</Shell>;
 }
 function TreinadorApp({user,onLogout}){
@@ -1274,7 +1408,7 @@ function TreinadorApp({user,onLogout}){
 }
 function NutriApp({user,onLogout}){
   const [page,setPage]=useState("dashboard");
-  const pages={dashboard:<NutriDash user={user}/>,plano:<NutriPlano user={user}/>,acompanhamento:<NutriAcompanhamento user={user}/>};
+  const pages={dashboard:<NutriDash user={user}/>,prescrever:<NutriPrescrever user={user}/>,acompanhamento:<NutriAcompanhamento user={user}/>};
   return<Shell user={user} onLogout={onLogout} nav={NAV_NUTRI} active={page} setActive={setPage} accent="blue">{pages[page]}</Shell>;
 }
 
