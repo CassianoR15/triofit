@@ -1056,14 +1056,14 @@ function AlunoCompeticoes({user,showToast}){
   useEffect(()=>{DB.getData("competicoes",user.id).then(d=>d&&setComps(d));},[user.id]);
   const [f,setF]=useState({nome:"",modalidade:"Corrida",data:"",local:"",objetivo:"Completar"});
   function set(k,v){setF(p=>({...p,[k]:v}));}
-  function add(){
+  async function add(){
     if(!f.nome||!f.data){return;}
     const novo=[...comps,{...f,id:Date.now()}];
     setComps(novo);await DB.setData("competicoes",user.id,novo);
     setF({nome:"",modalidade:"Corrida",data:"",local:"",objetivo:"Completar"});
     showToast&&showToast("Competição cadastrada! 🏆");
   }
-  function remover(id){const n=comps.filter(c=>c.id!==id);setComps(n);DB.setData("competicoes",user.id,n);}
+  async function remover(id){const n=comps.filter(c=>c.id!==id);setComps(n);await DB.setData("competicoes",user.id,n);}
   return(
     <div className="page">
       <div className="page-header">
