@@ -430,7 +430,7 @@ function AuthScreen({onLogin}){
             <div className="form-group"><label className="form-label">Email</label><input className="form-input" type="email" placeholder="seu@email.com" value={email} onChange={e=>setEmail(e.target.value)} required/></div>
             <div className="form-group"><label className="form-label">Senha</label><input className="form-input" type="password" placeholder="Mínimo 6 caracteres" value={senha} onChange={e=>setSenha(e.target.value)} required/></div>
             <div className="form-group"><label className="form-label">Confirmar senha</label><input className="form-input" type="password" placeholder="Repita a senha" value={confirma} onChange={e=>setConfirma(e.target.value)} required/></div>
-            <button className="btn btn-primary btn-full" type="submit" disabled={loading}>{loading?<><span className="spinner"/> Criando...</>:"Criar conta grátis"}}</button>
+            <button className="btn btn-primary btn-full" type="submit" disabled={loading}>{loading?<><span className="spinner"/> Criando...</>:"Criar conta grátis"}</button>
           </form>
         )}
         <div className="auth-switch">{tab==="login"?<>Não tem conta? <span onClick={()=>{setTab("register");setError("");}}>Cadastre-se grátis</span></>:<>Já tem conta? <span onClick={()=>{setTab("login");setError("");}}>Entrar</span></>}</div>
@@ -658,7 +658,6 @@ function AlunoVinculo({user,showToast}){
     <div className="page">
       <div className="page-title green">MINHA EQUIPE</div>
       <div className="page-sub">Use o código de 6 letras do seu profissional para se conectar</div>
-      {ok&&<div className="alert alert-success">✅ {ok}</div>}
       <div className="alert alert-info">🔐 Peça o código para seu treinador e nutricionista. Só quem tem o código pode se vincular — suas informações ficam protegidas.</div>
       <div className="card"><div className="card-title">🏋️ TREINADOR</div><VinculoPorCodigo label="Treinador" tipo="treinador" atual={treinador} onVincular={vincT}/>{treinador&&<button className="btn btn-ghost btn-sm" style={{marginTop:"0.5rem",color:"var(--red)"}} onClick={desT}>Desvincular</button>}</div>
       <div className="card"><div className="card-title">🥗 NUTRICIONISTA</div><VinculoPorCodigo label="Nutricionista" tipo="nutri" atual={nutri} onVincular={vincN}/>{nutri&&<button className="btn btn-ghost btn-sm" style={{marginTop:"0.5rem",color:"var(--red)"}} onClick={desN}>Desvincular</button>}</div>
@@ -691,7 +690,9 @@ function AlunoTreinos({user,showToast}){
   }
 
   function salvarAvaliacao(){
+    if(!rating){showToast&&showToast("Selecione uma nota de 1-5 estrelas","warn");return;}
     DB.setData("treino_avaliacao",user.id,{rating,feedback,data:new Date().toISOString()});
+    showToast&&showToast("Avaliação salva! Treinador notificado ✅");
   }
 
   if(!planoTreino||!planoTreino.dias){
@@ -715,7 +716,6 @@ function AlunoTreinos({user,showToast}){
     <div className="page">
       <div className="page-title green">TREINOS</div>
       <div className="page-sub">Semana completa — clique no dia para ver os exercícios</div>
-      {ok&&<div className="alert alert-success">✅ Avaliação salva!</div>}
 
       <PeriodoBadge plano={planoTreino}/>
 
@@ -938,7 +938,6 @@ function AlunoSaude({user,showToast}){
   const [obs,setObs]=useState(s.obs||"");
   const [dores,setDores]=useState(s.dores||[]);
   const [musculoSel,setMusculoSel]=useState([]);
-  const [ok,setOk]=useState(false);
   function salvar(ov={}){DB.setData("saude",user.id,{doente,sintomas,doente_desde:doenteDe,mens,meds,obs,dores,...ov});showToast&&showToast("Saúde atualizada!");}
   function marcarDoente(){const agora=new Date().toISOString();setDoente(true);setDoenteDe(agora);salvar({doente:true,doente_desde:agora});}
   function marcarRecuperado(){setDoente(false);setDoenteDe(null);setSintomas("");salvar({doente:false,doente_desde:null,sintomas:""});showToast&&showToast("Ótimo! Recuperação registrada! 💪");}
@@ -948,7 +947,6 @@ function AlunoSaude({user,showToast}){
     <div className="page">
       <div className="page-title green">SAÚDE</div>
       <div className="page-sub">Treinador e nutricionista verão estas informações</div>
-      {ok&&<div className="alert alert-success">✅ Salvo!</div>}
       <div className="card">
         <div className="card-title">📊 STATUS ATUAL</div>
         <SaudeStatusCard status={{doente,doente_desde:doenteDe,sintomas,dores}} onRecuperado={marcarRecuperado} onDorRecuperado={removerDor} soLeitura={false}/>
@@ -1001,13 +999,22 @@ function AlunoAvaliacao({user,showToast}){
     }
     showToast&&showToast("Avaliação física salva! ✅");
   }
+  const imc=calcIMC(f.peso,f.altura);
   return(
     <div className="page">
       <div className="page-header">
         <div className="page-title green">AVALIAÇÃO FÍSICA</div>
         <div className="page-sub">Visível para treinador e nutricionista</div>
       </div>
-      {ok&&<div className="alert alert-success">✅ Avaliação salva!</div>}
+      {imc&&(
+        <div className="card">
+          <div className="card-title">📊 IMC Calculado</div>
+          <div className="grid-2" style={{marginBottom:0}}>
+            <div className="stat-tile"><div className="stat-label">IMC</div><div className="stat-value green">{imc.val}</div><div className="stat-sub">{imc.cat}</div></div>
+            <div className="stat-tile"><div className="stat-label">Peso / Altura</div><div style={{marginTop:"0.4rem",fontWeight:700}}>{f.peso||"—"}kg / {f.altura||"—"}cm</div></div>
+          </div>
+        </div>
+      )}
       <div className="card">
         <div className="card-title">📏 MEDIDAS CORPORAIS</div>
         <div className="grid-2">
@@ -1030,7 +1037,6 @@ function AlunoAvaliacao({user,showToast}){
 function AlunoCompeticoes({user,showToast}){
   const [comps,setComps]=useState(()=>DB.getData("competicoes",user.id)||[]);
   const [f,setF]=useState({nome:"",modalidade:"Corrida",data:"",local:"",objetivo:"Completar"});
-  const [ok,setOk]=useState(false);
   function set(k,v){setF(p=>({...p,[k]:v}));}
   function add(){
     if(!f.nome||!f.data){return;}
@@ -1143,7 +1149,7 @@ function TreinadorPrescrever({user,showToast}){
   const [modalidade,setModalidade]=useState("musculacao");
   const [duracao,setDuracao]=useState(1);
   const [inicio,setInicio]=useState(()=>new Date().toISOString().split("T")[0]);
-  const [dias,setDias]=useState(()=>DIAS_SEMANA.map((d,i)=>({nome:`Treino ${String.fromCharCode(65+i)}`,tipo:"treino",obs:"",exercicios:[]})));
+  const [dias,setDias]=useState(()=>DIAS_SEMANA.map((_,i)=>({nome:`Treino ${String.fromCharCode(65+i)}`,tipo:i<5?"academia":"descanso",obs:"",exercicios:[],distancia:"",ritmo:"",zona:"",duracaoTotal:"",rounds:"",tempoRound:"",foco:"",modalidadeLuta:""})));
   const [diaEdit,setDiaEdit]=useState(0);
   const [novoEx,setNovoEx]=useState({nome:"",series:"",reps:"",carga:"",duracao:""});
   function setDiaTipo(i,tipo){setDias(p=>{const n=[...p];n[i]={...n[i],tipo};return n;});}
@@ -1171,7 +1177,6 @@ function TreinadorPrescrever({user,showToast}){
     <div className="page">
       <div className="page-title orange">PRESCREVER TREINO</div>
       <div className="page-sub">Monte a semana completa de treinos para um aluno</div>
-      {ok&&<div className="alert alert-success">✅ Plano enviado para {alunoSel?.nome}!</div>}
       {alunos.length===0&&<div className="alert alert-warn">⚠️ Nenhum aluno vinculado. Código: <b style={{fontFamily:"var(--font-mono)"}}>{gerarCodigo(user.id)}</b></div>}
 
       {/* SELECIONAR ALUNO */}
@@ -1620,7 +1625,6 @@ function NutriPrescrever({user,showToast}){
     {h:"19:00",r:"Pós-treino",i:"Tilápia + arroz + brócolis",k:450},
     {h:"21:30",r:"Ceia",i:"Cottage + pasta de amendoim",k:220},
   ]);
-  const [ok,setOk]=useState(false);
   const fases={normal:2330,carga:3100,cutting:1800,peak:2000};
   const totalKcal=refeicoes.reduce((s,r)=>s+Number(r.k),0);
 
@@ -1640,7 +1644,6 @@ function NutriPrescrever({user,showToast}){
     <div className="page">
       <div className="page-title blue">PLANO ALIMENTAR</div>
       <div className="page-sub">Monte e atribua planos alimentares com período de validade</div>
-      {ok&&<div className="alert alert-success">✅ Plano enviado para {alunoSel?.nome}!</div>}
       {alunos.length===0&&<div className="alert alert-warn">⚠️ Sem pacientes vinculados. Código: <b style={{fontFamily:"var(--font-mono)"}}>{gerarCodigo(user.id)}</b></div>}
 
       {/* SELECIONAR PACIENTE */}
@@ -1815,7 +1818,7 @@ const NAV_NUTRI=[
 function AlunoApp({user,onLogout}){
   const {show,ToastEl}=useToast();
   const [page,setPage]=useState("dashboard");
-  const pages={dashboard:<AlunoDash user={user}/>,saude:<AlunoSaude user={user}/>,treinos:<AlunoTreinos user={user}/>,alimentacao:<AlunoAlimentacao user={user}/>,hidratacao:<AlunoHidratacao user={user}/>,competicoes:<AlunoCompeticoes user={user}/>,avaliacao:<AlunoAvaliacao user={user}/>,vinculo:<AlunoVinculo user={user}/>};
+  const pages={dashboard:<AlunoDash user={user} setPage={setPage}/>,saude:<AlunoSaude user={user} showToast={show}/>,treinos:<AlunoTreinos user={user} showToast={show}/>,alimentacao:<AlunoAlimentacao user={user} showToast={show}/>,hidratacao:<AlunoHidratacao user={user} showToast={show}/>,competicoes:<AlunoCompeticoes user={user} showToast={show}/>,avaliacao:<AlunoAvaliacao user={user} showToast={show}/>,vinculo:<AlunoVinculo user={user} showToast={show}/>};
   return(<>{ToastEl}<Shell user={user} onLogout={onLogout} nav={NAV_ALUNO} active={page} setActive={setPage} accent="">{pages[page]}</Shell></>);
 }
 function TreinadorApp({user,onLogout}){
@@ -1823,13 +1826,13 @@ function TreinadorApp({user,onLogout}){
   const [page,setPage]=useState("dashboard");
   const alunos=DB.getAlunosDe(user.id);
   const alertCount=alunos.filter(a=>{const s=DB.getData("saude",a.id)||{};return s.doente||(s.dores?.length>0);}).length;
-  const pages={dashboard:<TreinadorDash user={user}/>,prescrever:<TreinadorPrescrever user={user}/>,acompanhamento:<TreinadorAcompanhamento user={user}/>};
+  const pages={dashboard:<TreinadorDash user={user}/>,prescrever:<TreinadorPrescrever user={user} showToast={show}/>,acompanhamento:<TreinadorAcompanhamento user={user}/>};
   return(<>{ToastEl}<Shell user={user} onLogout={onLogout} nav={NAV_TREINADOR} active={page} setActive={setPage} accent="orange" alertCount={alertCount}>{pages[page]}</Shell></>);
 }
 function NutriApp({user,onLogout}){
   const {show,ToastEl}=useToast();
   const [page,setPage]=useState("dashboard");
-  const pages={dashboard:<NutriDash user={user}/>,prescrever:<NutriPrescrever user={user}/>,acompanhamento:<NutriAcompanhamento user={user}/>};
+  const pages={dashboard:<NutriDash user={user}/>,prescrever:<NutriPrescrever user={user} showToast={show}/>,acompanhamento:<NutriAcompanhamento user={user}/>};
   return(<>{ToastEl}<Shell user={user} onLogout={onLogout} nav={NAV_NUTRI} active={page} setActive={setPage} accent="blue">{pages[page]}</Shell></>);
 }
 
