@@ -54,16 +54,16 @@ const styles = `
   .nav-label { font-size:0.65rem; color:var(--text3); letter-spacing:0.2em; text-transform:uppercase; padding:0 0.5rem; margin-bottom:0.5rem; }
   .nav-item { display:flex; align-items:center; gap:0.75rem; padding:0.65rem 0.75rem; border-radius:var(--radius); cursor:pointer; font-size:0.9rem; color:var(--text2); border:1px solid transparent; margin-bottom:2px; transition:all 0.2s; }
   .nav-item:hover { background:var(--bg2); color:var(--text); }
-  .nav-item.active { background:var(--green-dim); color:var(--green); border-color:rgba(46,204,113,0.2); }
+  .nav-item.active { background:var(--green-dim); color:var(--green); border-color:rgba(46,204,113,0.2); font-weight:700; }
   .nav-item.active.orange { background:var(--orange-dim); color:var(--orange); border-color:rgba(243,156,18,0.2); }
   .nav-item.active.blue { background:rgba(52,152,219,0.1); color:var(--blue); border-color:rgba(52,152,219,0.2); }
   .nav-icon { font-size:1.1rem; width:20px; text-align:center; }
   .sidebar-footer { margin-top:auto; padding-top:1rem; border-top:1px solid var(--border); }
-  .logout-btn { display:flex; align-items:center; gap:0.5rem; font-size:0.85rem; color:var(--text3); cursor:pointer; padding:0.6rem 0.5rem; border-radius:var(--radius); width:100%; transition:all 0.2s; }
+  .logout-btn { display:flex; align-items:center; gap:0.5rem; font-size:0.85rem; color:var(--text3); cursor:pointer; padding:0.6rem 0.75rem; border-radius:var(--radius); width:100%; transition:all 0.18s; background:none; border:none; }
   .logout-btn:hover { color:var(--red); background:var(--red-dim); }
   .main { flex:1; overflow-y:auto; background:var(--bg); }
   .page { padding:2rem; max-width:960px; margin:0 auto; }
-  .page-header { margin-bottom:1.75rem; }
+  .page-header { margin-bottom:1.75rem; padding-bottom:1.25rem; border-bottom:1px solid var(--border); }
   .page-title { font-family:var(--font-display); font-size:2.5rem; letter-spacing:0.05em; line-height:1; }
   .page-sub { color:var(--text2); font-size:0.9rem; margin-top:0.25rem; margin-bottom:2rem; }
 
@@ -368,6 +368,8 @@ const DB={
     return this.getUsers().filter(u=>ids.includes(u.id));
   },
   getData:(k,uid)=>JSON.parse(localStorage.getItem(`tf_${k}_${uid}`)||"null"),
+  getAllKeys:(uid)=>Object.keys(localStorage).filter(k=>k.startsWith(`tf_`)&&k.endsWith(`_${uid}`)),
+  clearUserData:(uid)=>{Object.keys(localStorage).filter(k=>k.includes(`_${uid}`)).forEach(k=>localStorage.removeItem(k));},
   setData:(k,uid,val)=>localStorage.setItem(`tf_${k}_${uid}`,JSON.stringify(val)),
 };
 
@@ -400,14 +402,20 @@ function AuthScreen({onLogin}){
         {success&&<div className="auth-success">✅ {success}</div>}
         {tab==="login"?(
           <form onSubmit={handleLogin}>
-            <div className="form-group"><label className="form-label">Email</label><input className="form-input" type="email" placeholder="seu@email.com" value={email} onChange={e=>setEmail(e.target.value)} required/></div>
-            <div className="form-group"><label className="form-label">Senha</label>
+            <div className="form-group">
+              <label className="form-label">Email</label>
+              <input className="form-input" type="email" placeholder="seu@email.com" value={email} onChange={e=>setEmail(e.target.value)} required autoComplete="email" autoCapitalize="none"/>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Senha</label>
               <div style={{position:"relative"}}>
-                <input className="form-input" type={showSenha?"text":"password"} placeholder="••••••••" value={senha} onChange={e=>setSenha(e.target.value)} required style={{paddingRight:"3rem"}}/>
-                <button type="button" onClick={()=>setShowSenha(!showSenha)} style={{position:"absolute",right:"0.75rem",top:"50%",transform:"translateY(-50%)",background:"none",border:"none",color:"var(--text3)",fontSize:"1rem"}}>{showSenha?"🙈":"👁️"}</button>
+                <input className="form-input" type={showSenha?"text":"password"} placeholder="••••••••" value={senha} onChange={e=>setSenha(e.target.value)} required style={{paddingRight:"3rem"}} autoComplete="current-password"/>
+                <button type="button" onClick={()=>setShowSenha(p=>!p)} style={{position:"absolute",right:"0.75rem",top:"50%",transform:"translateY(-50%)",background:"none",border:"none",color:"var(--text3)",fontSize:"1rem",cursor:"pointer",lineHeight:1,padding:"0.25rem"}}>{showSenha?"🙈":"👁️"}</button>
               </div>
             </div>
-            <button className="btn btn-primary btn-full" type="submit" disabled={loading}>{loading?<><span className="spinner"/> Entrando...</>:"Entrar"}</button>
+            <button className="btn btn-primary btn-full" type="submit" disabled={loading} style={{marginTop:"0.25rem"}}>
+              {loading?<><span className="spinner"/> Entrando...</>:"Entrar"}
+            </button>
           </form>
         ):(
           <form onSubmit={handleRegister}>
@@ -640,7 +648,6 @@ function PeriodoBadge({plano}){
 // ============================================================
 function AlunoVinculo({user,showToast}){
   const [vinculo,setVinculo]=useState(()=>DB.getVinculoAluno(user.id)||{});
-  const [ok,setOk]=useState("");
   const treinador=vinculo.treinadorId?DB.getUserById(vinculo.treinadorId):null;
   const nutri=vinculo.nutriId?DB.getUserById(vinculo.nutriId):null;
   function vincT(u){const n={...vinculo,treinadorId:u.id};DB.setVinculoAluno(user.id,n.treinadorId,n.nutriId);setVinculo(n);showToast&&showToast(`✅ Treinador ${u.nome.split(" ")[0]} vinculado!`);}
@@ -666,9 +673,9 @@ function AlunoTreinos({user,showToast}){
   const planoTreino=DB.getData("plano_treino_aluno",user.id);
   const [diaAtivo,setDiaAtivo]=useState(0);
   const [checked,setChecked]=useState(()=>DB.getData("treino_check_hoje",user.id)||{});
-  const [rating,setRating]=useState(0);
-  const [feedback,setFeedback]=useState("");
-  const [ok,setOk]=useState(false);
+  const savedAval=DB.getData("treino_avaliacao",user.id)||{};
+  const [rating,setRating]=useState(savedAval.rating||0);
+  const [feedback,setFeedback]=useState(savedAval.feedback||"");
 
   // Determina o dia atual da semana (0=seg)
   const hoje=new Date().getDay();
@@ -685,7 +692,6 @@ function AlunoTreinos({user,showToast}){
 
   function salvarAvaliacao(){
     DB.setData("treino_avaliacao",user.id,{rating,feedback,data:new Date().toISOString()});
-    setOk(true);setTimeout(()=>setOk(false),3000);
   }
 
   if(!planoTreino||!planoTreino.dias){
@@ -797,12 +803,16 @@ function AlunoTreinos({user,showToast}){
 function AlunoAlimentacao({user,showToast}){
   const planoAlim=DB.getData("plano_alim_aluno",user.id);
   const [comido,setComido]=useState(()=>DB.getData("alim_check_hoje",user.id)||{});
-  const [obs,setObs]=useState("");
+  const [obs,setObs]=useState(()=>DB.getData("alim_obs_hoje",user.id)||"");
 
   function toggleRefeicao(i){
     const novo={...comido,[i]:!comido[i]};
     setComido(novo);
     DB.setData("alim_check_hoje",user.id,novo);
+  }
+  function salvarObs(){
+    DB.setData("alim_obs_hoje",user.id,obs);
+    showToast&&showToast("Observação salva! Sua nutricionista vai ver.");
   }
 
   const refeicoes=planoAlim?.refeicoes||[
@@ -820,8 +830,10 @@ function AlunoAlimentacao({user,showToast}){
 
   return(
     <div className="page">
-      <div className="page-title green">ALIMENTAÇÃO</div>
-      <div className="page-sub">Marque o que você já comeu hoje</div>
+      <div className="page-header">
+        <div className="page-title green">ALIMENTAÇÃO</div>
+        <div className="page-sub">Marque o que você já comeu hoje</div>
+      </div>
 
       {planoAlim&&<PeriodoBadge plano={planoAlim}/>}
 
@@ -859,7 +871,7 @@ function AlunoAlimentacao({user,showToast}){
       <div className="card">
         <div className="card-title">📝 OBSERVAÇÕES PARA A NUTRICIONISTA</div>
         <textarea className="form-textarea" placeholder="Substituições, dificuldades, como se sentiu..." value={obs} onChange={e=>setObs(e.target.value)}/>
-        <button className="btn btn-primary" style={{marginTop:"0.75rem"}} onClick={()=>{DB.setData("alim_obs_hoje",user.id,{obs,data:new Date().toISOString()});}}>💾 Salvar observação</button>
+        <button className="btn btn-primary" style={{marginTop:"0.75rem"}} onClick={salvarObs}>💾 Salvar observação</button>
       </div>
     </div>
   );
@@ -873,12 +885,25 @@ function AlunoHidratacao({user,showToast}){
   const [meta,setMeta]=useState(()=>DB.getData("meta_agua",user.id)||3000);
   const [novaMeta,setNovaMeta]=useState(meta);
   const pct=Math.min((ml/meta)*100,100);
-  function add(q){const n=Math.min(ml+q,9999);setMl(n);DB.setData("agua_hoje",user.id,n);}
-  function salvarMeta(){const n=Number(novaMeta);setMeta(n);DB.setData("meta_agua",user.id,n);}
+  function add(q){
+    const n=Math.min(ml+q,9999);
+    setMl(n);
+    DB.setData("agua_hoje",user.id,n);
+    if(n>=meta&&ml<meta)showToast&&showToast("🎉 Meta de hidratação atingida!");
+  }
+  function salvarMeta(){
+    const n=Math.max(Number(novaMeta)||3000,500);
+    setMeta(n);setNovaMeta(n);
+    DB.setData("meta_agua",user.id,n);
+    showToast&&showToast(`Meta atualizada: ${(n/1000).toFixed(1)}L por dia`);
+  }
+  const hist=DB.getData("agua_hist",user.id)||Array(7).fill(0);
   return(
     <div className="page">
-      <div className="page-title green">HIDRATAÇÃO</div>
-      <div className="page-sub">{getDateStr()}</div>
+      <div className="page-header">
+        <div className="page-title green">HIDRATAÇÃO</div>
+        <div className="page-sub">{getDateStr()}</div>
+      </div>
       <div className="card" style={{textAlign:"center"}}>
         <div style={{fontSize:"5rem",fontFamily:"var(--font-display)",color:"var(--blue)",lineHeight:1}}>{(ml/1000).toFixed(1)}</div>
         <div style={{fontSize:"1.2rem",color:"var(--text2)",marginBottom:"1.5rem"}}>litros de {(meta/1000).toFixed(1)}L</div>
@@ -916,7 +941,7 @@ function AlunoSaude({user,showToast}){
   const [ok,setOk]=useState(false);
   function salvar(ov={}){DB.setData("saude",user.id,{doente,sintomas,doente_desde:doenteDe,mens,meds,obs,dores,...ov});showToast&&showToast("Saúde atualizada!");}
   function marcarDoente(){const agora=new Date().toISOString();setDoente(true);setDoenteDe(agora);salvar({doente:true,doente_desde:agora});}
-  function marcarRecuperado(){setDoente(false);setDoenteDe(null);setSintomas("");salvar({doente:false,doente_desde:null,sintomas:""});}
+  function marcarRecuperado(){setDoente(false);setDoenteDe(null);setSintomas("");salvar({doente:false,doente_desde:null,sintomas:""});showToast&&showToast("Ótimo! Recuperação registrada! 💪");}
   function adicionarDor(){if(!musculoSel.length)return;const agora=new Date().toISOString();const novas=[...dores,...musculoSel.filter(m=>!dores.find(d=>d.musculo===m)).map(m=>({musculo:m,desde:agora,intensidade:5}))];setDores(novas);setMusculoSel([]);salvar({dores:novas});}
   function removerDor(idx){const novas=dores.filter((_,i)=>i!==idx);setDores(novas);salvar({dores:novas});}
   return(
@@ -966,23 +991,22 @@ function AlunoSaude({user,showToast}){
 function AlunoAvaliacao({user,showToast}){
   const saved=DB.getData("avaliacao",user.id)||{};
   const [f,setF]=useState(saved);
-  const [ok,setOk]=useState(false);
   function set(k,v){setF(p=>({...p,[k]:v}));}
   function salvar(){
     DB.setData("avaliacao",user.id,f);
-    // Save to history
     const hist=DB.getData("avaliacao_hist",user.id)||[];
     if(f.peso){
       const entry={peso:f.peso,gordura:f.gordura,data:new Date().toISOString()};
-      const novoHist=[...hist.slice(-11),entry];
-      DB.setData("avaliacao_hist",user.id,novoHist);
+      DB.setData("avaliacao_hist",user.id,[...hist.slice(-11),entry]);
     }
-    setOk(true);setTimeout(()=>setOk(false),3000);
+    showToast&&showToast("Avaliação física salva! ✅");
   }
   return(
     <div className="page">
-      <div className="page-title green">AVALIAÇÃO FÍSICA</div>
-      <div className="page-sub">Visível para treinador e nutricionista</div>
+      <div className="page-header">
+        <div className="page-title green">AVALIAÇÃO FÍSICA</div>
+        <div className="page-sub">Visível para treinador e nutricionista</div>
+      </div>
       {ok&&<div className="alert alert-success">✅ Avaliação salva!</div>}
       <div className="card">
         <div className="card-title">📏 MEDIDAS CORPORAIS</div>
@@ -1015,12 +1039,13 @@ function AlunoCompeticoes({user,showToast}){
     setF({nome:"",modalidade:"Corrida",data:"",local:"",objetivo:"Completar"});
     showToast&&showToast("Competição cadastrada! 🏆");
   }
-  function remover(id){const novo=comps.filter(c=>c.id!==id);setComps(novo);DB.setData("competicoes",user.id,novo);}
+  function remover(id){const n=comps.filter(c=>c.id!==id);setComps(n);DB.setData("competicoes",user.id,n);}
   return(
     <div className="page">
-      <div className="page-title green">COMPETIÇÕES</div>
-      <div className="page-sub">Visível para treinador e nutricionista</div>
-      {ok&&<div className="alert alert-success">✅ Competição cadastrada!</div>}
+      <div className="page-header">
+        <div className="page-title green">COMPETIÇÕES</div>
+        <div className="page-sub">Visível para treinador e nutricionista</div>
+      </div>
       {comps.length>0&&<div className="card"><div className="card-title">📅 MEUS EVENTOS</div>{comps.map((c,i)=>{const d=new Date(c.data);return(<div key={i} className="comp-card" style={{background:"var(--bg2)"}}><div className="comp-date"><div className="comp-date-day">{d.getDate()}</div><div className="comp-date-month">{d.toLocaleDateString("pt-BR",{month:"short"})}</div></div><div style={{flex:1}}><div style={{fontWeight:600}}>{c.nome}</div><div style={{fontSize:"0.8rem",color:"var(--text2)"}}>{c.modalidade} • {c.local}</div></div><span className="tag tag-orange">{c.objetivo.toUpperCase()}</span></div>);})}</div>}
       <div className="card">
         <div className="card-title">➕ CADASTRAR COMPETIÇÃO</div>
@@ -1121,8 +1146,6 @@ function TreinadorPrescrever({user,showToast}){
   const [dias,setDias]=useState(()=>DIAS_SEMANA.map((d,i)=>({nome:`Treino ${String.fromCharCode(65+i)}`,tipo:"treino",obs:"",exercicios:[]})));
   const [diaEdit,setDiaEdit]=useState(0);
   const [novoEx,setNovoEx]=useState({nome:"",series:"",reps:"",carga:"",duracao:""});
-  const [ok,setOk]=useState(false);
-
   function setDiaTipo(i,tipo){setDias(p=>{const n=[...p];n[i]={...n[i],tipo};return n;});}
   function setDiaNome(i,nome){setDias(p=>{const n=[...p];n[i]={...n[i],nome};return n;});}
   function setDiaObs(i,obs){setDias(p=>{const n=[...p];n[i]={...n[i],obs};return n;});}
@@ -1134,11 +1157,12 @@ function TreinadorPrescrever({user,showToast}){
   function removeEx(diaIdx,exIdx){setDias(p=>{const n=[...p];n[diaIdx]={...n[diaIdx],exercicios:n[diaIdx].exercicios.filter((_,i)=>i!==exIdx)};return n;});}
 
   function salvar(){
-    if(!alunoSel)return;
+    if(!alunoSel){showToast&&showToast("Selecione um aluno primeiro","warn");return;}
     const fimDate=addMonths(new Date(inicio),duracao);
     const plano={nome:nomePlano,modalidade,duracao,inicio,fim:fimDate.toISOString(),dias,criadoEm:new Date().toISOString()};
     DB.setData("plano_treino_aluno",alunoSel.id,plano);
-    setOk(true);setTimeout(()=>setOk(false),3000);
+    showToast&&showToast(`✅ Plano enviado para ${alunoSel.nome.split(" ")[0]}!`);
+    
   }
 
   const diaAtual=dias[diaEdit];
@@ -1609,7 +1633,6 @@ function NutriPrescrever({user,showToast}){
     const fimDate=addMonths(new Date(inicio),duracao);
     const plano={nome:nomePlano,protocolo,duracao,inicio,fim:fimDate.toISOString(),refeicoes,kcalMeta:fases[protocolo],criadoEm:new Date().toISOString()};
     DB.setData("plano_alim_aluno",alunoSel.id,plano);
-    setOk(true);setTimeout(()=>setOk(false),3000);
     showToast&&showToast(`✅ Plano alimentar enviado para ${alunoSel.nome.split(" ")[0]}!`);
   }
 
