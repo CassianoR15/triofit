@@ -233,7 +233,41 @@ const styles = `
   .periodo-card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); padding:1rem; margin-bottom:1rem; }
   .periodo-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.3rem 0.75rem; border-radius:999px; font-size:0.78rem; font-weight:700; background:var(--green-dim); color:var(--green); font-family:var(--font-mono); }
 
-  @media(max-width:768px){ .sidebar{display:none;} .grid-2,.grid-4{grid-template-columns:1fr 1fr;} .pain-grid{grid-template-columns:repeat(3,1fr);} }
+  /* MOBILE NAV BAR */
+  .mobile-nav {
+    display: none;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: var(--card);
+    border-top: 1px solid var(--border);
+    z-index: 100;
+    padding: 0.4rem 0 calc(0.4rem + env(safe-area-inset-bottom));
+  }
+  .mobile-nav-items { display: flex; justify-content: space-around; align-items: center; }
+  .mobile-nav-item {
+    display: flex; flex-direction: column; align-items: center; gap: 0.2rem;
+    padding: 0.4rem 0.75rem; border-radius: var(--radius); cursor: pointer;
+    transition: all 0.2s; flex: 1; max-width: 80px;
+    background: none; border: none; color: var(--text3);
+  }
+  .mobile-nav-item.active { color: var(--green); }
+  .mobile-nav-item.active.orange { color: var(--orange); }
+  .mobile-nav-item.active.blue { color: var(--blue); }
+  .mobile-nav-icon { font-size: 1.35rem; line-height: 1; }
+  .mobile-nav-label { font-size: 0.58rem; font-weight: 600; letter-spacing: 0.02em; text-transform: uppercase; line-height: 1; }
+  .mobile-nav-dot { width: 4px; height: 4px; border-radius: 50%; background: currentColor; margin-top: 2px; }
+
+  @media(max-width:768px){
+    .sidebar { display:none; }
+    .mobile-nav { display:block; }
+    .main { padding-bottom: 70px; }
+    .grid-2,.grid-4 { grid-template-columns:1fr 1fr; }
+    .pain-grid { grid-template-columns:repeat(3,1fr); }
+    .grid-3 { grid-template-columns:1fr 1fr; }
+    .page { padding: 1.25rem 1rem; }
+    .page-title { font-size: 2rem; }
+    .auth-box { padding: 1.75rem 1.25rem; }
+  }
 `;
 
 // ============================================================
@@ -351,8 +385,15 @@ function AuthScreen({onLogin}){
 // ============================================================
 function Shell({user,onLogout,nav,active,setActive,accent,children}){
   const roleLabel={aluno:"Aluno",treinador:"Treinador",nutri:"Nutricionista"}[user.role];
+
+  // Flat list of all nav items for mobile bar (max 5)
+  const allItems = nav.flatMap(s=>s.items);
+  // Pick primary items + logout for mobile
+  const mobileItems = allItems.slice(0, 4);
+
   return(
     <div className="shell">
+      {/* SIDEBAR — desktop */}
       <div className="sidebar">
         <div className="sidebar-logo">TrioFit</div>
         <div className="sidebar-name">{user.nome}</div>
@@ -369,7 +410,41 @@ function Shell({user,onLogout,nav,active,setActive,accent,children}){
         ))}
         <div className="sidebar-footer"><div className="logout-btn" onClick={onLogout}>🚪 Sair da conta</div></div>
       </div>
+
+      {/* MAIN */}
       <div className="main">{children}</div>
+
+      {/* BOTTOM NAV — mobile */}
+      <nav className="mobile-nav">
+        <div className="mobile-nav-items">
+          {mobileItems.map(it=>(
+            <button key={it.id} className={`mobile-nav-item ${active===it.id?`active ${accent}`:""}`} onClick={()=>setActive(it.id)}>
+              <span className="mobile-nav-icon">{it.icon}</span>
+              <span className="mobile-nav-label">{it.label.split(" ")[0]}</span>
+              {active===it.id&&<div className="mobile-nav-dot"/>}
+            </button>
+          ))}
+          {/* Mais / overflow se tiver mais de 4 itens */}
+          {allItems.length > 4 && (
+            <button className={`mobile-nav-item ${allItems.slice(4).some(i=>i.id===active)?`active ${accent}`:""}`}
+              onClick={()=>{
+                // Cycle through overflow items
+                const overflow=allItems.slice(4);
+                const cur=overflow.findIndex(i=>i.id===active);
+                setActive(overflow[(cur+1)%overflow.length].id);
+              }}>
+              <span className="mobile-nav-icon">☰</span>
+              <span className="mobile-nav-label">Mais</span>
+              {allItems.slice(4).some(i=>i.id===active)&&<div className="mobile-nav-dot"/>}
+            </button>
+          )}
+          {/* Logout */}
+          <button className="mobile-nav-item" onClick={onLogout} style={{color:"var(--text3)"}}>
+            <span className="mobile-nav-icon">🚪</span>
+            <span className="mobile-nav-label">Sair</span>
+          </button>
+        </div>
+      </nav>
     </div>
   );
 }
