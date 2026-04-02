@@ -698,7 +698,7 @@ function AlunoTreinos({user,showToast}){
 
   async function toggleEx(diaIdx,exIdx){
     const key=`${diaIdx}_${exIdx}`;
-    const novo={...(checked||{}),(key):!(checked||{})[key]};
+    const novo={...(checked||{}),[key]:!(checked||{})[key]};
     await saveChecked(novo);
   }
 
