@@ -1180,7 +1180,7 @@ function TreinadorPrescrever({user,showToast}){
   }
   function removeEx(diaIdx,exIdx){setDias(p=>{const n=[...p];n[diaIdx]={...n[diaIdx],exercicios:n[diaIdx].exercicios.filter((_,i)=>i!==exIdx)};return n;});}
 
-  function salvar(){
+  async function salvar(){
     if(!alunoSel){showToast&&showToast("Selecione um aluno primeiro","warn");return;}
     const fimDate=addMonths(new Date(inicio),duracao);
     const plano={nome:nomePlano,modalidade,duracao,inicio,fim:fimDate.toISOString(),dias,criadoEm:new Date().toISOString()};
@@ -1652,7 +1652,7 @@ function NutriPrescrever({user,showToast}){
   function removeRef(i){setRefeicoes(p=>p.filter((_,j)=>j!==i));}
   function addRef(){setRefeicoes(p=>[...p,{h:"",r:"Nova refeição",i:"",k:0}]);}
 
-  function salvar(){
+  async function salvar(){
     if(!alunoSel)return;
     const fimDate=addMonths(new Date(inicio),duracao);
     const plano={nome:nomePlano,protocolo,duracao,inicio,fim:fimDate.toISOString(),refeicoes,kcalMeta:fases[protocolo],criadoEm:new Date().toISOString()};
