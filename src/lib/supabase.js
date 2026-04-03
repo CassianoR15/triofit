@@ -7,7 +7,7 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
-    detectSessionInUrl: false, // evita loop em SPAs
+    detectSessionInUrl: false,
   },
 });
 
@@ -19,19 +19,21 @@ function gerarCodigoLocal(id) {
   return r.slice(0, 6);
 }
 
+// Cria perfil usando INSERT direto (evita 403 do upsert com RLS)
 async function criarPerfil(user, nome, role) {
   const codigo = gerarCodigoLocal(user.id);
-  await supabase.from('profiles').upsert(
-    { id: user.id, nome: nome || user.email.split('@')[0], role: role || 'aluno', codigo },
-    { onConflict: 'id' }
-  );
-  return {
+  const nomeFinal = nome || user.email.split('@')[0];
+  const roleFinal = role || 'aluno';
+
+  // Tenta insert, se já existe ignora
+  await supabase.from('profiles').insert({
     id: user.id,
-    email: user.email,
-    nome: nome || user.email.split('@')[0],
-    role: role || 'aluno',
+    nome: nomeFinal,
+    role: roleFinal,
     codigo,
-  };
+  }).select().single();
+
+  return { id: user.id, email: user.email, nome: nomeFinal, role: roleFinal, codigo };
 }
 
 export const DB = {
@@ -42,17 +44,19 @@ export const DB = {
       password: senha,
       options: { data: { nome, role } },
     });
-    if (error) return { ok: false, msg: error.message };
+    if (error) {
+      const msg = error.message?.includes('already registered')
+        ? 'Este email já está cadastrado. Faça login.'
+        : error.message;
+      return { ok: false, msg };
+    }
     if (!data.user) return { ok: false, msg: 'Erro ao criar conta.' };
     const user = await criarPerfil(data.user, nome, role);
     return { ok: true, user };
   },
 
   async login(email, senha) {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password: senha,
-    });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password: senha });
     if (error) return { ok: false, msg: 'Email ou senha incorretos.' };
     const user = await this._formatUser(data.user);
     return { ok: true, user };
@@ -62,18 +66,16 @@ export const DB = {
     await supabase.auth.signOut();
   },
 
-  // Com timeout para não travar na tela de loading
   async getSession() {
     try {
       const timeout = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('timeout')), 4000)
+        setTimeout(() => reject(new Error('timeout')), 5000)
       );
-      const sessionPromise = supabase.auth.getSession();
-      const { data } = await Promise.race([sessionPromise, timeout]);
+      const { data } = await Promise.race([supabase.auth.getSession(), timeout]);
       if (!data?.session?.user) return null;
       return this._formatUser(data.session.user);
     } catch {
-      return null; // timeout ou erro → vai para tela de login
+      return null;
     }
   },
 
@@ -92,18 +94,12 @@ export const DB = {
         return criarPerfil(supaUser, nome, role);
       }
 
-      return {
-        id: supaUser.id,
-        email: supaUser.email,
-        nome: profile.nome,
-        role: profile.role,
-        codigo: profile.codigo,
-      };
+      return { id: supaUser.id, email: supaUser.email, nome: profile.nome, role: profile.role, codigo: profile.codigo };
     } catch {
       return {
         id: supaUser.id,
         email: supaUser.email,
-        nome: supaUser.email.split('@')[0],
+        nome: supaUser.user_metadata?.nome || supaUser.email.split('@')[0],
         role: supaUser.user_metadata?.role || 'aluno',
         codigo: gerarCodigoLocal(supaUser.id),
       };
