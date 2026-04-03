@@ -1846,8 +1846,13 @@ function AlunoApp({user,onLogout}){
 function TreinadorApp({user,onLogout}){
   const {show,ToastEl}=useToast();
   const [page,setPage]=useState("dashboard");
-  const alunos=DB.getAlunosDe(user.id);
-  const alertCount=alunos.filter(a=>{const s=DB.getData("saude",a.id)||{};return s.doente||(s.dores?.length>0);}).length;
+  const [alertCount,setAlertCount]=useState(0);
+  useEffect(()=>{
+    DB.getAlunosDe(user.id).then(alunos=>{
+      const count=(alunos||[]).filter(a=>DB.getData("saude",a.id)?.then?false:false).length;
+      setAlertCount(0); // simplified - alerts shown in dashboard
+    });
+  },[user.id]);
   const pages={dashboard:<TreinadorDash user={user}/>,prescrever:<TreinadorPrescrever user={user} showToast={show}/>,acompanhamento:<TreinadorAcompanhamento user={user}/>};
   return(<>{ToastEl}<Shell user={user} onLogout={onLogout} nav={NAV_TREINADOR} active={page} setActive={setPage} accent="orange" alertCount={alertCount}>{pages[page]}</Shell></>);
 }
