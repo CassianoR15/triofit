@@ -4,7 +4,11 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || '';
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: false, // evita loop em SPAs
+  },
 });
 
 function gerarCodigoLocal(id) {
@@ -17,13 +21,17 @@ function gerarCodigoLocal(id) {
 
 async function criarPerfil(user, nome, role) {
   const codigo = gerarCodigoLocal(user.id);
-  await supabase.from('profiles').upsert({
+  await supabase.from('profiles').upsert(
+    { id: user.id, nome: nome || user.email.split('@')[0], role: role || 'aluno', codigo },
+    { onConflict: 'id' }
+  );
+  return {
     id: user.id,
+    email: user.email,
     nome: nome || user.email.split('@')[0],
     role: role || 'aluno',
     codigo,
-  }, { onConflict: 'id' });
-  return { ...user, nome: nome || user.email.split('@')[0], role: role || 'aluno', codigo };
+  };
 }
 
 export const DB = {
@@ -36,13 +44,15 @@ export const DB = {
     });
     if (error) return { ok: false, msg: error.message };
     if (!data.user) return { ok: false, msg: 'Erro ao criar conta.' };
-    // Criar perfil diretamente (sem depender de trigger)
     const user = await criarPerfil(data.user, nome, role);
     return { ok: true, user };
   },
 
   async login(email, senha) {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password: senha });
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password: senha,
+    });
     if (error) return { ok: false, msg: 'Email ou senha incorretos.' };
     const user = await this._formatUser(data.user);
     return { ok: true, user };
@@ -52,34 +62,52 @@ export const DB = {
     await supabase.auth.signOut();
   },
 
+  // Com timeout para não travar na tela de loading
   async getSession() {
-    const { data } = await supabase.auth.getSession();
-    if (!data.session?.user) return null;
-    return this._formatUser(data.session.user);
+    try {
+      const timeout = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('timeout')), 4000)
+      );
+      const sessionPromise = supabase.auth.getSession();
+      const { data } = await Promise.race([sessionPromise, timeout]);
+      if (!data?.session?.user) return null;
+      return this._formatUser(data.session.user);
+    } catch {
+      return null; // timeout ou erro → vai para tela de login
+    }
   },
 
   async _formatUser(supaUser) {
     if (!supaUser) return null;
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('nome, role, codigo')
-      .eq('id', supaUser.id)
-      .single();
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('nome, role, codigo')
+        .eq('id', supaUser.id)
+        .single();
 
-    // Se não tem perfil ainda, cria agora
-    if (!profile) {
-      const nome = supaUser.user_metadata?.nome || supaUser.email.split('@')[0];
-      const role = supaUser.user_metadata?.role || 'aluno';
-      return criarPerfil(supaUser, nome, role);
+      if (!profile) {
+        const nome = supaUser.user_metadata?.nome || supaUser.email.split('@')[0];
+        const role = supaUser.user_metadata?.role || 'aluno';
+        return criarPerfil(supaUser, nome, role);
+      }
+
+      return {
+        id: supaUser.id,
+        email: supaUser.email,
+        nome: profile.nome,
+        role: profile.role,
+        codigo: profile.codigo,
+      };
+    } catch {
+      return {
+        id: supaUser.id,
+        email: supaUser.email,
+        nome: supaUser.email.split('@')[0],
+        role: supaUser.user_metadata?.role || 'aluno',
+        codigo: gerarCodigoLocal(supaUser.id),
+      };
     }
-
-    return {
-      id: supaUser.id,
-      email: supaUser.email,
-      nome: profile.nome,
-      role: profile.role,
-      codigo: profile.codigo,
-    };
   },
 
   async getUserByCodigo(codigo) {
@@ -88,11 +116,11 @@ export const DB = {
       .select('id, nome, role, codigo')
       .eq('codigo', codigo.toUpperCase())
       .single();
-    if (!data) return null;
-    return data;
+    return data || null;
   },
 
   async getUserById(id) {
+    if (!id) return null;
     const { data } = await supabase
       .from('profiles')
       .select('id, nome, role, codigo')
@@ -133,6 +161,7 @@ export const DB = {
   },
 
   async getData(chave, userId) {
+    if (!userId) return null;
     const { data } = await supabase
       .from('dados')
       .select('valor')
@@ -143,6 +172,7 @@ export const DB = {
   },
 
   async setData(chave, userId, valor) {
+    if (!userId) return;
     await supabase.from('dados').upsert(
       { user_id: userId, chave, valor, atualizado_em: new Date().toISOString() },
       { onConflict: 'user_id,chave' }
@@ -150,6 +180,7 @@ export const DB = {
   },
 
   async getMultiData(userId, chaves) {
+    if (!userId) return {};
     const { data } = await supabase
       .from('dados')
       .select('chave, valor')
