@@ -116,9 +116,11 @@ export const DB = {
     const { data } = await supabase
       .from('profiles')
       .select('id, nome, role, codigo')
-      .eq('codigo', codigo.toUpperCase())
+      .ilike('codigo', codigo.trim())
       .single();
-    return data || null;
+    if (!data) return null;
+    // Ensure role is always defined
+    return { ...data, role: data.role || 'aluno' };
   },
 
   async getUserById(id) {
