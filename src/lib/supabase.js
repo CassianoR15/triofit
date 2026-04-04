@@ -64,13 +64,12 @@ export const DB = {
   },
 
   async logout() {
+    try { await supabase.auth.signOut({ scope: 'local' }); } catch{}
     try {
-      await supabase.auth.signOut({ scope: 'local' });
-    } catch(e) {
-      // Force clear even if signOut fails
-    }
-    // Clear any cached session
-    try { localStorage.removeItem('sb-vboknerswhvpheuymakx-auth-token'); } catch {}
+      Object.keys(localStorage)
+        .filter(k => k.includes('supabase') || k.includes('sb-'))
+        .forEach(k => localStorage.removeItem(k));
+    } catch{}
   },
 
   async getSession() {
