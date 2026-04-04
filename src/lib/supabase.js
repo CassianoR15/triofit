@@ -92,7 +92,7 @@ export const DB = {
         .from('profiles')
         .select('nome, role, codigo')
         .eq('id', supaUser.id)
-        .single();
+        .maybeSingle();
 
       if (!profile) {
         const nome = supaUser.user_metadata?.nome || supaUser.email.split('@')[0];
@@ -117,7 +117,7 @@ export const DB = {
       .from('profiles')
       .select('id, nome, role, codigo')
       .ilike('codigo', codigo.trim())
-      .single();
+      .maybeSingle();
     if (!data) return null;
     // Ensure role is always defined
     return { ...data, role: data.role || 'aluno' };
@@ -129,7 +129,7 @@ export const DB = {
       .from('profiles')
       .select('id, nome, role, codigo')
       .eq('id', id)
-      .single();
+      .maybeSingle();
     return data || null;
   },
 
@@ -138,7 +138,7 @@ export const DB = {
       .from('vinculos')
       .select('treinador_id, nutri_id')
       .eq('aluno_id', alunoId)
-      .single();
+      .maybeSingle();
     if (!data) return null;
     return { treinadorId: data.treinador_id, nutriId: data.nutri_id };
   },
@@ -171,7 +171,7 @@ export const DB = {
       .select('valor')
       .eq('user_id', userId)
       .eq('chave', chave)
-      .single();
+      .maybeSingle();
     return data?.valor ?? null;
   },
 
