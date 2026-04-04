@@ -492,7 +492,7 @@ function Shell({user,onLogout,nav,active,setActive,accent,children}){
             ))}
           </div>
         ))}
-        <div className="sidebar-footer"><div className="logout-btn" onClick={onLogout}>🚪 Sair da conta</div></div>
+        <div className="sidebar-footer"><button className="logout-btn" onClick={onLogout} type="button">🚪 Sair da conta</button></div>
       </div>
 
       {/* MAIN */}
@@ -1906,11 +1906,15 @@ export default function TrioFit(){
   },[]);
 
   async function handleLogout(){
-    try { await supabase.auth.signOut({ scope: 'local' }); } catch{}
-    try { 
-      Object.keys(localStorage).filter(k=>k.includes('supabase')||k.includes('sb-')).forEach(k=>localStorage.removeItem(k));
+    setUser(null); // Update UI immediately
+    try { await supabase.auth.signOut({ scope: 'global' }); } catch{}
+    try {
+      Object.keys(localStorage)
+        .filter(k=>k.includes('supabase')||k.includes('sb-')||k.includes('tf_'))
+        .forEach(k=>localStorage.removeItem(k));
     } catch{}
-    setUser(null);
+    // Force page reload to clear all state
+    setTimeout(()=>window.location.href='/', 100);
   }
 
   if(loading){
