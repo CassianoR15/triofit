@@ -64,7 +64,13 @@ export const DB = {
   },
 
   async logout() {
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut({ scope: 'local' });
+    } catch(e) {
+      // Force clear even if signOut fails
+    }
+    // Clear any cached session
+    try { localStorage.removeItem('sb-vboknerswhvpheuymakx-auth-token'); } catch {}
   },
 
   async getSession() {
