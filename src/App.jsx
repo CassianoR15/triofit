@@ -339,8 +339,8 @@ const MUSCLES=["Ombro D","Ombro E","Bíceps D","Bíceps E","Tríceps D","Trícep
 // ============================================================
 
 // Hook para carregar dados async com estado de loading
-function useAsyncData(fetcher, deps=[]) {
-  const [data, setData] = useState(null);
+function useAsyncData(fetcher, deps=[], defaultVal=null) {
+  const [data, setData] = useState(defaultVal);
   const [loading, setLoading] = useState(true);
   const mountedRef = useRef(true);
 
@@ -348,8 +348,8 @@ function useAsyncData(fetcher, deps=[]) {
     mountedRef.current = true;
     setLoading(true);
     fetcher().then(result => {
-      if (mountedRef.current) { setData(result); setLoading(false); }
-    }).catch(() => { if (mountedRef.current) setLoading(false); });
+      if (mountedRef.current) { setData(result ?? defaultVal); setLoading(false); }
+    }).catch(() => { if (mountedRef.current) { setData(defaultVal); setLoading(false); } });
     return () => { mountedRef.current = false; };
   // eslint-disable-next-line
   }, deps);
@@ -1161,7 +1161,7 @@ function AlunoDash({user,setPage}){
 // TREINADOR — PRESCREVER TREINO
 // ============================================================
 function TreinadorPrescrever({user,showToast}){
-  const [alunos,]=useAsyncData(()=>DB.getAlunosDe(user.id),[user.id]);
+  const [alunos,]=useAsyncData(()=>DB.getAlunosDe(user.id),[user.id],[]);
   const [alunoSel,setAlunoSel]=useState(null);
   const [nomePlano,setNomePlano]=useState("Treino A/B/C");
   const [modalidade,setModalidade]=useState("musculacao");
@@ -1569,11 +1569,11 @@ function DiarioAluno({aluno,onBack}){
   );
 }
 function TreinadorDash({user}){
-  const [alunos,alunosReady]=useAsyncData(()=>DB.getAlunosDe(user.id),[user.id]);
+  const [alunos,alunosReady]=useAsyncData(()=>DB.getAlunosDe(user.id),[user.id],[]);
   const [alunoVer,setAlunoVer]=useState(null);
   if(alunoVer)return<DiarioAluno aluno={alunoVer} onBack={()=>setAlunoVer(null)}/>;
-  const alunosList=alunos||[];
-  const comAlerta=alunosList.filter(a=>{const s=DB.getData("saude",a.id)||{};return s.doente||(s.dores&&s.dores.length>0);});
+  const alunosList=Array.isArray(alunos)?alunos:[];
+  const comAlerta=(alunosList||[]).filter(a=>{const s=DB.getData("saude",a.id)||{};return s.doente||(s.dores&&s.dores.length>0);});
   return(
     <div className="page">
       <div className="page-title orange">{getGreeting()}, {firstName(user.nome)} 👋</div>
@@ -1610,9 +1610,9 @@ function TreinadorDash({user}){
 }
 
 function TreinadorAcompanhamento({user}){
-  const [alunos,]=useAsyncData(()=>DB.getAlunosDe(user.id),[user.id]);
+  const [alunos,]=useAsyncData(()=>DB.getAlunosDe(user.id),[user.id],[]);
   const [alunoVer,setAlunoVer]=useState(null);
-  const alunosList=alunos||[];
+  const alunosList=Array.isArray(alunos)?alunos:[];
   if(alunoVer)return<DiarioAluno aluno={alunoVer} onBack={()=>setAlunoVer(null)}/>;
   return(
     <div className="page">
@@ -1631,7 +1631,7 @@ function TreinadorAcompanhamento({user}){
 // NUTRICIONISTA — PRESCREVER PLANO ALIMENTAR
 // ============================================================
 function NutriPrescrever({user,showToast}){
-  const [alunos,]=useAsyncData(()=>DB.getAlunosDe(user.id),[user.id]);
+  const [alunos,]=useAsyncData(()=>DB.getAlunosDe(user.id),[user.id],[]);
   const [alunoSel,setAlunoSel]=useState(null);
   const [nomePlano,setNomePlano]=useState("Plano Alimentar");
   const [protocolo,setProtocolo]=useState("normal");
@@ -1733,9 +1733,9 @@ function NutriPrescrever({user,showToast}){
 // NUTRI — DASHBOARD + ACOMPANHAMENTO
 // ============================================================
 function NutriDash({user}){
-  const [pacientes,]=useAsyncData(()=>DB.getAlunosDe(user.id),[user.id]);
+  const [pacientes,]=useAsyncData(()=>DB.getAlunosDe(user.id),[user.id],[]);
   const [pacVer,setPacVer]=useState(null);
-  const pacientesList=pacientes||[];
+  const pacientesList=Array.isArray(pacientes)?pacientes:[];
   if(pacVer)return<DiarioAluno aluno={pacVer} onBack={()=>setPacVer(null)}/>;
   return(
     <div className="page">
@@ -1778,9 +1778,9 @@ function NutriDash({user}){
 }
 
 function NutriAcompanhamento({user}){
-  const [pacientes,]=useAsyncData(()=>DB.getAlunosDe(user.id),[user.id]);
+  const [pacientes,]=useAsyncData(()=>DB.getAlunosDe(user.id),[user.id],[]);
   const [pacVer,setPacVer]=useState(null);
-  const pacientesList=pacientes||[];
+  const pacientesList=Array.isArray(pacientes)?pacientes:[];
   if(pacVer)return<DiarioAluno aluno={pacVer} onBack={()=>setPacVer(null)}/>;
   return(
     <div className="page">
