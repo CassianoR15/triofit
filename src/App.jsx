@@ -390,6 +390,13 @@ function useAlunoData(userId, chave, defaultVal=null) {
 // ============================================================
 function AuthScreen({onLogin}){
   const [tab,setTab]=useState("login");
+  useEffect(()=>{
+    // Clear any stale session when auth screen is shown
+    supabase.auth.signOut({ scope: 'local' }).catch(()=>{});
+    try {
+      Object.keys(localStorage).filter(k=>k.includes('supabase')||k.includes('sb-')).forEach(k=>localStorage.removeItem(k));
+    } catch{}
+  },[]);
   const [role,setRole]=useState("aluno");
   const [nome,setNome]=useState("");
   const [email,setEmail]=useState("");
@@ -408,7 +415,7 @@ function AuthScreen({onLogin}){
         <div className="auth-subtitle">Aluno • Treinador • Nutricionista</div>
         <div className="auth-tabs">
           <div className={`auth-tab ${tab==="login"?"active":""}`} onClick={()=>{setTab("login");setError("");setSuccess("");}}>Entrar</div>
-          <div className={`auth-tab ${tab==="register"?"active":""}`} onClick={()=>{setTab("register");setError("");setSuccess("");}}>Criar conta</div>
+          <div className={`auth-tab ${tab==="register"?"active":""}`} onClick={async()=>{setTab("register");setError("");setSuccess("");await supabase.auth.signOut();}}>Criar conta</div>
         </div>
         {error&&<div className="auth-error">⚠️ {error}</div>}
         {success&&<div className="auth-success">✅ {success}</div>}
@@ -1899,7 +1906,10 @@ export default function TrioFit(){
   },[]);
 
   async function handleLogout(){
-    await DB.logout();
+    try { await supabase.auth.signOut({ scope: 'local' }); } catch{}
+    try { 
+      Object.keys(localStorage).filter(k=>k.includes('supabase')||k.includes('sb-')).forEach(k=>localStorage.removeItem(k));
+    } catch{}
     setUser(null);
   }
 
