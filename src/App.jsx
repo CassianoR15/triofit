@@ -554,7 +554,17 @@ function VinculoPorCodigo({label,tipo,atual,onVincular}){
   const [encontrado,setEncontrado]=useState(null);
   const [erro,setErro]=useState("");
   const [buscando,setBuscando]=useState(false);
-  function buscar(){setErro("");setEncontrado(null);if(codigo.trim().length<6){setErro("Digite os 6 caracteres.");return;}const u=DB.getUserByCodigo(codigo.trim());if(!u){setErro("Código não encontrado.");return;}if(u.role!==tipo){setErro(`Este código é de um ${u.role}, não de um ${label.toLowerCase()}.`);return;}setEncontrado(u);}
+  async function buscar(){
+    setErro("");setEncontrado(null);
+    if(codigo.trim().length<6){setErro("Digite os 6 caracteres do código.");return;}
+    setBuscando(true);
+    const u=await DB.getUserByCodigo(codigo.trim().toUpperCase());
+    setBuscando(false);
+    if(!u){setErro("Código não encontrado. Verifique com seu profissional.");return;}
+    const roleLabel={treinador:"treinador",nutri:"nutricionista",aluno:"aluno"}[u.role]||u.role||"?";
+    if(u.role!==tipo){setErro(`Este código pertence a um ${roleLabel}, não a um ${label.toLowerCase()}.`);return;}
+    setEncontrado(u);
+  }
   function confirmar(){if(encontrado)onVincular(encontrado);setCodigo("");setEncontrado(null);}
   const cor=tipo==="treinador"?"var(--orange)":tipo==="nutri"?"var(--blue)":"var(--green)";
   return(
