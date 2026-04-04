@@ -113,14 +113,19 @@ export const DB = {
   },
 
   async getUserByCodigo(codigo) {
-    const { data } = await supabase
-      .from('profiles')
-      .select('id, nome, role, codigo')
-      .ilike('codigo', codigo.trim())
-      .maybeSingle();
-    if (!data) return null;
-    // Ensure role is always defined
-    return { ...data, role: data.role || 'aluno' };
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, nome, role, codigo')
+        .eq('codigo', codigo.trim().toUpperCase())
+        .limit(1);
+      if (error || !data || data.length === 0) return null;
+      const profile = data[0];
+      return { ...profile, role: profile.role || 'aluno' };
+    } catch(e) {
+      console.error('getUserByCodigo error:', e);
+      return null;
+    }
   },
 
   async getUserById(id) {
