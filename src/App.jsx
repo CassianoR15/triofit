@@ -325,7 +325,19 @@ function initials(n){if(!n)return"?";const p=n.trim().split(" ");return p.length
 function diffDays(d){if(!d)return 0;return Math.max(Math.floor((Date.now()-new Date(d).getTime())/(864e5)),0);}
 function pluralDia(n){return n===1?"dia":"dias";}
 function calcIMC(peso,altura){if(!peso||!altura)return null;const imc=Number(peso)/((Number(altura)/100)**2);return{val:imc.toFixed(1),cat:imc<18.5?"Abaixo do peso":imc<25?"Normal":imc<30?"Sobrepeso":"Obesidade"};}
-function gerarCodigo(seed){const c="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";let r="",s=seed%999999;for(let i=0;i<6;i++){r+=c[s%c.length];s=Math.floor(s/c.length)+7;}return r.slice(0,6);}
+function gerarCodigo(seed){
+  if(!seed)return"------";
+  // Handle UUID string (from Supabase) or number
+  if(typeof seed==="string"){
+    let s=0;
+    for(let i=0;i<seed.length;i++)s=(s*31+seed.charCodeAt(i))%999999;
+    seed=s;
+  }
+  const c="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let r="",s=seed%999999;
+  for(let i=0;i<6;i++){r+=c[s%c.length];s=Math.floor(s/c.length)+7;}
+  return r.slice(0,6).toUpperCase();
+}
 function addMonths(date,n){const d=new Date(date);d.setMonth(d.getMonth()+n);return d;}
 function fmtDate(d){return new Date(d).toLocaleDateString("pt-BR");}
 
@@ -518,7 +530,7 @@ function Shell({user,onLogout,nav,active,setActive,accent,children}){
 // SHARED COMPONENTS
 // ============================================================
 function CodigoProfissional({user}){
-  const codigo=gerarCodigo(user.id);
+  const codigo=user.codigo||gerarCodigo(user.id)||"------";
   const [copiado,setCopiado]=useState(false);
   function copiar(){navigator.clipboard&&navigator.clipboard.writeText(codigo);setCopiado(true);setTimeout(()=>setCopiado(false),2000);}
   return(
@@ -1195,7 +1207,7 @@ function TreinadorPrescrever({user,showToast}){
     <div className="page">
       <div className="page-title orange">PRESCREVER TREINO</div>
       <div className="page-sub">Monte a semana completa de treinos para um aluno</div>
-      {alunos.length===0&&<div className="alert alert-warn">⚠️ Nenhum aluno vinculado. Código: <b style={{fontFamily:"var(--font-mono)"}}>{gerarCodigo(user.id)}</b></div>}
+      {alunos.length===0&&<div className="alert alert-warn">⚠️ Nenhum aluno vinculado. Código: <b style={{fontFamily:"var(--font-mono)"}}>{user.codigo||gerarCodigo(user.id)}</b></div>}
 
       {/* SELECIONAR ALUNO */}
       <div className="card">
@@ -1582,12 +1594,12 @@ function TreinadorDash({user}){
       <div className="grid-4">
         <div className="stat-tile"><div className="stat-label">Alunos</div><div className="stat-value orange">{alunos.length}</div></div>
         <div className="stat-tile"><div className="stat-label">Alertas</div><div className="stat-value red">{comAlerta.length}</div></div>
-        <div className="stat-tile"><div className="stat-label">Código</div><div style={{marginTop:"0.35rem",fontFamily:"var(--font-mono)",fontSize:"1.1rem",color:"var(--green)",letterSpacing:"0.1em"}}>{gerarCodigo(user.id)}</div></div>
+        <div className="stat-tile"><div className="stat-label">Código</div><div style={{marginTop:"0.35rem",fontFamily:"var(--font-mono)",fontSize:"1.1rem",color:"var(--green)",letterSpacing:"0.1em"}}>{user.codigo||gerarCodigo(user.id)}</div></div>
         <div className="stat-tile"><div className="stat-label">Planos ativos</div><div className="stat-value green">{alunosList.filter(a=>DB.getData("plano_treino_aluno",a.id)).length}</div></div>
       </div>
       {comAlerta.length>0&&<div className="alert alert-danger">🔴 {comAlerta.map(a=>a.nome.split(" ")[0]).join(", ")} — verificar saúde!</div>}
       {alunosList.length===0?(
-        <div className="card"><div className="card-title">👥 MEUS ALUNOS</div><div style={{color:"var(--text2)",fontSize:"0.9rem",lineHeight:1.7}}>Compartilhe seu código <b style={{color:"var(--green)",fontFamily:"var(--font-mono)"}}>{gerarCodigo(user.id)}</b> para seus alunos se conectarem.</div></div>
+        <div className="card"><div className="card-title">👥 MEUS ALUNOS</div><div style={{color:"var(--text2)",fontSize:"0.9rem",lineHeight:1.7}}>Compartilhe seu código <b style={{color:"var(--green)",fontFamily:"var(--font-mono)"}}>{user.codigo||gerarCodigo(user.id)}</b> para seus alunos se conectarem.</div></div>
       ):(
         <div className="card">
           <div className="card-title">👥 MEUS ALUNOS</div>
@@ -1619,7 +1631,7 @@ function TreinadorAcompanhamento({user}){
       <div className="page-title orange">ACOMPANHAMENTO</div>
       <div className="page-sub">Resumo semanal — clique para ver o relatório completo do mês</div>
       {alunos.length===0?(
-        <div className="card"><div style={{color:"var(--text2)"}}>Nenhum aluno vinculado. Código: <b style={{fontFamily:"var(--font-mono)",color:"var(--green)"}}>{gerarCodigo(user.id)}</b></div></div>
+        <div className="card"><div style={{color:"var(--text2)"}}>Nenhum aluno vinculado. Código: <b style={{fontFamily:"var(--font-mono)",color:"var(--green)"}}>{user.codigo||gerarCodigo(user.id)}</b></div></div>
       ):alunosList.map(a=>(
         <ResumoSemanalAluno key={a.id} aluno={a} onVerCompleto={()=>setAlunoVer(a)}/>
       ))}
@@ -1664,7 +1676,7 @@ function NutriPrescrever({user,showToast}){
     <div className="page">
       <div className="page-title blue">PLANO ALIMENTAR</div>
       <div className="page-sub">Monte e atribua planos alimentares com período de validade</div>
-      {alunos.length===0&&<div className="alert alert-warn">⚠️ Sem pacientes vinculados. Código: <b style={{fontFamily:"var(--font-mono)"}}>{gerarCodigo(user.id)}</b></div>}
+      {alunos.length===0&&<div className="alert alert-warn">⚠️ Sem pacientes vinculados. Código: <b style={{fontFamily:"var(--font-mono)"}}>{user.codigo||gerarCodigo(user.id)}</b></div>}
 
       {/* SELECIONAR PACIENTE */}
       <div className="card">
@@ -1745,11 +1757,11 @@ function NutriDash({user}){
       <div className="grid-4">
         <div className="stat-tile"><div className="stat-label">Pacientes</div><div className="stat-value blue">{pacientesList.length}</div></div>
         <div className="stat-tile"><div className="stat-label">Planos ativos</div><div className="stat-value green">{pacientesList.filter(p=>DB.getData("plano_alim_aluno",p.id)).length}</div></div>
-        <div className="stat-tile"><div className="stat-label">Código</div><div style={{marginTop:"0.35rem",fontFamily:"var(--font-mono)",fontSize:"1.1rem",color:"var(--green)",letterSpacing:"0.1em"}}>{gerarCodigo(user.id)}</div></div>
+        <div className="stat-tile"><div className="stat-label">Código</div><div style={{marginTop:"0.35rem",fontFamily:"var(--font-mono)",fontSize:"1.1rem",color:"var(--green)",letterSpacing:"0.1em"}}>{user.codigo||gerarCodigo(user.id)}</div></div>
         <div className="stat-tile"><div className="stat-label">Alertas</div><div className="stat-value orange">{pacientesList.filter(p=>{const s=DB.getData("saude",p.id)||{};return s.doente||s.mens;}).length}</div></div>
       </div>
       {pacientesList.length===0?(
-        <div className="card"><div className="card-title">👥 MEUS PACIENTES</div><div style={{color:"var(--text2)",lineHeight:1.7}}>Compartilhe o código <b style={{color:"var(--green)",fontFamily:"var(--font-mono)"}}>{gerarCodigo(user.id)}</b> para seus pacientes se conectarem.</div></div>
+        <div className="card"><div className="card-title">👥 MEUS PACIENTES</div><div style={{color:"var(--text2)",lineHeight:1.7}}>Compartilhe o código <b style={{color:"var(--green)",fontFamily:"var(--font-mono)"}}>{user.codigo||gerarCodigo(user.id)}</b> para seus pacientes se conectarem.</div></div>
       ):(
         <div className="card">
           <div className="card-title">👥 MEUS PACIENTES</div>
@@ -1786,7 +1798,7 @@ function NutriAcompanhamento({user}){
     <div className="page">
       <div className="page-title blue">ACOMPANHAMENTO</div>
       <div className="page-sub">Alimentação e saúde dos pacientes</div>
-      {pacientes.length===0?<div className="card"><div style={{color:"var(--text2)"}}>Sem pacientes. Código: <b style={{fontFamily:"var(--font-mono)",color:"var(--green)"}}>{gerarCodigo(user.id)}</b></div></div>:pacientesList.map(p=>{
+      {pacientes.length===0?<div className="card"><div style={{color:"var(--text2)"}}>Sem pacientes. Código: <b style={{fontFamily:"var(--font-mono)",color:"var(--green)"}}>{user.codigo||gerarCodigo(user.id)}</b></div></div>:pacientesList.map(p=>{
         const s=DB.getData("saude",p.id)||{};
         const alimCheck=DB.getData("alim_check_hoje",p.id)||{};
         const plano=DB.getData("plano_alim_aluno",p.id);
