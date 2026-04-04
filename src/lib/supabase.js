@@ -19,38 +19,39 @@ function gerarCodigoLocal(id) {
   return r.slice(0, 6);
 }
 
-// Cria perfil usando INSERT direto (evita 403 do upsert com RLS)
 async function criarPerfil(user, nome, role) {
   const codigo = gerarCodigoLocal(user.id);
   const nomeFinal = nome || user.email.split('@')[0];
   const roleFinal = role || 'aluno';
-
-  // Tenta insert, se já existe ignora
-  await supabase.from('profiles').insert({
-    id: user.id,
-    nome: nomeFinal,
-    role: roleFinal,
-    codigo,
-  }).select().single();
-
+  // Usa upsert para não falhar se já existe
+  await supabase.from('profiles').upsert(
+    { id: user.id, nome: nomeFinal, role: roleFinal, codigo },
+    { onConflict: 'id', ignoreDuplicates: false }
+  );
   return { id: user.id, email: user.email, nome: nomeFinal, role: roleFinal, codigo };
 }
 
 export const DB = {
 
   async register(nome, email, senha, role) {
+    // Faz logout de qualquer sessão existente antes de criar conta nova
+    await supabase.auth.signOut();
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password: senha,
       options: { data: { nome, role } },
     });
+
     if (error) {
-      const msg = error.message?.includes('already registered')
-        ? 'Este email já está cadastrado. Faça login.'
-        : error.message;
-      return { ok: false, msg };
+      if (error.message?.includes('already registered') || error.code === 'user_already_exists') {
+        return { ok: false, msg: 'Este email já está cadastrado. Use a aba "Entrar" para fazer login.' };
+      }
+      return { ok: false, msg: error.message };
     }
-    if (!data.user) return { ok: false, msg: 'Erro ao criar conta.' };
+
+    if (!data.user) return { ok: false, msg: 'Erro ao criar conta. Tente novamente.' };
+
     const user = await criarPerfil(data.user, nome, role);
     return { ok: true, user };
   },
