@@ -1,5 +1,11 @@
+// ============================================================
+// src/lib/supabase.js
+// Cliente Supabase + camada DB que substitui localStorage
+// ============================================================
 import { createClient } from '@supabase/supabase-js';
 
+// Coloque suas credenciais aqui (ou em .env)
+// VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY no arquivo .env
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || '';
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
@@ -7,189 +13,150 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
-    detectSessionInUrl: false,
+    detectSessionInUrl: true,
   },
 });
 
-function gerarCodigoLocal(id) {
-  const c = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let r = "", s = 0;
-  for (let i = 0; i < id.length; i++) s = (s * 31 + id.charCodeAt(i)) % 999999;
-  for (let i = 0; i < 6; i++) { r += c[s % 32]; s = Math.floor(s / 32) + 7; }
-  return r.slice(0, 6);
-}
-
-async function criarPerfil(user, nome, role) {
-  const codigo = gerarCodigoLocal(user.id);
-  const nomeFinal = nome || user.email.split('@')[0];
-  const roleFinal = role || 'aluno';
-  // Usa upsert para não falhar se já existe
-  await supabase.from('profiles').upsert(
-    { id: user.id, nome: nomeFinal, role: roleFinal, codigo },
-    { onConflict: 'id', ignoreDuplicates: false }
-  );
-  return { id: user.id, email: user.email, nome: nomeFinal, role: roleFinal, codigo };
-}
-
+// ============================================================
+// DB — API idêntica ao localStorage anterior
+// Troca localStorage por Supabase sem mudar o resto do app
+// ============================================================
 export const DB = {
 
+  // ----------------------------------------------------------
+  // AUTH
+  // ----------------------------------------------------------
   async register(nome, email, senha, role) {
-    // Faz logout de qualquer sessão existente antes de criar conta nova
-    await supabase.auth.signOut();
-
     const { data, error } = await supabase.auth.signUp({
       email,
       password: senha,
-      options: { data: { nome, role } },
+      options: {
+        data: { nome, role }, // salvo em raw_user_meta_data → trigger cria perfil
+      },
     });
-
-    if (error) {
-      if (error.message?.includes('already registered') || error.code === 'user_already_exists') {
-        return { ok: false, msg: 'Este email já está cadastrado. Use a aba "Entrar" para fazer login.' };
-      }
-      return { ok: false, msg: error.message };
-    }
-
-    if (!data.user) return { ok: false, msg: 'Erro ao criar conta. Tente novamente.' };
-
-    const user = await criarPerfil(data.user, nome, role);
-    return { ok: true, user };
+    if (error) return { ok: false, msg: error.message };
+    return { ok: true, user: await this._formatUser(data.user) };
   },
 
   async login(email, senha) {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password: senha });
     if (error) return { ok: false, msg: 'Email ou senha incorretos.' };
-    const user = await this._formatUser(data.user);
-    return { ok: true, user };
+    return { ok: true, user: await this._formatUser(data.user) };
   },
 
   async logout() {
-    try { await supabase.auth.signOut({ scope: 'local' }); } catch{}
-    try {
-      Object.keys(localStorage)
-        .filter(k => k.includes('supabase') || k.includes('sb-'))
-        .forEach(k => localStorage.removeItem(k));
-    } catch{}
+    await supabase.auth.signOut();
   },
 
   async getSession() {
-    try {
-      const timeout = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('timeout')), 5000)
-      );
-      const { data } = await Promise.race([supabase.auth.getSession(), timeout]);
-      if (!data?.session?.user) return null;
-      return this._formatUser(data.session.user);
-    } catch {
-      return null;
-    }
+    const { data } = await supabase.auth.getSession();
+    if (!data.session?.user) return null;
+    return this._formatUser(data.session.user);
   },
 
+  async onAuthChange(callback) {
+    return supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        const user = await this._formatUser(session.user);
+        callback(user);
+      } else {
+        callback(null);
+      }
+    });
+  },
+
+  // Formata o user do Supabase para o formato do app
   async _formatUser(supaUser) {
     if (!supaUser) return null;
-    try {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('nome, role, codigo')
-        .eq('id', supaUser.id)
-        .maybeSingle();
+    // Busca perfil (nome, role, codigo)
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('nome, role, codigo')
+      .eq('id', supaUser.id)
+      .single();
 
-      if (!profile) {
-        const nome = supaUser.user_metadata?.nome || supaUser.email.split('@')[0];
-        const role = supaUser.user_metadata?.role || 'aluno';
-        return criarPerfil(supaUser, nome, role);
-      }
-
-      return { id: supaUser.id, email: supaUser.email, nome: profile.nome, role: profile.role, codigo: profile.codigo };
-    } catch {
-      return {
-        id: supaUser.id,
-        email: supaUser.email,
-        nome: supaUser.user_metadata?.nome || supaUser.email.split('@')[0],
-        role: supaUser.user_metadata?.role || 'aluno',
-        codigo: gerarCodigoLocal(supaUser.id),
-      };
-    }
+    return {
+      id: supaUser.id,
+      email: supaUser.email,
+      nome: profile?.nome || supaUser.user_metadata?.nome || supaUser.email,
+      role: profile?.role || supaUser.user_metadata?.role || 'aluno',
+      codigo: profile?.codigo || '',
+    };
   },
 
+  // ----------------------------------------------------------
+  // BUSCA POR CÓDIGO (vínculo)
+  // ----------------------------------------------------------
   async getUserByCodigo(codigo) {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, nome, role, codigo')
-        .eq('codigo', codigo.trim().toUpperCase())
-        .limit(1);
-      if (error || !data || data.length === 0) return null;
-      const profile = data[0];
-      return { ...profile, role: profile.role || 'aluno' };
-    } catch(e) {
-      console.error('getUserByCodigo error:', e);
-      return null;
-    }
+    const { data, error } = await supabase.rpc('get_profile_by_codigo', { c: codigo.toUpperCase() });
+    if (error || !data?.length) return null;
+    return data[0];
   },
 
   async getUserById(id) {
-    if (!id) return null;
     const { data } = await supabase
       .from('profiles')
       .select('id, nome, role, codigo')
       .eq('id', id)
-      .maybeSingle();
-    return data || null;
+      .single();
+    if (!data) return null;
+    const { data: u } = await supabase.auth.admin?.getUserById?.(id) || {};
+    return { ...data, email: u?.email || '' };
   },
 
+  // ----------------------------------------------------------
+  // VÍNCULOS
+  // ----------------------------------------------------------
   async getVinculoAluno(alunoId) {
     const { data } = await supabase
       .from('vinculos')
       .select('treinador_id, nutri_id')
       .eq('aluno_id', alunoId)
-      .maybeSingle();
+      .single();
     if (!data) return null;
     return { treinadorId: data.treinador_id, nutriId: data.nutri_id };
   },
 
   async setVinculoAluno(alunoId, treinadorId, nutriId) {
-    await supabase.from('vinculos').upsert(
-      { aluno_id: alunoId, treinador_id: treinadorId || null, nutri_id: nutriId || null },
-      { onConflict: 'aluno_id' }
-    );
+    await supabase
+      .from('vinculos')
+      .upsert(
+        { aluno_id: alunoId, treinador_id: treinadorId || null, nutri_id: nutriId || null },
+        { onConflict: 'aluno_id' }
+      );
   },
 
   async getAlunosDe(profId) {
-    const { data } = await supabase
-      .from('vinculos')
-      .select('aluno_id')
-      .or(`treinador_id.eq.${profId},nutri_id.eq.${profId}`);
-    if (!data?.length) return [];
-    const ids = data.map(v => v.aluno_id);
-    const { data: profiles } = await supabase
-      .from('profiles')
-      .select('id, nome, role, codigo')
-      .in('id', ids);
-    return profiles || [];
+    const { data } = await supabase.rpc('get_alunos_do_prof', { prof_id: profId });
+    return data || [];
   },
 
+  // ----------------------------------------------------------
+  // DADOS GENÉRICOS (substitui localStorage tf_KEY_UID)
+  // ----------------------------------------------------------
   async getData(chave, userId) {
-    if (!userId) return null;
     const { data } = await supabase
       .from('dados')
       .select('valor')
       .eq('user_id', userId)
       .eq('chave', chave)
-      .maybeSingle();
+      .single();
     return data?.valor ?? null;
   },
 
   async setData(chave, userId, valor) {
-    if (!userId) return;
-    await supabase.from('dados').upsert(
-      { user_id: userId, chave, valor, atualizado_em: new Date().toISOString() },
-      { onConflict: 'user_id,chave' }
-    );
+    await supabase.rpc('upsert_dado', {
+      p_user_id: userId,
+      p_chave: chave,
+      p_valor: valor,
+    });
   },
 
+  // ----------------------------------------------------------
+  // HELPER: buscar vários dados de um aluno de uma vez
+  // (para dashboards do profissional — evita N+1 queries)
+  // ----------------------------------------------------------
   async getMultiData(userId, chaves) {
-    if (!userId) return {};
     const { data } = await supabase
       .from('dados')
       .select('chave, valor')
