@@ -278,6 +278,13 @@ const styles = `
   /* IMC */
   .stat-sub { font-size:0.72rem; color:var(--text3); margin-top:0.2rem; }
 
+
+  .skeleton { background: linear-gradient(90deg, var(--card2) 25%, var(--border) 50%, var(--card2) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: var(--radius); }
+  @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+  .loading-dots { display:flex; gap:4px; justify-content:center; padding:2rem; }
+  .loading-dots span { width:8px; height:8px; border-radius:50%; background:var(--green); animation:dotPulse 1.2s ease-in-out infinite; }
+  .loading-dots span:nth-child(2){animation-delay:.2s} .loading-dots span:nth-child(3){animation-delay:.4s}
+  @keyframes dotPulse{0%,80%,100%{transform:scale(0.6);opacity:0.4}40%{transform:scale(1);opacity:1}}
   @media(max-width:768px){
     .sidebar { display:none; }
     .mobile-nav { display:block; }
@@ -549,20 +556,23 @@ function CodigoProfissional({user}){
   );
 }
 
-// ANTIGO (sem async):
-function buscar(){setErro("");setEncontrado(null);if(codigo.trim().length<6)...
-
-// NOVO (com async):
-async function buscar(){
+function VinculoPorCodigo({label,tipo,atual,onVincular}){
+  const [codigo,setCodigo]=useState("");
+  const [encontrado,setEncontrado]=useState(null);
+  const [erro,setErro]=useState("");
+  const [buscando,setBuscando]=useState(false);
+  async function buscar(){
     setErro("");setEncontrado(null);
     if(codigo.trim().length<6){setErro("Digite os 6 caracteres do código.");return;}
     setBuscando(true);
-    const u=await DB.getUserByCodigo(codigo.trim().toUpperCase());
-    setBuscando(false);
-    if(!u){setErro("Código não encontrado. Verifique com seu profissional.");return;}
-    const roleLabel={treinador:"treinador",nutri:"nutricionista",aluno:"aluno"}[u.role]||u.role||"?";
-    if(u.role!==tipo){setErro(`Este código pertence a um ${roleLabel}, não a um ${label.toLowerCase()}.`);return;}
-    setEncontrado(u);
+    try{
+      const u=await DB.getUserByCodigo(codigo.trim().toUpperCase());
+      setBuscando(false);
+      if(!u){setErro("Código não encontrado. Verifique com seu profissional.");return;}
+      const rl={treinador:"treinador",nutri:"nutricionista",aluno:"aluno"}[u.role]||u.role||"outro";
+      if(u.role!==tipo){setErro(`Este código pertence a um ${rl}, não a um ${label.toLowerCase()}.`);return;}
+      setEncontrado(u);
+    }catch(e){setBuscando(false);setErro("Erro ao buscar. Tente novamente.");}
   }
   function confirmar(){if(encontrado)onVincular(encontrado);setCodigo("");setEncontrado(null);}
   const cor=tipo==="treinador"?"var(--orange)":tipo==="nutri"?"var(--blue)":"var(--green)";
@@ -1034,7 +1044,7 @@ function AlunoSaude({user,showToast}){
 function AlunoAvaliacao({user,showToast}){
   const [f,setF]=useState({});
   useEffect(()=>{DB.getData("avaliacao",user.id).then(d=>d&&setF(d));},[user.id]);
-  function set(k,v){setF(p=>({...p,[k]:v}));}
+  async function set(k,v){setF(p=>({...p,[k]:v}));}
   async function salvar(){
     await DB.setData("avaliacao",user.id,f);
     const hist=DB.getData("avaliacao_hist",user.id)||[];
@@ -1083,7 +1093,7 @@ function AlunoCompeticoes({user,showToast}){
   const [comps,setComps]=useState([]);
   useEffect(()=>{DB.getData("competicoes",user.id).then(d=>d&&setComps(d));},[user.id]);
   const [f,setF]=useState({nome:"",modalidade:"Corrida",data:"",local:"",objetivo:"Completar"});
-  function set(k,v){setF(p=>({...p,[k]:v}));}
+  async function set(k,v){setF(p=>({...p,[k]:v}));}
   async function add(){
     if(!f.nome||!f.data){return;}
     const novo=[...comps,{...f,id:Date.now()}];
@@ -1206,7 +1216,7 @@ function TreinadorPrescrever({user,showToast}){
     setDias(p=>{const n=[...p];n[diaIdx]={...n[diaIdx],exercicios:[...(n[diaIdx].exercicios||[]),{...novoEx}]};return n;});
     setNovoEx({nome:"",series:"",reps:"",carga:"",duracao:""});
   }
-  function removeEx(diaIdx,exIdx){setDias(p=>{const n=[...p];n[diaIdx]={...n[diaIdx],exercicios:n[diaIdx].exercicios.filter((_,i)=>i!==exIdx)};return n;});}
+  async function removeEx(diaIdx,exIdx){setDias(p=>{const n=[...p];n[diaIdx]={...n[diaIdx],exercicios:n[diaIdx].exercicios.filter((_,i)=>i!==exIdx)};return n;});}
 
   async function salvar(){
     if(!alunoSel){showToast&&showToast("Selecione um aluno primeiro","warn");return;}
@@ -1223,7 +1233,7 @@ function TreinadorPrescrever({user,showToast}){
     <div className="page">
       <div className="page-title orange">PRESCREVER TREINO</div>
       <div className="page-sub">Monte a semana completa de treinos para um aluno</div>
-      {alunos.length===0&&<div className="alert alert-warn">⚠️ Nenhum aluno vinculado. Código: <b style={{fontFamily:"var(--font-mono)"}}>{user.codigo||gerarCodigo(user.id)}</b></div>}
+      {alunos.length===0&&<div className="alert alert-warn">⚠️ Nenhum aluno vinculado. Código: <b style={{fontFamily:"var(--font-mono)"}}>{user.codigo||"------"}</b></div>}
 
       {/* SELECIONAR ALUNO */}
       <div className="card">
@@ -1610,12 +1620,12 @@ function TreinadorDash({user}){
       <div className="grid-4">
         <div className="stat-tile"><div className="stat-label">Alunos</div><div className="stat-value orange">{alunos.length}</div></div>
         <div className="stat-tile"><div className="stat-label">Alertas</div><div className="stat-value red">{comAlerta.length}</div></div>
-        <div className="stat-tile"><div className="stat-label">Código</div><div style={{marginTop:"0.35rem",fontFamily:"var(--font-mono)",fontSize:"1.1rem",color:"var(--green)",letterSpacing:"0.1em"}}>{user.codigo||gerarCodigo(user.id)}</div></div>
+        <div className="stat-tile"><div className="stat-label">Código</div><div style={{marginTop:"0.35rem",fontFamily:"var(--font-mono)",fontSize:"1.1rem",color:"var(--green)",letterSpacing:"0.1em"}}>{user.codigo||"------"}</div></div>
         <div className="stat-tile"><div className="stat-label">Planos ativos</div><div className="stat-value green">{alunosList.filter(a=>DB.getData("plano_treino_aluno",a.id)).length}</div></div>
       </div>
       {comAlerta.length>0&&<div className="alert alert-danger">🔴 {comAlerta.map(a=>a.nome.split(" ")[0]).join(", ")} — verificar saúde!</div>}
       {alunosList.length===0?(
-        <div className="card"><div className="card-title">👥 MEUS ALUNOS</div><div style={{color:"var(--text2)",fontSize:"0.9rem",lineHeight:1.7}}>Compartilhe seu código <b style={{color:"var(--green)",fontFamily:"var(--font-mono)"}}>{user.codigo||gerarCodigo(user.id)}</b> para seus alunos se conectarem.</div></div>
+        <div className="card"><div className="card-title">👥 MEUS ALUNOS</div><div style={{color:"var(--text2)",fontSize:"0.9rem",lineHeight:1.7}}>Compartilhe seu código <b style={{color:"var(--green)",fontFamily:"var(--font-mono)"}}>{user.codigo||"------"}</b> para seus alunos se conectarem.</div></div>
       ):(
         <div className="card">
           <div className="card-title">👥 MEUS ALUNOS</div>
@@ -1647,7 +1657,7 @@ function TreinadorAcompanhamento({user}){
       <div className="page-title orange">ACOMPANHAMENTO</div>
       <div className="page-sub">Resumo semanal — clique para ver o relatório completo do mês</div>
       {alunos.length===0?(
-        <div className="card"><div style={{color:"var(--text2)"}}>Nenhum aluno vinculado. Código: <b style={{fontFamily:"var(--font-mono)",color:"var(--green)"}}>{user.codigo||gerarCodigo(user.id)}</b></div></div>
+        <div className="card"><div style={{color:"var(--text2)"}}>Nenhum aluno vinculado. Código: <b style={{fontFamily:"var(--font-mono)",color:"var(--green)"}}>{user.codigo||"------"}</b></div></div>
       ):alunosList.map(a=>(
         <ResumoSemanalAluno key={a.id} aluno={a} onVerCompleto={()=>setAlunoVer(a)}/>
       ))}
@@ -1678,7 +1688,7 @@ function NutriPrescrever({user,showToast}){
 
   function updateRef(i,campo,val){setRefeicoes(p=>{const n=[...p];n[i]={...n[i],[campo]:campo==="k"?Number(val):val};return n;});}
   function removeRef(i){setRefeicoes(p=>p.filter((_,j)=>j!==i));}
-  function addRef(){setRefeicoes(p=>[...p,{h:"",r:"Nova refeição",i:"",k:0}]);}
+  async function addRef(){setRefeicoes(p=>[...p,{h:"",r:"Nova refeição",i:"",k:0}]);}
 
   async function salvar(){
     if(!alunoSel)return;
@@ -1692,7 +1702,7 @@ function NutriPrescrever({user,showToast}){
     <div className="page">
       <div className="page-title blue">PLANO ALIMENTAR</div>
       <div className="page-sub">Monte e atribua planos alimentares com período de validade</div>
-      {alunos.length===0&&<div className="alert alert-warn">⚠️ Sem pacientes vinculados. Código: <b style={{fontFamily:"var(--font-mono)"}}>{user.codigo||gerarCodigo(user.id)}</b></div>}
+      {alunos.length===0&&<div className="alert alert-warn">⚠️ Sem pacientes vinculados. Código: <b style={{fontFamily:"var(--font-mono)"}}>{user.codigo||"------"}</b></div>}
 
       {/* SELECIONAR PACIENTE */}
       <div className="card">
@@ -1773,11 +1783,11 @@ function NutriDash({user}){
       <div className="grid-4">
         <div className="stat-tile"><div className="stat-label">Pacientes</div><div className="stat-value blue">{pacientesList.length}</div></div>
         <div className="stat-tile"><div className="stat-label">Planos ativos</div><div className="stat-value green">{pacientesList.filter(p=>DB.getData("plano_alim_aluno",p.id)).length}</div></div>
-        <div className="stat-tile"><div className="stat-label">Código</div><div style={{marginTop:"0.35rem",fontFamily:"var(--font-mono)",fontSize:"1.1rem",color:"var(--green)",letterSpacing:"0.1em"}}>{user.codigo||gerarCodigo(user.id)}</div></div>
+        <div className="stat-tile"><div className="stat-label">Código</div><div style={{marginTop:"0.35rem",fontFamily:"var(--font-mono)",fontSize:"1.1rem",color:"var(--green)",letterSpacing:"0.1em"}}>{user.codigo||"------"}</div></div>
         <div className="stat-tile"><div className="stat-label">Alertas</div><div className="stat-value orange">{pacientesList.filter(p=>{const s=DB.getData("saude",p.id)||{};return s.doente||s.mens;}).length}</div></div>
       </div>
       {pacientesList.length===0?(
-        <div className="card"><div className="card-title">👥 MEUS PACIENTES</div><div style={{color:"var(--text2)",lineHeight:1.7}}>Compartilhe o código <b style={{color:"var(--green)",fontFamily:"var(--font-mono)"}}>{user.codigo||gerarCodigo(user.id)}</b> para seus pacientes se conectarem.</div></div>
+        <div className="card"><div className="card-title">👥 MEUS PACIENTES</div><div style={{color:"var(--text2)",lineHeight:1.7}}>Compartilhe o código <b style={{color:"var(--green)",fontFamily:"var(--font-mono)"}}>{user.codigo||"------"}</b> para seus pacientes se conectarem.</div></div>
       ):(
         <div className="card">
           <div className="card-title">👥 MEUS PACIENTES</div>
@@ -1814,7 +1824,7 @@ function NutriAcompanhamento({user}){
     <div className="page">
       <div className="page-title blue">ACOMPANHAMENTO</div>
       <div className="page-sub">Alimentação e saúde dos pacientes</div>
-      {pacientes.length===0?<div className="card"><div style={{color:"var(--text2)"}}>Sem pacientes. Código: <b style={{fontFamily:"var(--font-mono)",color:"var(--green)"}}>{user.codigo||gerarCodigo(user.id)}</b></div></div>:pacientesList.map(p=>{
+      {pacientes.length===0?<div className="card"><div style={{color:"var(--text2)"}}>Sem pacientes. Código: <b style={{fontFamily:"var(--font-mono)",color:"var(--green)"}}>{user.codigo||"------"}</b></div></div>:pacientesList.map(p=>{
         const s=DB.getData("saude",p.id)||{};
         const alimCheck=DB.getData("alim_check_hoje",p.id)||{};
         const plano=DB.getData("plano_alim_aluno",p.id);
