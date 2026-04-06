@@ -1128,14 +1128,14 @@ function AlunoCompeticoes({user,showToast}){
 // ALUNO — DASHBOARD
 // ============================================================
 function AlunoDash({user,setPage}){
-  const vinculo=DB.getVinculoAluno(user.id)||{};
-  const treinador=vinculo.treinadorId?DB.getUserById(vinculo.treinadorId):null;
-  const nutri=vinculo.nutriId?DB.getUserById(vinculo.nutriId):null;
-  const agua=DB.getData("agua_hoje",user.id)||0;
-  const meta=DB.getData("meta_agua",user.id)||3000;
-  const saude=DB.getData("saude",user.id)||{};
-  const pct=Math.min(Math.round((agua/meta)*100),100);
-  const planoTreino=DB.getData("plano_treino_aluno",user.id);
+  const [vinculo,,]=useAsyncData(()=>DB.getVinculoAluno(user.id),[user.id],{});
+  const [treinador,,]=useAsyncData(()=>vinculo?.treinadorId?DB.getUserById(vinculo.treinadorId):Promise.resolve(null),[vinculo?.treinadorId],null);
+  const [nutri,,]=useAsyncData(()=>vinculo?.nutriId?DB.getUserById(vinculo.nutriId):Promise.resolve(null),[vinculo?.nutriId],null);
+  const [agua,,]=useAlunoData(user.id,"agua_hoje",0);
+  const [meta,,]=useAlunoData(user.id,"meta_agua",3000);
+  const [saude,,]=useAlunoData(user.id,"saude",{});
+  const [planoTreino,,]=useAlunoData(user.id,"plano_treino_aluno",null);
+  const pct=Math.min(Math.round(((agua||0)/Math.max(meta||3000,1))*100),100);
   const hoje=new Date().getDay();const diaHoje=hoje===0?6:hoje-1;
   const treinoHoje=planoTreino?.dias?.[diaHoje];
   return(
