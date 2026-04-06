@@ -1,1 +1,1 @@
-{"buildCommand":"vite build --force","framework":"vite"} 
+{"rewrites":[{"source":"/(.*)", "destination":"/index.html"}]} 
