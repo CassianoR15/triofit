@@ -806,7 +806,7 @@ function AlunoTreinos({user,showToast}){
             {diaInfo.exercicios&&(
               <div style={{textAlign:"right"}}>
                 <div style={{fontFamily:"var(--font-display)",fontSize:"1.8rem",color:"var(--green)"}}>
-                  {diaInfo.exercicios.filter((_,j)=>checked[`${diaAtivo}_${j}`]).length}/{diaInfo.exercicios.length}
+                  {(diaInfo.exercicios||[]).filter((_,j)=>checked[`${diaAtivo}_${j}`]).length}/{(diaInfo.exercicios||[]).length}
                 </div>
                 <div style={{fontSize:"0.7rem",color:"var(--text3)"}}>exercícios</div>
               </div>
@@ -815,13 +815,13 @@ function AlunoTreinos({user,showToast}){
 
           {diaInfo.obs&&<div style={{background:"rgba(52,152,219,0.1)",border:"1px solid rgba(52,152,219,0.2)",borderRadius:"var(--radius)",padding:"0.75rem",fontSize:"0.85rem",color:"var(--blue)",marginBottom:"1rem"}}>📌 {diaInfo.obs}</div>}
 
-          {diaInfo.exercicios&&diaInfo.exercicios.length>0?(
+          {diaInfo.exercicios&&(diaInfo.exercicios||[]).length>0?(
             <>
               <div className="prog-wrap">
-                <div className="prog-hdr"><span>Progresso</span><span className="green">{diaInfo.exercicios.filter((_,j)=>checked[`${diaAtivo}_${j}`]).length}/{diaInfo.exercicios.length}</span></div>
-                <div className="prog-track"><div className="prog-fill green" style={{width:`${(diaInfo.exercicios.filter((_,j)=>checked[`${diaAtivo}_${j}`]).length/diaInfo.exercicios.length)*100}%`}}/></div>
+                <div className="prog-hdr"><span>Progresso</span><span className="green">{(diaInfo.exercicios||[]).filter((_,j)=>checked[`${diaAtivo}_${j}`]).length}/{(diaInfo.exercicios||[]).length}</span></div>
+                <div className="prog-track"><div className="prog-fill green" style={{width:`${((diaInfo.exercicios||[]).filter((_,j)=>checked[`${diaAtivo}_${j}`]).length/(diaInfo.exercicios||[]).length)*100}%`}}/></div>
               </div>
-              {diaInfo.exercicios.map((ex,j)=>(
+              {(diaInfo.exercicios||[]).map((ex,j)=>(
                 <div key={j} className={`ex-item ${checked[`${diaAtivo}_${j}`]?"done-ex":""}`} onClick={()=>toggleEx(diaAtivo,j)}>
                   <div className={`check-box ${checked[`${diaAtivo}_${j}`]?"checked":""}`}>{checked[`${diaAtivo}_${j}`]&&"✓"}</div>
                   <div style={{flex:1}}>
@@ -909,7 +909,7 @@ function AlunoAlimentacao({user,showToast}){
 
       <div className="card">
         <div className="card-title">🥗 REFEIÇÕES DO DIA — marque o que comeu</div>
-        {refeicoes.map((r,i)=>(
+        {(refeicoes||[]).map((r,i)=>(
           <div key={i} className={`refeicao-item ${comido[i]?"comido":""}`} onClick={()=>toggleRefeicao(i)}>
             <div className={`check-box ${comido[i]?"checked":""}`} style={{width:"24px",height:"24px",borderRadius:"8px"}}>{comido[i]&&"✓"}</div>
             <div className="refeicao-hora">{r.h}</div>
@@ -1227,7 +1227,7 @@ function TreinadorPrescrever({user,showToast}){
     
   }
 
-  const diaAtual=dias[diaEdit];
+  const diaAtual=dias[diaEdit]||{exercicios:[]};
 
   return(
     <div className="page">
@@ -1586,7 +1586,7 @@ function DiarioAluno({aluno,onBack}){
           <div style={{fontSize:"0.9rem",color:"var(--text2)",marginTop:"0.5rem",marginBottom:"1rem"}}>
             Refeições feitas hoje: <span style={{color:"var(--green)",fontWeight:600}}>{qtdComido}/{refeicoes.length}</span>
           </div>
-          {refeicoes.map((r,i)=>(
+          {(refeicoes||[]).map((r,i)=>(
             <div key={i} className="meal-item" style={{background:alimCheck[i]?"var(--green-dim)":"var(--card2)",border:alimCheck[i]?"1px solid rgba(46,204,113,0.3)":"none"}}>
               <div style={{color:"var(--text3)",fontFamily:"var(--font-mono)",fontSize:"0.75rem",minWidth:"45px"}}>{r.h}</div>
               <div style={{flex:1,fontWeight:600,fontSize:"0.88rem"}}>{r.r}</div>
@@ -1611,7 +1611,7 @@ function TreinadorDash({user}){
   const [alunoVer,setAlunoVer]=useState(null);
   if(alunoVer)return<DiarioAluno aluno={alunoVer} onBack={()=>setAlunoVer(null)}/>;
   const alunosList=Array.isArray(alunos)?alunos:[];
-  const comAlerta=(alunosList||[]).filter(a=>{const s=DB.getData("saude",a.id)||{};return s.doente||(s.dores&&s.dores.length>0);});
+  const comAlerta=[];
   return(
     <div className="page">
       <div className="page-title orange">{getGreeting()}, {firstName(user.nome)} 👋</div>
@@ -1744,7 +1744,7 @@ function NutriPrescrever({user,showToast}){
           {/* REFEIÇÕES */}
           <div className="card">
             <div className="card-title">🥗 REFEIÇÕES DO PLANO</div>
-            {refeicoes.map((r,i)=>(
+            {(refeicoes||[]).map((r,i)=>(
               <div key={i} style={{background:"var(--card2)",borderRadius:"var(--radius)",padding:"0.85rem",marginBottom:"0.75rem",border:"1px solid var(--border)"}}>
                 <div className="grid-2" style={{marginBottom:"0.5rem"}}>
                   <div className="form-group" style={{marginBottom:0}}><label className="form-label">Horário</label><input className="form-input" type="time" value={r.h} onChange={e=>updateRef(i,"h",e.target.value)}/></div>
