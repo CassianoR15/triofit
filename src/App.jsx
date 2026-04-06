@@ -562,7 +562,7 @@ function VinculoPorCodigo({label,tipo,atual,onVincular}){
   const [encontrado,setEncontrado]=useState(null);
   const [erro,setErro]=useState("");
   const [buscando,setBuscando]=useState(false);
-  async function buscar(){
+  async async function buscar(){
     setErro("");setEncontrado(null);
     if(codigo.trim().length<6){setErro("Digite os 6 caracteres do código.");return;}
     setBuscando(true);
