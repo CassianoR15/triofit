@@ -646,7 +646,7 @@ function AlunoSelector({alunos,selecionado,onSelect,accentClass}){
     <div>
       <div style={{fontSize:"0.8rem",color:"var(--text3)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:"0.75rem"}}>Selecionar aluno / paciente</div>
       <div className="aluno-sel-wrap">
-        {alunos.map(a=>(
+        {(alunos||[]).map(a=>(
           <button key={a.id} className={`aluno-sel-btn ${selecionado?.id===a.id?accentClass:""}`}
             onClick={()=>onSelect(selecionado?.id===a.id ? null : a)}>
             <div className="aluno-sel-avatar">{initials(a.nome)}</div>
@@ -1630,7 +1630,7 @@ function TreinadorDash({user}){
       ):(
         <div className="card">
           <div className="card-title">👥 MEUS ALUNOS</div>
-          {alunosList.map(a=>{
+          {(alunosList||[]).map(a=>{
             const s=DB.getData("saude",a.id)||{};
             const plano=DB.getData("plano_treino_aluno",a.id);
             const temAlerta=s.doente||(s.dores&&s.dores.length>0);
@@ -1659,7 +1659,7 @@ function TreinadorAcompanhamento({user}){
       <div className="page-sub">Resumo semanal — clique para ver o relatório completo do mês</div>
       {alunos.length===0?(
         <div className="card"><div style={{color:"var(--text2)"}}>Nenhum aluno vinculado. Código: <b style={{fontFamily:"var(--font-mono)",color:"var(--green)"}}>{user.codigo||"------"}</b></div></div>
-      ):alunosList.map(a=>(
+      ):(alunosList||[]).map(a=>(
         <ResumoSemanalAluno key={a.id} aluno={a} onVerCompleto={()=>setAlunoVer(a)}/>
       ))}
     </div>
@@ -1792,7 +1792,7 @@ function NutriDash({user}){
       ):(
         <div className="card">
           <div className="card-title">👥 MEUS PACIENTES</div>
-          {pacientesList.map(p=>{
+          {(pacientesList||[]).map(p=>{
             const s=DB.getData("saude",p.id)||{};
             const plano=DB.getData("plano_alim_aluno",p.id);
             const alimCheck=DB.getData("alim_check_hoje",p.id)||{};
@@ -1825,7 +1825,7 @@ function NutriAcompanhamento({user}){
     <div className="page">
       <div className="page-title blue">ACOMPANHAMENTO</div>
       <div className="page-sub">Alimentação e saúde dos pacientes</div>
-      {pacientes.length===0?<div className="card"><div style={{color:"var(--text2)"}}>Sem pacientes. Código: <b style={{fontFamily:"var(--font-mono)",color:"var(--green)"}}>{user.codigo||"------"}</b></div></div>:pacientesList.map(p=>{
+      {pacientes.length===0?<div className="card"><div style={{color:"var(--text2)"}}>Sem pacientes. Código: <b style={{fontFamily:"var(--font-mono)",color:"var(--green)"}}>{user.codigo||"------"}</b></div></div>:(pacientesList||[]).map(p=>{
         const s=DB.getData("saude",p.id)||{};
         const alimCheck=DB.getData("alim_check_hoje",p.id)||{};
         const plano=DB.getData("plano_alim_aluno",p.id);
