@@ -399,11 +399,10 @@ function useAlunoData(userId, chave, defaultVal=null) {
 function AuthScreen({onLogin}){
   const [tab,setTab]=useState("login");
   useEffect(()=>{
-    // Clear any stale session when auth screen is shown
-    supabase.auth.signOut({ scope: 'local' }).catch(()=>{});
-    try {
-      Object.keys(localStorage).filter(k=>k.includes('supabase')||k.includes('sb-')).forEach(k=>localStorage.removeItem(k));
-    } catch{}
+    // Only clear if there's a stale token in URL (OAuth redirect)
+    if(window.location.hash.includes('access_token')) {
+      window.history.replaceState(null,'',window.location.pathname);
+    }
   },[]);
   const [role,setRole]=useState("aluno");
   const [nome,setNome]=useState("");
@@ -1926,15 +1925,13 @@ export default function TrioFit(){
   },[]);
 
   async function handleLogout(){
-    setUser(null); // Update UI immediately
     try { await supabase.auth.signOut({ scope: 'global' }); } catch{}
     try {
       Object.keys(localStorage)
-        .filter(k=>k.includes('supabase')||k.includes('sb-')||k.includes('tf_'))
+        .filter(k=>k.startsWith('sb-'))
         .forEach(k=>localStorage.removeItem(k));
     } catch{}
-    // Force page reload to clear all state
-    setTimeout(()=>window.location.href='/', 100);
+    window.location.href = '/';
   }
 
   if(loading){
