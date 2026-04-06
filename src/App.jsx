@@ -775,7 +775,7 @@ function AlunoTreinos({user,showToast}){
 
       {/* ABAS DOS DIAS */}
       <div className="week-tabs">
-        {dias.map((d,i)=>{
+        {(dias||[]).map((d,i)=>{
           const temEx=d.exercicios&&d.exercicios.length>0;
           const feitos=d.exercicios?d.exercicios.filter((_,j)=>checked[`${i}_${j}`]).length:0;
           const todos=d.exercicios?d.exercicios.length:0;
@@ -1015,7 +1015,7 @@ function AlunoSaude({user,showToast}){
       </div>
       <div className="card">
         <div className="card-title">🔴 REGISTRAR DOR MUSCULAR</div>
-        {dores.length>0&&<div style={{marginBottom:"1rem"}}>{dores.map((d,i)=>(
+        {(dores||[]).length>0&&<div style={{marginBottom:"1rem"}}>{(dores||[]).map((d,i)=>(
           <div key={i} style={{display:"flex",alignItems:"center",gap:"0.75rem",padding:"0.65rem",background:"var(--red-dim)",borderRadius:"var(--radius)",marginBottom:"0.5rem",border:"1px solid rgba(231,76,60,0.3)"}}>
             <span style={{color:"var(--red)",fontWeight:600,fontSize:"0.9rem",flex:1}}>{d.musculo} — {diffDays(d.desde)} {pluralDia(diffDays(d.desde))}</span>
             <button className="btn btn-sm" style={{background:"var(--green)",color:"#0a0f0d",padding:"0.3rem 0.75rem",fontSize:"0.75rem"}} onClick={()=>removerDor(i)}>✅ Recuperado</button>
@@ -1108,7 +1108,7 @@ function AlunoCompeticoes({user,showToast}){
         <div className="page-title green">COMPETIÇÕES</div>
         <div className="page-sub">Visível para treinador e nutricionista</div>
       </div>
-      {comps.length>0&&<div className="card"><div className="card-title">📅 MEUS EVENTOS</div>{comps.map((c,i)=>{const d=new Date(c.data);return(<div key={i} className="comp-card" style={{background:"var(--bg2)"}}><div className="comp-date"><div className="comp-date-day">{d.getDate()}</div><div className="comp-date-month">{d.toLocaleDateString("pt-BR",{month:"short"})}</div></div><div style={{flex:1}}><div style={{fontWeight:600}}>{c.nome}</div><div style={{fontSize:"0.8rem",color:"var(--text2)"}}>{c.modalidade} • {c.local}</div></div><span className="tag tag-orange">{c.objetivo.toUpperCase()}</span></div>);})}</div>}
+      {(comps||[]).length>0&&<div className="card"><div className="card-title">📅 MEUS EVENTOS</div>{(comps||[]).map((c,i)=>{const d=new Date(c.data);return(<div key={i} className="comp-card" style={{background:"var(--bg2)"}}><div className="comp-date"><div className="comp-date-day">{d.getDate()}</div><div className="comp-date-month">{d.toLocaleDateString("pt-BR",{month:"short"})}</div></div><div style={{flex:1}}><div style={{fontWeight:600}}>{c.nome}</div><div style={{fontSize:"0.8rem",color:"var(--text2)"}}>{c.modalidade} • {c.local}</div></div><span className="tag tag-orange">{c.objetivo.toUpperCase()}</span></div>);})}</div>}
       <div className="card">
         <div className="card-title">➕ CADASTRAR COMPETIÇÃO</div>
         <div className="grid-2">
@@ -1332,7 +1332,7 @@ function TreinadorPrescrever({user,showToast}){
                     <>
                   {diaAtual.exercicios&&diaAtual.exercicios.length>0&&(
                     <div style={{marginBottom:"1rem"}}>
-                      {diaAtual.exercicios.map((ex,j)=>(
+                      {(diaAtual?.exercicios||[]).map((ex,j)=>(
                         <div key={j} style={{display:"flex",alignItems:"center",gap:"0.75rem",padding:"0.65rem",background:"var(--card)",borderRadius:"var(--radius)",marginBottom:"0.4rem",fontSize:"0.85rem"}}>
                           <span style={{fontWeight:600,flex:1}}>{ex.nome}</span>
                           <span style={{color:"var(--text2)"}}>{ex.series&&`${ex.series}x`} {ex.reps} {ex.carga&&`• ${ex.carga}`}</span>
@@ -1429,7 +1429,7 @@ function ResumoSemanalAluno({aluno,onVerCompleto}){
         <div>
           <div style={{fontSize:"0.7rem",color:"var(--text3)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:"0.5rem"}}>Semana de treinos</div>
           <div style={{display:"flex",gap:"0.3rem"}}>
-            {planoTreino.dias.map((d,i)=>{
+            {(planoTreino?.dias||[]).map((d,i)=>{
               const tipoIcons={descanso:"😴",academia:"🏋️",corrida:"🏃",natacao:"🏊",luta:"🥊",ciclismo:"🚴",funcional:"⚡",caminhada:"🚶",treino:"🏋️"};
               return(
                 <div key={i} style={{flex:1,textAlign:"center",padding:"0.4rem 0.2rem",background:"var(--bg2)",borderRadius:"8px",fontSize:"0.65rem"}}>
@@ -1504,7 +1504,7 @@ function DiarioAluno({aluno,onBack}){
           {/* SEMANA DETALHADA */}
           <div style={{fontSize:"0.75rem",color:"var(--text3)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:"0.75rem"}}>Distribuição semanal</div>
           <div style={{display:"flex",gap:"0.5rem",flexWrap:"wrap"}}>
-            {planoTreino.dias.map((d,i)=>(
+            {(planoTreino?.dias||[]).map((d,i)=>(
               <div key={i} style={{flex:"1",minWidth:"80px",background:d.tipo==="descanso"?"var(--bg2)":"var(--card2)",border:d.tipo==="descanso"?"1px solid var(--border)":"1px solid var(--green-dim)",borderRadius:"var(--radius)",padding:"0.65rem",textAlign:"center"}}>
                 <div style={{fontSize:"1.2rem",marginBottom:"0.2rem"}}>{tipoIcons[d.tipo]||"🏋️"}</div>
                 <div style={{fontSize:"0.7rem",fontWeight:600,color:d.tipo==="descanso"?"var(--text3)":"var(--text)"}}>{DIAS_SEMANA[i].slice(0,3)}</div>
@@ -1533,7 +1533,7 @@ function DiarioAluno({aluno,onBack}){
           <div className="diario-section">
             <div className="diario-label">🔴 Dores musculares ativas</div>
             <div className="diario-val" style={{fontFamily:"var(--font-display)",fontSize:"1.8rem",color:saude.dores?.length?"var(--orange)":"var(--green)"}}>{saude.dores?.length||0}<span style={{fontSize:"0.8rem",color:"var(--text2)"}}> grupos</span></div>
-            {saude.dores?.length>0&&<div style={{fontSize:"0.8rem",color:"var(--text2)",marginTop:"0.25rem"}}>{saude.dores.map(d=>`${d.musculo} (${diffDays(d.desde)}d)`).join(", ")}</div>}
+            {saude?.dores?.length>0&&<div style={{fontSize:"0.8rem",color:"var(--text2)",marginTop:"0.25rem"}}>{saude.dores.map(d=>`${d.musculo} (${diffDays(d.desde)}d)`).join(", ")}</div>}
           </div>
           <div className="diario-section">
             <div className="diario-label">🔴 Ciclo menstrual</div>
@@ -1600,7 +1600,7 @@ function DiarioAluno({aluno,onBack}){
       {comps.length>0&&(
         <div className="card">
           <div className="card-title">🏆 COMPETIÇÕES</div>
-          {comps.map((c,i)=>{const d=new Date(c.data);return(<div key={i} className="comp-card" style={{background:"var(--bg2)"}}><div className="comp-date"><div className="comp-date-day">{d.getDate()}</div><div className="comp-date-month">{d.toLocaleDateString("pt-BR",{month:"short"})}</div></div><div style={{flex:1}}><div style={{fontWeight:600}}>{c.nome}</div><div style={{fontSize:"0.8rem",color:"var(--text2)"}}>{c.modalidade}</div></div><span className="tag tag-orange">{c.objetivo}</span></div>);})}
+          {(comps||[]).map((c,i)=>{const d=new Date(c.data);return(<div key={i} className="comp-card" style={{background:"var(--bg2)"}}><div className="comp-date"><div className="comp-date-day">{d.getDate()}</div><div className="comp-date-month">{d.toLocaleDateString("pt-BR",{month:"short"})}</div></div><div style={{flex:1}}><div style={{fontWeight:600}}>{c.nome}</div><div style={{fontSize:"0.8rem",color:"var(--text2)"}}>{c.modalidade}</div></div><span className="tag tag-orange">{c.objetivo}</span></div>);})}
         </div>
       )}
     </div>
