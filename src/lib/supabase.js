@@ -20,8 +20,9 @@ async function criarPerfil(user, nome, role) {
   const codigo = gerarCodigoLocal(user.id);
   const nomeFinal = nome || user.email.split('@')[0];
   const roleFinal = role || 'aluno';
-  await supabase.from('profiles').insert(
-    { id: user.id, nome: nomeFinal, role: roleFinal, codigo }
+  await supabase.from('profiles').upsert(
+    { id: user.id, nome: nomeFinal, role: roleFinal, codigo },
+    { onConflict: 'id', ignoreDuplicates: true }
   );
   return { id: user.id, email: user.email, nome: nomeFinal, role: roleFinal, codigo };
 }
