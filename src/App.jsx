@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase, DB } from "./lib/supabase.js";
 
-const _v='TRIOFIT_BUILD_1775575284';
+const _v='TRIOFIT_BUILD_1775582970';
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -2074,7 +2074,7 @@ const NAV_ALUNO=[
 ];
 const NAV_TREINADOR=[
   {section:"VISÃO GERAL",items:[{id:"dashboard",icon:"🏠",label:"Dashboard"}]},
-  {section:"ALUNOS",items:[{id:"acompanhamento",icon:"👁️",label:"Acompanhamento"},{id:"prescrever",icon:"📋",label:"Prescrever Treino"}]},
+  {section:"ALUNOS",items:[{id:"cadastrar",icon:"➕",label:"Cadastrar Aluno"},{id:"acompanhamento",icon:"👁️",label:"Acompanhamento"},{id:"prescrever",icon:"📋",label:"Prescrever Treino"}]},
 ];
 const NAV_NUTRI=[
   {section:"VISÃO GERAL",items:[{id:"dashboard",icon:"🏠",label:"Dashboard"}]},
@@ -2142,6 +2142,120 @@ function AlunoApp({user,onLogout}){
   const pages={dashboard:<AlunoDash user={user} setPage={setPage} vinculo={vinculoApp} treinador={treinadorApp} nutri={nutriApp}/>,saude:<AlunoSaude user={user} showToast={show}/>,treinos:<AlunoTreinos user={user} showToast={show}/>,alimentacao:<AlunoAlimentacao user={user} showToast={show}/>,hidratacao:<AlunoHidratacao user={user} showToast={show}/>,competicoes:<AlunoCompeticoes user={user} showToast={show}/>,avaliacao:<AlunoAvaliacao user={user} showToast={show}/>,vinculo:<AlunoVinculo user={user} showToast={show} onVinculoChange={refreshVinculo}/>};
   return(<>{ToastEl}<Shell user={user} onLogout={onLogout} nav={NAV_ALUNO} active={page} setActive={setPage} accent="">{pages[page]}</Shell></>);
 }
+// ============================================================
+// TREINADOR — CADASTRAR ALUNO
+// ============================================================
+function CadastrarAluno({user,showToast}){
+  const [form,setForm]=useState({nome:"",sobrenome:"",nascimento:"",telefone:"",email:"",localTreino:"",obs:""});
+  const [salvando,setSalvando]=useState(false);
+  const [alunos,setAlunos]=useState([]);
+  const [aba,setAba]=useState("form"); // "form" | "lista"
+
+  useEffect(()=>{
+    DB.getData("alunos_cadastrados",user.id).then(d=>setAlunos(d||[]));
+  },[user.id]);
+
+  function set(k,v){setForm(p=>({...p,[k]:v}));}
+
+  async function salvar(){
+    if(!form.nome.trim()){showToast&&showToast("Informe o nome do aluno","warn");return;}
+    setSalvando(true);
+    const novo={
+      id:Date.now().toString(),
+      nome:form.nome.trim(),
+      sobrenome:form.sobrenome.trim(),
+      nascimento:form.nascimento,
+      telefone:form.telefone.trim(),
+      email:form.email.trim(),
+      localTreino:form.localTreino.trim(),
+      obs:form.obs.trim(),
+      criadoEm:new Date().toISOString(),
+      treinadorId:user.id,
+    };
+    const novos=[...(alunos||[]),novo];
+    await DB.setData("alunos_cadastrados",user.id,novos);
+    setAlunos(novos);
+    setForm({nome:"",sobrenome:"",nascimento:"",telefone:"",email:"",localTreino:"",obs:""});
+    setSalvando(false);
+    showToast&&showToast(`✅ ${novo.nome} cadastrado! Compartilhe o link do app para ele criar a conta.`);
+    setAba("lista");
+  }
+
+  async function remover(id){
+    if(!window.confirm("Remover este aluno do cadastro?"))return;
+    const novos=(alunos||[]).filter(a=>a.id!==id);
+    await DB.setData("alunos_cadastrados",user.id,novos);
+    setAlunos(novos);
+    showToast&&showToast("Aluno removido.");
+  }
+
+  function abrirWhatsApp(aluno){
+    const msg=encodeURIComponent(`Olá ${aluno.nome}! Você foi cadastrado no TrioFit. Acesse seu treino aqui: https://triofit.vercel.app — crie sua conta com este e-mail: ${aluno.email||"(informe seu e-mail)"} e conecte-se comigo usando meu código: ${user.codigo||"------"} 💪`);
+    window.open(`https://wa.me/55${aluno.telefone.replace(/\D/g,"")}?text=${msg}`,"_blank");
+  }
+
+  return(
+    <div className="page">
+      <div className="page-title orange">CADASTRAR ALUNO</div>
+      <div className="page-sub">Cadastre seus alunos e compartilhe o link do app</div>
+
+      {/* ABAS */}
+      <div style={{display:"flex",gap:"8px",marginBottom:"1rem"}}>
+        <button className={`btn ${aba==="form"?"btn-primary":"btn-ghost"} btn-sm`} onClick={()=>setAba("form")}>➕ Novo aluno</button>
+        <button className={`btn ${aba==="lista"?"btn-primary":"btn-ghost"} btn-sm`} onClick={()=>setAba("lista")}>👥 Lista ({(alunos||[]).length})</button>
+      </div>
+
+      {aba==="form"&&(
+        <div className="card">
+          <div className="card-title">📋 DADOS DO ALUNO</div>
+          <div className="grid-2">
+            <div className="form-group"><label className="form-label">Nome *</label><input className="form-input" placeholder="João" value={form.nome} onChange={e=>set("nome",e.target.value)}/></div>
+            <div className="form-group"><label className="form-label">Sobrenome</label><input className="form-input" placeholder="Silva" value={form.sobrenome} onChange={e=>set("sobrenome",e.target.value)}/></div>
+            <div className="form-group"><label className="form-label">Data de Nascimento</label><input className="form-input" type="date" value={form.nascimento} onChange={e=>set("nascimento",e.target.value)}/></div>
+            <div className="form-group"><label className="form-label">Telefone / WhatsApp</label><input className="form-input" placeholder="(51) 99999-9999" value={form.telefone} onChange={e=>set("telefone",e.target.value)}/></div>
+            <div className="form-group"><label className="form-label">E-mail</label><input className="form-input" type="email" placeholder="joao@email.com" value={form.email} onChange={e=>set("email",e.target.value)}/></div>
+            <div className="form-group"><label className="form-label">Local de treino</label><input className="form-input" placeholder="Academia X / Residência / Parque" value={form.localTreino} onChange={e=>set("localTreino",e.target.value)}/></div>
+          </div>
+          <div className="form-group"><label className="form-label">Observações</label><textarea className="form-textarea" rows={3} placeholder="Limitações, objetivos, histórico de saúde..." value={form.obs} onChange={e=>set("obs",e.target.value)}/></div>
+          <div className="card" style={{background:"var(--card2)",marginTop:"0.5rem"}}>
+            <div style={{fontSize:"0.82rem",color:"var(--text2)",lineHeight:1.6}}>
+              📲 <b>Como funciona:</b> após cadastrar, envie o link <b>triofit.vercel.app</b> para o aluno criar a conta. Ele deve se registrar e vincular com seu código <b style={{color:"var(--orange)",fontFamily:"var(--font-mono)"}}>{user.codigo||"------"}</b>.
+            </div>
+          </div>
+          <button className="btn btn-primary btn-full" style={{marginTop:"1rem"}} onClick={salvar} disabled={salvando}>{salvando?"Salvando...":"✅ Cadastrar aluno"}</button>
+        </div>
+      )}
+
+      {aba==="lista"&&(
+        <div className="card">
+          <div className="card-title">👥 ALUNOS CADASTRADOS</div>
+          {(alunos||[]).length===0?(
+            <div style={{color:"var(--text2)",fontSize:"0.9rem",padding:"1rem 0"}}>Nenhum aluno cadastrado ainda.</div>
+          ):(alunos||[]).map(a=>(
+            <div key={a.id} style={{background:"var(--card2)",borderRadius:"var(--radius)",padding:"0.75rem 1rem",marginBottom:"0.5rem"}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:"0.5rem"}}>
+                <div>
+                  <div style={{fontWeight:600,fontSize:"1rem"}}>{a.nome} {a.sobrenome}</div>
+                  <div style={{fontSize:"0.8rem",color:"var(--text2)",marginTop:"2px"}}>
+                    {a.email&&<span>✉️ {a.email} </span>}
+                    {a.telefone&&<span>📱 {a.telefone} </span>}
+                    {a.localTreino&&<span>📍 {a.localTreino}</span>}
+                  </div>
+                  {a.obs&&<div style={{fontSize:"0.78rem",color:"var(--text3)",marginTop:"4px"}}>📝 {a.obs}</div>}
+                </div>
+                <div style={{display:"flex",gap:"6px",flexShrink:0}}>
+                  {a.telefone&&<button className="btn btn-ghost btn-sm" style={{fontSize:"0.75rem",color:"#25D366"}} onClick={()=>abrirWhatsApp(a)}>WhatsApp</button>}
+                  <button className="btn btn-ghost btn-sm" style={{fontSize:"0.75rem",color:"var(--red)"}} onClick={()=>remover(a.id)}>✕</button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function TreinadorApp({user,onLogout}){
   const {show,ToastEl}=useToast();
   const [page,setPage]=useState("dashboard");
@@ -2151,7 +2265,7 @@ function TreinadorApp({user,onLogout}){
       setAlertCount(0);
     });
   },[user.id]);
-  const pages={dashboard:<TreinadorDash user={user}/>,prescrever:<TreinadorPrescrever user={user} showToast={show}/>,acompanhamento:<TreinadorAcompanhamento user={user}/>};
+  const pages={dashboard:<TreinadorDash user={user}/>,cadastrar:<CadastrarAluno user={user} showToast={show}/>,prescrever:<TreinadorPrescrever user={user} showToast={show}/>,acompanhamento:<TreinadorAcompanhamento user={user}/>};
   return(<>{ToastEl}<Shell user={user} onLogout={onLogout} nav={NAV_TREINADOR} active={page} setActive={setPage} accent="orange" alertCount={alertCount}>{pages[page]}</Shell></>);
 }
 function NutriApp({user,onLogout}){
