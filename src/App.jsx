@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase, DB } from "./lib/supabase.js";
 
-const _v='TRIOFIT_BUILD_1775570684';
+const _v='TRIOFIT_BUILD_1775571949';
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -744,6 +744,8 @@ function AlunoTreinos({user,showToast}){
   const [feedback,setFeedback]=useState("");
   const [mostrarTroca,setMostrarTroca]=useState(false);
   const [diaOriginal,setDiaOriginal]=useState(null); // null = sem troca ativa
+  const [treinosFinalizados,,saveTreinosFinalizados]=useAlunoData(user.id,"treinos_finalizados",{});
+  const [confirmandoFinalizar,setConfirmandoFinalizar]=useState(false);
   // Load saved avaliacao
   useEffect(()=>{
     DB.getData("treino_avaliacao",user.id).then(d=>{
@@ -759,6 +761,11 @@ function AlunoTreinos({user,showToast}){
   useEffect(()=>{setDiaAtivo(diaHojeRef.current);},[]);
 
   async function toggleEx(diaIdx,exIdx){
+    const chaveDia=dataHojeStr+"_dia"+diaIdx;
+    if((treinosFinalizados||{})[chaveDia]){
+      showToast&&showToast("Treino já finalizado. Clique em '+ Novo treino' para treinar novamente.","warn");
+      return;
+    }
     const key=`${diaIdx}_${exIdx}`;
     const novo={...(checked||{}),[key]:!(checked||{})[key]};
     await saveChecked(novo);
@@ -768,6 +775,27 @@ function AlunoTreinos({user,showToast}){
     if(!rating){showToast&&showToast("Selecione uma nota de 1-5 estrelas","warn");return;}
     await DB.setData("treino_avaliacao",user.id,{rating,feedback,data:new Date().toISOString()});
     showToast&&showToast("Avaliação salva! Treinador notificado ✅");
+  }
+
+  // Chave do dia atual para verificar se já foi finalizado
+  const dataHojeStr=new Date().toISOString().split("T")[0];
+  const chaveHoje=dataHojeStr+"_dia"+diaHoje;
+  const treinoDeHojeFinalizado=!!(treinosFinalizados||{})[chaveHoje];
+
+  async function finalizarTreino(diaIdx,diaInfo2,checked2){
+    const chave=dataHojeStr+"_dia"+diaIdx;
+    const novo={...(treinosFinalizados||{}),[chave]:{
+      dia:diaIdx,nome:diaInfo2?.nome,
+      data:new Date().toISOString(),
+      exercicios:(diaInfo2?.exercicios||[]).length,
+      rating
+    }};
+    await saveTreinosFinalizados(novo);
+    if(rating>0){
+      await DB.setData("treino_avaliacao",user.id,{rating,feedback,data:new Date().toISOString()});
+    }
+    setConfirmandoFinalizar(false);
+    showToast&&showToast("🏆 Treino finalizado! Ótimo trabalho!");
   }
 
   if(!planoReady){
@@ -903,17 +931,48 @@ function AlunoTreinos({user,showToast}){
         </div>
       )}
 
-      {/* AVALIAÇÃO */}
-      {diaInfo.tipo!=="descanso"&&(
-        <div className="card">
-          <div className="card-title">⭐ AVALIAR TREINO DE HOJE</div>
-          <div className="form-group">
-            <label className="form-label">Nota geral</label>
-            <div className="stars">{[1,2,3,4,5].map(s=><div key={s} style={{fontSize:"2rem",cursor:"pointer",color:s<=rating?"var(--orange)":"var(--border)"}} onClick={()=>setRating(s)}>★</div>)}</div>
+      {/* FINALIZAR TREINO */}
+      {diaInfo.tipo!=="descanso"&&diaAtivo===diaHoje&&(
+        treinoDeHojeFinalizado?(
+          <div className="card" style={{textAlign:"center",padding:"1.5rem"}}>
+            <div style={{fontSize:"3rem",marginBottom:"0.5rem"}}>🏆</div>
+            <div style={{fontFamily:"var(--font-display)",fontSize:"1.2rem",color:"var(--green)",marginBottom:"0.3rem"}}>Treino finalizado!</div>
+            <div style={{fontSize:"0.85rem",color:"var(--text2)",marginBottom:"1rem"}}>Ótimo trabalho! O treinador já pode acompanhar sua evolução.</div>
+            <button className="btn btn-ghost btn-sm" onClick={async()=>{
+              const chaveExtra=dataHojeStr+"_dia"+diaHoje+"_extra"+Date.now();
+              const novo={...(treinosFinalizados||{}),[chaveExtra]:{dia:diaHoje,extra:true,data:new Date().toISOString()}};
+              await saveChecked({});
+              await saveTreinosFinalizados(novo);
+              showToast&&showToast("Iniciando novo treino 💪");
+            }}>+ Novo treino agora</button>
           </div>
-          <div className="form-group"><label className="form-label">Feedback para o treinador</label><textarea className="form-textarea" placeholder="Como foi o treino? Dificuldades? Observações?" value={feedback} onChange={e=>setFeedback(e.target.value)}/></div>
-          <button className="btn btn-primary btn-full" onClick={salvarAvaliacao}>✅ Registrar avaliação</button>
-        </div>
+        ):(
+          <div className="card">
+            <div className="card-title">⭐ FINALIZAR TREINO</div>
+            <div className="form-group">
+              <label className="form-label">Avalie o treino (opcional)</label>
+              <div className="stars">{[1,2,3,4,5].map(s=><div key={s} style={{fontSize:"2rem",cursor:"pointer",color:s<=rating?"var(--orange)":"var(--border)"}} onClick={()=>setRating(s)}>★</div>)}</div>
+            </div>
+            <div className="form-group"><label className="form-label">Feedback para o treinador (opcional)</label><textarea className="form-textarea" rows={2} placeholder="Como foi? Alguma dificuldade?" value={feedback} onChange={e=>setFeedback(e.target.value)}/></div>
+            {!confirmandoFinalizar?(
+              <button className="btn btn-primary btn-full" onClick={()=>{
+                const feitos=(diaInfo?.exercicios||[]).filter((_,j)=>checked[`${diaAtivo}_${j}`]).length;
+                const total=(diaInfo?.exercicios||[]).length;
+                if(total>0&&feitos<total){setConfirmandoFinalizar(true);}
+                else{finalizarTreino(diaAtivo,diaInfo,checked);}
+              }}>🏁 Finalizar treino</button>
+            ):(
+              <div style={{background:"var(--card2)",borderRadius:"var(--radius)",padding:"1rem",marginTop:"0.5rem"}}>
+                <div style={{fontWeight:600,marginBottom:"0.3rem"}}>⚠️ {(diaInfo?.exercicios||[]).filter((_,j)=>checked[`${diaAtivo}_${j}`]).length} de {(diaInfo?.exercicios||[]).length} exercícios concluídos</div>
+                <div style={{fontSize:"0.85rem",color:"var(--text2)",marginBottom:"0.75rem"}}>Deseja finalizar mesmo assim?</div>
+                <div style={{display:"flex",gap:"0.5rem"}}>
+                  <button className="btn btn-ghost btn-sm" onClick={()=>setConfirmandoFinalizar(false)}>Continuar</button>
+                  <button className="btn btn-primary btn-sm" onClick={()=>finalizarTreino(diaAtivo,diaInfo,checked)}>Finalizar assim mesmo</button>
+                </div>
+              </div>
+            )}
+          </div>
+        )
       )}
     </div>
   );
