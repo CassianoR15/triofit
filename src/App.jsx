@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase, DB } from "./lib/supabase.js";
 
-const _v='TRIOFIT_BUILD_1775564408';
+const _v='TRIOFIT_BUILD_1775565237';
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -1234,7 +1234,7 @@ function TreinadorPrescrever({user,showToast}){
   async function salvar(){
     if(!alunoSel){showToast&&showToast("Selecione um aluno primeiro","warn");return;}
     const planoExistente=await DB.getData("plano_treino_aluno",alunoSel.id);
-    if(planoExistente&&!window.confirm(`Substituir o plano de treino atual de ${alunoSel.nome.split(" ")[0]}?`))return;
+    if(planoExistente&&!window.confirm(`Substituir o treino de ${alunoSel.nome.split(" ")[0]}? O plano atual será perdido.`))return;
     const fimDate=addMonths(new Date(inicio),duracao);
     const plano={nome:nomePlano,modalidade,duracao,inicio,fim:fimDate.toISOString(),dias,criadoEm:new Date().toISOString()};
     await DB.setData("plano_treino_aluno",alunoSel.id,plano);
@@ -1628,11 +1628,18 @@ function TreinadorDash({user}){
   if(alunoVer)return<DiarioAluno aluno={alunoVer} onBack={()=>setAlunoVer(null)}/>;
   const alunosList=Array.isArray(alunos)?alunos:[];
   const [saudeMap,setSaudeMap]=useState({});
+  const [planoMap,setPlanoMap]=useState({});
   useEffect(()=>{
     if(!alunosList.length)return;
-    Promise.all(alunosList.map(a=>DB.getData("saude",a.id).then(s=>({id:a.id,s:s||{}}))))
-      .then(results=>{const m={};results.forEach(({id,s})=>{m[id]=s;});setSaudeMap(m);});
-  },[alunos]);
+    Promise.all(alunosList.map(a=>
+      Promise.all([DB.getData("saude",a.id),DB.getData("plano_treino_aluno",a.id)])
+        .then(([s,pl])=>({id:a.id,s:s||{},pl}))
+    )).then(results=>{
+      const sm={},pm={};
+      results.forEach(({id,s,pl})=>{sm[id]=s;pm[id]=pl;});
+      setSaudeMap(sm);setPlanoMap(pm);
+    });
+  },[alunos?.length]);
   const comAlerta=alunosList.filter(a=>{const s=saudeMap[a.id]||{};return s.doente||(s.dores&&s.dores.length>0);});
   return(
     <div className="page">
@@ -1643,7 +1650,7 @@ function TreinadorDash({user}){
         <div className="stat-tile"><div className="stat-label">Alunos</div><div className="stat-value orange">{alunos.length}</div></div>
         <div className="stat-tile"><div className="stat-label">Alertas</div><div className="stat-value red">{comAlerta.length}</div></div>
         <div className="stat-tile"><div className="stat-label">Código</div><div style={{marginTop:"0.35rem",fontFamily:"var(--font-mono)",fontSize:"1.1rem",color:"var(--green)",letterSpacing:"0.1em"}}>{user.codigo||"------"}</div></div>
-        <div className="stat-tile"><div className="stat-label">Planos ativos</div><div className="stat-value green">{alunosList.length}</div></div>
+        <div className="stat-tile"><div className="stat-label">Planos ativos</div><div className="stat-value green">{Object.values(planoMap||{}).filter(Boolean).length}</div></div>
       </div>
       {comAlerta.length>0&&<div className="alert alert-danger">🔴 {comAlerta.map(a=>a.nome.split(" ")[0]).join(", ")} — verificar saúde!</div>}
       {alunosList.length===0?(
@@ -1652,8 +1659,8 @@ function TreinadorDash({user}){
         <div className="card">
           <div className="card-title">👥 MEUS ALUNOS</div>
           {(alunosList||[]).map(a=>{
-            const s=DB.getData("saude",a.id)||{};
-            const plano=DB.getData("plano_treino_aluno",a.id);
+            const s=saudeMap[a.id]||{};
+            const plano=planoMap?.[a.id];
             const temAlerta=s.doente||(s.dores&&s.dores.length>0);
             return(
               <div key={a.id} className="aluno-row" onClick={()=>setAlunoVer(a)}>
@@ -1716,7 +1723,7 @@ function NutriPrescrever({user,showToast}){
   async function salvar(){
     if(!alunoSel)return;
     const planoExistente=await DB.getData("plano_alim_aluno",alunoSel.id);
-    if(planoExistente&&!window.confirm(`Substituir o plano alimentar atual de ${alunoSel.nome.split(" ")[0]}?`))return;
+    if(planoExistente&&!window.confirm(`Substituir a dieta de ${alunoSel.nome.split(" ")[0]}? O plano atual será perdido.`))return;
     const fimDate=addMonths(new Date(inicio),duracao);
     const plano={nome:nomePlano,protocolo,duracao,inicio,fim:fimDate.toISOString(),refeicoes,kcalMeta:fases[protocolo],criadoEm:new Date().toISOString()};
     await DB.setData("plano_alim_aluno",alunoSel.id,plano);
@@ -1799,6 +1806,23 @@ function NutriDash({user}){
   const [pacientes,]=useAsyncData(()=>DB.getAlunosDe(user.id),[user.id],[]);
   const [pacVer,setPacVer]=useState(null);
   const pacientesList=Array.isArray(pacientes)?pacientes:[];
+  const [saudeMapN,setSaudeMapN]=useState({});
+  const [planoMapN,setPlanoMapN]=useState({});
+  const [checkMapN,setCheckMapN]=useState({});
+  useEffect(()=>{
+    if(!pacientesList.length)return;
+    Promise.all(pacientesList.map(p=>
+      Promise.all([
+        DB.getData("saude",p.id),
+        DB.getData("plano_alim_aluno",p.id),
+        DB.getData("alim_check_hoje",p.id)
+      ]).then(([s,pl,ch])=>({id:p.id,s:s||{},pl,ch:ch||{}}))
+    )).then(results=>{
+      const sm={},pm={},cm={};
+      results.forEach(({id,s,pl,ch})=>{sm[id]=s;pm[id]=pl;cm[id]=ch;});
+      setSaudeMapN(sm);setPlanoMapN(pm);setCheckMapN(cm);
+    });
+  },[pacientes?.length]);
   if(pacVer)return<DiarioAluno aluno={pacVer} onBack={()=>setPacVer(null)}/>;
   if(pacientes===null)return<div className="page"><div className="page-title blue">{getGreeting()}, {firstName(user.nome)} 👋</div><div style={{display:"flex",justifyContent:"center",padding:"3rem"}}><span className="spinner"/></div></div>;
   return(
@@ -1808,9 +1832,9 @@ function NutriDash({user}){
       <div className="card" style={{padding:"1rem 1.5rem"}}><CodigoProfissional user={user}/></div>
       <div className="grid-4">
         <div className="stat-tile"><div className="stat-label">Pacientes</div><div className="stat-value blue">{pacientesList.length}</div></div>
-        <div className="stat-tile"><div className="stat-label">Planos ativos</div><div className="stat-value green">{pacientesList.length}</div></div>
+        <div className="stat-tile"><div className="stat-label">Planos ativos</div><div className="stat-value green">{Object.values(planoMapN||{}).filter(Boolean).length}</div></div>
         <div className="stat-tile"><div className="stat-label">Código</div><div style={{marginTop:"0.35rem",fontFamily:"var(--font-mono)",fontSize:"1.1rem",color:"var(--green)",letterSpacing:"0.1em"}}>{user.codigo||"------"}</div></div>
-        <div className="stat-tile"><div className="stat-label">Alertas</div><div className="stat-value orange">{pacientesList.filter(p=>{const s=DB.getData("saude",p.id)||{};return s.doente||s.mens;}).length}</div></div>
+        <div className="stat-tile"><div className="stat-label">Alertas</div><div className="stat-value orange">{Object.values(saudeMapN).filter(s=>s.doente||s.mens).length}</div></div>
       </div>
       {pacientesList.length===0?(
         <div className="card"><div className="card-title">👥 MEUS PACIENTES</div><div style={{color:"var(--text2)",lineHeight:1.7}}>Compartilhe o código <b style={{color:"var(--green)",fontFamily:"var(--font-mono)"}}>{user.codigo||"------"}</b> para seus pacientes se conectarem.</div></div>
@@ -1818,9 +1842,9 @@ function NutriDash({user}){
         <div className="card">
           <div className="card-title">👥 MEUS PACIENTES</div>
           {(pacientesList||[]).map(p=>{
-            const s=DB.getData("saude",p.id)||{};
-            const plano=DB.getData("plano_alim_aluno",p.id);
-            const alimCheck=DB.getData("alim_check_hoje",p.id)||{};
+            const s=saudeMapN[p.id]||{};
+            const plano=planoMapN[p.id];
+            const alimCheck=checkMapN[p.id]||{};
             const qtdComido=Object.values(alimCheck).filter(Boolean).length;
             const totalRef=plano?.refeicoes?.length||0;
             return(
@@ -1845,6 +1869,27 @@ function NutriAcompanhamento({user}){
   const [pacientes,]=useAsyncData(()=>DB.getAlunosDe(user.id),[user.id],[]);
   const [pacVer,setPacVer]=useState(null);
   const pacientesList=Array.isArray(pacientes)?pacientes:[];
+  const [saudeMapNA,setSaudeMapNA]=useState({});
+  const [planoMapNA,setPlanoMapNA]=useState({});
+  const [checkMapNA,setCheckMapNA]=useState({});
+  const [aguaMapNA,setAguaMapNA]=useState({});
+  const [metaMapNA,setMetaMapNA]=useState({});
+  useEffect(()=>{
+    if(!pacientesList.length)return;
+    Promise.all(pacientesList.map(p=>
+      Promise.all([
+        DB.getData("saude",p.id),
+        DB.getData("plano_alim_aluno",p.id),
+        DB.getData("alim_check_hoje",p.id),
+        DB.getData("agua_hoje",p.id),
+        DB.getData("meta_agua",p.id)
+      ]).then(([s,pl,ch,ag,mt])=>({id:p.id,s:s||{},pl,ch:ch||{},ag:ag||0,mt:mt||3000}))
+    )).then(results=>{
+      const sm={},pm={},cm={},am={},mm={};
+      results.forEach(({id,s,pl,ch,ag,mt})=>{sm[id]=s;pm[id]=pl;cm[id]=ch;am[id]=ag;mm[id]=mt;});
+      setSaudeMapNA(sm);setPlanoMapNA(pm);setCheckMapNA(cm);setAguaMapNA(am);setMetaMapNA(mm);
+    });
+  },[pacientes?.length]);
   if(pacVer)return<DiarioAluno aluno={pacVer} onBack={()=>setPacVer(null)}/>;
   if(!pacientes&&pacientesList.length===0)return<div className="page"><div className="page-title blue">ACOMPANHAMENTO</div><div style={{display:"flex",justifyContent:"center",padding:"3rem"}}><span className="spinner"/></div></div>;
   return(
@@ -1852,13 +1897,13 @@ function NutriAcompanhamento({user}){
       <div className="page-title blue">ACOMPANHAMENTO</div>
       <div className="page-sub">Alimentação e saúde dos pacientes</div>
       {pacientes.length===0?<div className="card"><div style={{color:"var(--text2)"}}>Sem pacientes. Código: <b style={{fontFamily:"var(--font-mono)",color:"var(--green)"}}>{user.codigo||"------"}</b></div></div>:(pacientesList||[]).map(p=>{
-        const s=DB.getData("saude",p.id)||{};
-        const alimCheck=DB.getData("alim_check_hoje",p.id)||{};
-        const plano=DB.getData("plano_alim_aluno",p.id);
+        const s=saudeMapNA[p.id]||{};
+        const alimCheck=checkMapNA[p.id]||{};
+        const plano=planoMapNA[p.id];
         const totalRef=plano?.refeicoes?.length||0;
         const qtdComido=Object.values(alimCheck).filter(Boolean).length;
-        const agua=DB.getData("agua_hoje",p.id)||0;
-        const meta=DB.getData("meta_agua",p.id)||3000;
+        const agua=aguaMapNA[p.id]||0;
+        const meta=metaMapNA[p.id]||3000;
         const diasDoente=s.doente_desde?diffDays(s.doente_desde):0;
         return(
           <div key={p.id} className="card" style={{cursor:"pointer"}} onClick={()=>setPacVer(p)}>
@@ -1914,7 +1959,7 @@ function TreinadorApp({user,onLogout}){
   const [alertCount,setAlertCount]=useState(0);
   useEffect(()=>{
     DB.getAlunosDe(user.id).then(alunos=>{
-      const count=(alunos||[]).filter(a=>DB.getData("saude",a.id)?.then?false:false).length;
+      const count=comAlerta.length;
       setAlertCount(0); // simplified - alerts shown in dashboard
     });
   },[user.id]);
