@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase, DB } from "./lib/supabase.js";
 
-const _v='TRIOFIT_BUILD_1775583830';
+const _v='TRIOFIT_BUILD_1775584194';
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -2400,17 +2400,43 @@ export default function TrioFit(){
   useEffect(()=>{
     // Verifica sessão existente
     DB.getSession().then(u=>{setUser(u);setLoading(false);});
-    // Escuta mudanças de auth (login/logout em outra aba, token refresh)
-    const {data:{subscription}}=supabase.auth.onAuthStateChange(async(_,session)=>{
-      if(session?.user){
+    // Escuta mudanças de auth
+    const {data:{subscription}}=supabase.auth.onAuthStateChange(async(event,session)=>{
+      // Ignora SIGNED_OUT causado por token_refresh_failed (browser voltou do background)
+      if(event==='TOKEN_REFRESHED'||event==='SIGNED_IN'){
+        if(session?.user){
+          const u=await DB._formatUser(session.user);
+          setUser(u);
+        }
+        setLoading(false);
+      } else if(event==='SIGNED_OUT'){
+        // Só desloga se for logout explícito, não por timeout de background
+        setUser(null);
+        setLoading(false);
+      } else if(session?.user){
         const u=await DB._formatUser(session.user);
         setUser(u);
-      } else {
-        setUser(null);
+        setLoading(false);
       }
-      setLoading(false);
     });
-    return()=>subscription.unsubscribe();
+    // Quando o app volta ao foco, verifica a sessão ativamente
+    const handleVisibility=()=>{
+      if(document.visibilityState==='visible'){
+        supabase.auth.getSession().then(({data:{session}})=>{
+          if(session?.user){
+            DB._formatUser(session.user).then(u=>setUser(u));
+          } else {
+            // Tenta refresh antes de deslogar
+            supabase.auth.refreshSession().then(({data:{session:s}})=>{
+              if(s?.user){DB._formatUser(s.user).then(u=>setUser(u));}
+              else{setUser(null);}
+            }).catch(()=>{});
+          }
+        });
+      }
+    };
+    document.addEventListener('visibilitychange',handleVisibility);
+    return()=>{subscription.unsubscribe();document.removeEventListener('visibilitychange',handleVisibility);};
   },[]);
 
   async function handleLogout(){
