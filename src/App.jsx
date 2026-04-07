@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase, DB } from "./lib/supabase.js";
 
-const _v='TRIOFIT_BUILD_1775582970';
+const _v='TRIOFIT_BUILD_1775583619';
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -2067,7 +2067,7 @@ function NutriAcompanhamento({user}){
 // NAV
 // ============================================================
 const NAV_ALUNO=[
-  {section:"VISÃO GERAL",items:[{id:"dashboard",icon:"🏠",label:"Dashboard"}]},
+  {section:"VISÃO GERAL",items:[{id:"dashboard",icon:"🏠",label:"Dashboard"},{id:"perfil",icon:"👤",label:"Meu Perfil"}]},
   {section:"DIÁRIO",items:[{id:"treinos",icon:"🏋️",label:"Treinos da Semana"},{id:"alimentacao",icon:"🥗",label:"Alimentação"},{id:"hidratacao",icon:"💧",label:"Hidratação"},{id:"saude",icon:"❤️",label:"Saúde"}]},
   {section:"PROGRESSO",items:[{id:"avaliacao",icon:"📊",label:"Avaliação Física"},{id:"competicoes",icon:"🏆",label:"Competições"}]},
   {section:"EQUIPE",items:[{id:"vinculo",icon:"🔗",label:"Minha Equipe"}]},
@@ -2084,6 +2084,110 @@ const NAV_NUTRI=[
 // ============================================================
 // ROLE APPS
 // ============================================================
+// ============================================================
+// ALUNO — MEU PERFIL
+// ============================================================
+function MeuPerfil({user,treinador,showToast}){
+  const [perfil,setPerfil]=useState(null);
+  const [editando,setEditando]=useState(false);
+  const [form,setForm]=useState({nome:"",sobrenome:"",nascimento:"",telefone:"",email:"",localTreino:"",obs:""});
+  const [salvando,setSalvando]=useState(false);
+
+  useEffect(()=>{
+    if(!user?.id||!treinador?.id)return;
+    // Busca dados cadastrados pelo treinador
+    DB.getData("alunos_cadastrados",treinador.id).then(lista=>{
+      const encontrado=(lista||[]).find(a=>a.email&&a.email.toLowerCase()===user.email?.toLowerCase());
+      if(encontrado){
+        setPerfil(encontrado);
+        setForm({
+          nome:encontrado.nome||"",
+          sobrenome:encontrado.sobrenome||"",
+          nascimento:encontrado.nascimento||"",
+          telefone:encontrado.telefone||"",
+          email:encontrado.email||user.email||"",
+          localTreino:encontrado.localTreino||"",
+          obs:encontrado.obs||""
+        });
+      } else {
+        // Aluno não encontrado no cadastro do treinador — preenche com dados básicos
+        setForm(p=>({...p,nome:user.nome||"",email:user.email||""}));
+      }
+    });
+    // Dados complementares do próprio aluno
+    DB.getData("perfil_aluno",user.id).then(d=>{
+      if(d)setForm(p=>({...p,...d}));
+    });
+  },[user?.id,treinador?.id]);
+
+  function set(k,v){setForm(p=>({...p,[k]:v}));}
+
+  async function salvar(){
+    setSalvando(true);
+    await DB.setData("perfil_aluno",user.id,form);
+    // Atualiza no cadastro do treinador se encontrou
+    if(perfil&&treinador?.id){
+      const lista=await DB.getData("alunos_cadastrados",treinador.id)||[];
+      const novaLista=lista.map(a=>a.id===perfil.id?{...a,...form}:a);
+      await DB.setData("alunos_cadastrados",treinador.id,novaLista);
+    }
+    setSalvando(false);
+    setEditando(false);
+    showToast&&showToast("✅ Perfil atualizado!");
+  }
+
+  const idade=form.nascimento?Math.floor((new Date()-new Date(form.nascimento))/31557600000):null;
+
+  return(
+    <div className="page">
+      <div className="page-title green">MEU PERFIL</div>
+      <div className="page-sub">Seus dados pessoais e informações de treino</div>
+
+      <div className="card">
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"1rem"}}>
+          <div className="card-title" style={{marginBottom:0}}>👤 DADOS PESSOAIS</div>
+          {!editando&&<button className="btn btn-ghost btn-sm" onClick={()=>setEditando(true)}>✏️ Editar</button>}
+        </div>
+
+        {!editando?(
+          <div style={{display:"flex",flexDirection:"column",gap:"0.6rem"}}>
+            {[
+              ["Nome completo",`${form.nome} ${form.sobrenome}`.trim()||"—"],
+              ["E-mail",form.email||user.email||"—"],
+              ["Telefone",form.telefone||"—"],
+              ["Data de nascimento",form.nascimento?`${new Date(form.nascimento+'T12:00').toLocaleDateString('pt-BR')} (${idade} anos)`:"—"],
+              ["Local de treino",form.localTreino||"—"],
+            ].map(([label,val])=>(
+              <div key={label} style={{display:"flex",gap:"0.5rem",flexWrap:"wrap"}}>
+                <span style={{fontSize:"0.8rem",color:"var(--text2)",minWidth:"140px"}}>{label}:</span>
+                <span style={{fontSize:"0.85rem",fontWeight:500}}>{val}</span>
+              </div>
+            ))}
+            {form.obs&&<div style={{marginTop:"0.5rem",padding:"0.6rem",background:"var(--card2)",borderRadius:"var(--radius)",fontSize:"0.82rem",color:"var(--text2)"}}>📝 {form.obs}</div>}
+            {treinador&&<div style={{marginTop:"0.75rem",padding:"0.6rem",background:"rgba(46,213,115,0.08)",borderRadius:"var(--radius)",fontSize:"0.82rem"}}>🏋️ Treinador: <b>{treinador.nome}</b></div>}
+          </div>
+        ):(
+          <>
+            <div className="grid-2">
+              <div className="form-group"><label className="form-label">Nome</label><input className="form-input" value={form.nome} onChange={e=>set("nome",e.target.value)}/></div>
+              <div className="form-group"><label className="form-label">Sobrenome</label><input className="form-input" value={form.sobrenome} onChange={e=>set("sobrenome",e.target.value)}/></div>
+              <div className="form-group"><label className="form-label">Data de Nascimento</label><input className="form-input" type="date" value={form.nascimento} onChange={e=>set("nascimento",e.target.value)}/></div>
+              <div className="form-group"><label className="form-label">Telefone</label><input className="form-input" placeholder="(51) 99999-9999" value={form.telefone} onChange={e=>set("telefone",e.target.value)}/></div>
+              <div className="form-group"><label className="form-label">E-mail</label><input className="form-input" type="email" value={form.email} onChange={e=>set("email",e.target.value)}/></div>
+              <div className="form-group"><label className="form-label">Local de treino</label><input className="form-input" value={form.localTreino} onChange={e=>set("localTreino",e.target.value)}/></div>
+            </div>
+            <div className="form-group"><label className="form-label">Observações</label><textarea className="form-textarea" rows={3} value={form.obs} onChange={e=>set("obs",e.target.value)}/></div>
+            <div style={{display:"flex",gap:"0.5rem"}}>
+              <button className="btn btn-ghost btn-sm" onClick={()=>setEditando(false)}>Cancelar</button>
+              <button className="btn btn-primary btn-sm" onClick={salvar} disabled={salvando}>{salvando?"Salvando...":"✅ Salvar"}</button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function AlunoApp({user,onLogout}){
   const {show,ToastEl}=useToast();
   const [page,setPage]=useState("dashboard");
@@ -2139,7 +2243,7 @@ function AlunoApp({user,onLogout}){
       try{localStorage.setItem("tfn_"+user.id,JSON.stringify(n));}catch{}
     } else {setNutriApp(null);try{localStorage.removeItem("tfn_"+user.id);}catch{}}
   },[user?.id]);
-  const pages={dashboard:<AlunoDash user={user} setPage={setPage} vinculo={vinculoApp} treinador={treinadorApp} nutri={nutriApp}/>,saude:<AlunoSaude user={user} showToast={show}/>,treinos:<AlunoTreinos user={user} showToast={show}/>,alimentacao:<AlunoAlimentacao user={user} showToast={show}/>,hidratacao:<AlunoHidratacao user={user} showToast={show}/>,competicoes:<AlunoCompeticoes user={user} showToast={show}/>,avaliacao:<AlunoAvaliacao user={user} showToast={show}/>,vinculo:<AlunoVinculo user={user} showToast={show} onVinculoChange={refreshVinculo}/>};
+  const pages={dashboard:<AlunoDash user={user} setPage={setPage} vinculo={vinculoApp} treinador={treinadorApp} nutri={nutriApp}/>,perfil:<MeuPerfil user={user} treinador={treinadorApp} showToast={show}/>,saude:<AlunoSaude user={user} showToast={show}/>,treinos:<AlunoTreinos user={user} showToast={show}/>,alimentacao:<AlunoAlimentacao user={user} showToast={show}/>,hidratacao:<AlunoHidratacao user={user} showToast={show}/>,competicoes:<AlunoCompeticoes user={user} showToast={show}/>,avaliacao:<AlunoAvaliacao user={user} showToast={show}/>,vinculo:<AlunoVinculo user={user} showToast={show} onVinculoChange={refreshVinculo}/>};
   return(<>{ToastEl}<Shell user={user} onLogout={onLogout} nav={NAV_ALUNO} active={page} setActive={setPage} accent="">{pages[page]}</Shell></>);
 }
 // ============================================================
