@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase, DB } from "./lib/supabase.js";
 
-const _v='TRIOFIT_BUILD_1775570684';
+const _v='TRIOFIT_BUILD_1775571077';
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -744,6 +744,8 @@ function AlunoTreinos({user,showToast}){
   const [feedback,setFeedback]=useState("");
   const [mostrarTroca,setMostrarTroca]=useState(false);
   const [diaOriginal,setDiaOriginal]=useState(null); // null = sem troca ativa
+  const [treinosFinalizados,,saveTreinosFinalizados]=useAlunoData(user.id,"treinos_finalizados",{});
+  const [confirmandoFinalizar,setConfirmandoFinalizar]=useState(false);
   // Load saved avaliacao
   useEffect(()=>{
     DB.getData("treino_avaliacao",user.id).then(d=>{
@@ -769,6 +771,26 @@ function AlunoTreinos({user,showToast}){
     await DB.setData("treino_avaliacao",user.id,{rating,feedback,data:new Date().toISOString()});
     showToast&&showToast("Avaliação salva! Treinador notificado ✅");
   }
+
+  async function finalizarTreino(){
+    const hoje=new Date().toISOString().split("T")[0];
+    const chave=`${hoje}_dia${diaAtivo}`;
+    const novo={...(treinosFinalizados||{}),[chave]:{
+      dia:diaAtivo,
+      nome:diaInfo?.nome,
+      data:new Date().toISOString(),
+      exercicios:(diaInfo?.exercicios||[]).length,
+      rating
+    }};
+    await saveTreinosFinalizados(novo);
+    if(rating>0)await salvarAvaliacao();
+    setConfirmandoFinalizar(false);
+    showToast&&showToast("🏆 Treino finalizado! Ótimo trabalho!");
+  }
+
+  // Chave do dia atual para verificar se já foi finalizado
+  const chaveHoje=new Date().toISOString().split("T")[0]+`_dia${diaHoje}`;
+  const treinoDeHojeFinalizado=!!(treinosFinalizados||{})[chaveHoje];
 
   if(!planoReady){
     return(<div className="page"><div className="page-header"><div className="page-title green">TREINOS</div></div><div style={{color:"var(--text2)",padding:"2rem",textAlign:"center"}}><span className="spinner"/> Carregando treinos...</div></div>);
@@ -890,7 +912,8 @@ function AlunoTreinos({user,showToast}){
                 <div className="prog-track"><div className="prog-fill green" style={{width:`${((diaInfo.exercicios||[]).filter((_,j)=>checked[`${diaAtivo}_${j}`]).length/(diaInfo.exercicios||[]).length)*100}%`}}/></div>
               </div>
               {(diaInfo.exercicios||[]).map((ex,j)=>(
-                <div key={j} className={`ex-item ${checked[`${diaAtivo}_${j}`]?"done-ex":""}`} onClick={()=>toggleEx(diaAtivo,j)}>
+                <div key={j} className={`ex-item ${checked[`${diaAtivo}_${j}`]?"done-ex":""}`}
+                  onClick={()=>{ const chaveDia=new Date().toISOString().split("T")[0]+`_dia${diaAtivo}`; if((treinosFinalizados||{})[chaveDia]){showToast&&showToast("Treino já finalizado. Para registrar novo treino, clique em '+ Novo treino'.","warn");return;} toggleEx(diaAtivo,j); }}>
                   <div className={`check-box ${checked[`${diaAtivo}_${j}`]?"checked":""}`}>{checked[`${diaAtivo}_${j}`]&&"✓"}</div>
                   <div style={{flex:1}}>
                     <div className="ex-nome" style={{textDecoration:checked[`${diaAtivo}_${j}`]?"line-through":"none"}}>{ex.nome}</div>
@@ -903,637 +926,51 @@ function AlunoTreinos({user,showToast}){
         </div>
       )}
 
-      {/* AVALIAÇÃO */}
-      {diaInfo.tipo!=="descanso"&&(
-        <div className="card">
-          <div className="card-title">⭐ AVALIAR TREINO DE HOJE</div>
-          <div className="form-group">
-            <label className="form-label">Nota geral</label>
-            <div className="stars">{[1,2,3,4,5].map(s=><div key={s} style={{fontSize:"2rem",cursor:"pointer",color:s<=rating?"var(--orange)":"var(--border)"}} onClick={()=>setRating(s)}>★</div>)}</div>
+      {/* FINALIZAR / AVALIAÇÃO */}
+      {diaInfo.tipo!=="descanso"&&diaAtivo===diaHoje&&(
+        treinoDeHojeFinalizado?(
+          <div className="card" style={{textAlign:"center",padding:"1.5rem"}}>
+            <div style={{fontSize:"3rem",marginBottom:"0.5rem"}}>🏆</div>
+            <div style={{fontFamily:"var(--font-display)",fontSize:"1.2rem",color:"var(--green)",marginBottom:"0.3rem"}}>Treino finalizado!</div>
+            <div style={{fontSize:"0.85rem",color:"var(--text2)",marginBottom:"1rem"}}>Ótimo trabalho! O treinador já pode acompanhar sua evolução.</div>
+            <button className="btn btn-ghost btn-sm" onClick={async()=>{
+              const hoje2=new Date().toISOString().split("T")[0];
+              const chave2=hoje2+`_dia${diaHoje}_extra_${Date.now()}`;
+              const novo={...(treinosFinalizados||{}),[chave2]:{dia:diaHoje,nome:diaInfo?.nome,data:new Date().toISOString(),extra:true}};
+              // Reset checks para novo treino
+              const novosChecked={};
+              await saveChecked(novosChecked);
+              await saveTreinosFinalizados(novo);
+              showToast&&showToast("Iniciando novo treino 💪");
+            }}>+ Novo treino agora</button>
           </div>
-          <div className="form-group"><label className="form-label">Feedback para o treinador</label><textarea className="form-textarea" placeholder="Como foi o treino? Dificuldades? Observações?" value={feedback} onChange={e=>setFeedback(e.target.value)}/></div>
-          <button className="btn btn-primary btn-full" onClick={salvarAvaliacao}>✅ Registrar avaliação</button>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ============================================================
-// ALUNO — ALIMENTAÇÃO (checkbox)
-// ============================================================
-function AlunoAlimentacao({user,showToast}){
-  const [planoAlim,setPlanoAlim]=useState(undefined);
-  const [planoAlimReady,setPlanoAlimReady]=useState(false);
-  useEffect(()=>{
-    let cancelled=false;
-    DB.getData("plano_alim_aluno",user.id).then(d=>{
-      if(!cancelled){setPlanoAlim(d);setPlanoAlimReady(true);}
-    }).catch(()=>{
-      if(!cancelled){setPlanoAlim(null);setPlanoAlimReady(true);}
-    });
-    const timeout=setTimeout(()=>{if(!cancelled){setPlanoAlimReady(true);}},5000);
-    return()=>{cancelled=true;clearTimeout(timeout);};
-  },[user.id]);
-  const [comido,,saveComido]=useAlunoData(user.id,"alim_check_hoje",{});
-  const [obs,setObs]=useState("");
-  useEffect(()=>{DB.getData("alim_obs_hoje",user.id).then(d=>d&&setObs(d));},[user.id]);
-
-  async function toggleRefeicao(i){
-    const novo={...(comido||{}),[i]:!(comido||{})[i]};
-    await saveComido(novo);
-  }
-  async function salvarObs(){
-    await DB.setData("alim_obs_hoje",user.id,obs);
-    showToast&&showToast("Observação salva! Sua nutricionista vai ver.");
-  }
-
-  const refeicoes=planoAlim?.refeicoes||[
-    {h:"07:00",r:"Café da manhã",i:"3 ovos + pão integral + banana + café",k:480},
-    {h:"10:00",r:"Lanche manhã",i:"Iogurte grego + castanhas",k:280},
-    {h:"12:30",r:"Almoço",i:"Frango grelhado + arroz integral + salada",k:580},
-    {h:"16:00",r:"Pré-treino",i:"Batata doce + whey",k:320},
-    {h:"19:00",r:"Pós-treino",i:"Tilápia + arroz + brócolis",k:450},
-    {h:"21:30",r:"Ceia",i:"Cottage + pasta de amendoim",k:220},
-  ];
-
-  const totalPrescrito=refeicoes.reduce((s,r)=>s+r.k,0);
-  const totalComido=refeicoes.filter((_,i)=>comido[i]).reduce((s,r)=>s+r.k,0);
-  const qtdComido=Object.values(comido).filter(Boolean).length;
-
-  return(
-    <div className="page">
-      <div className="page-header">
-        <div className="page-title green">ALIMENTAÇÃO</div>
-        <div className="page-sub">Marque o que você já comeu hoje</div>
-      </div>
-
-      {planoAlim&&<PeriodoBadge plano={planoAlim}/>}
-
-      <div className="grid-2" style={{marginBottom:"1.5rem"}}>
-        <div className="stat-tile">
-          <div className="stat-label">Refeições feitas</div>
-          <div className="stat-value green">{qtdComido}<span className="stat-unit">/{refeicoes.length}</span></div>
-        </div>
-        <div className="stat-tile">
-          <div className="stat-label">Kcal consumidas</div>
-          <div className="stat-value orange">{totalComido}<span className="stat-unit">/{totalPrescrito}</span></div>
-        </div>
-      </div>
-
-      <div className="prog-wrap" style={{marginBottom:"1.5rem"}}>
-        <div className="prog-hdr"><span>Progresso do dia</span><span className="green">{Math.round((qtdComido/refeicoes.length)*100)}%</span></div>
-        <div className="prog-track"><div className="prog-fill green" style={{width:`${(qtdComido/refeicoes.length)*100}%`}}/></div>
-      </div>
-
-      <div className="card">
-        <div className="card-title">🥗 REFEIÇÕES DO DIA — marque o que comeu</div>
-        {(refeicoes||[]).map((r,i)=>(
-          <div key={i} className={`refeicao-item ${comido[i]?"comido":""}`} onClick={()=>toggleRefeicao(i)}>
-            <div className={`check-box ${comido[i]?"checked":""}`} style={{width:"24px",height:"24px",borderRadius:"8px"}}>{comido[i]&&"✓"}</div>
-            <div className="refeicao-hora">{r.h}</div>
-            <div className="refeicao-info">
-              <div className="refeicao-nome" style={{textDecoration:comido[i]?"line-through":"none"}}>{r.r}</div>
-              <div className="refeicao-itens">{r.i}</div>
-            </div>
-            <div className="refeicao-kcal">{r.k}kcal</div>
-          </div>
-        ))}
-      </div>
-
-      <div className="card">
-        <div className="card-title">📝 OBSERVAÇÕES PARA A NUTRICIONISTA</div>
-        <textarea className="form-textarea" placeholder="Substituições, dificuldades, como se sentiu..." value={obs} onChange={e=>setObs(e.target.value)}/>
-        <button className="btn btn-primary" style={{marginTop:"0.75rem"}} onClick={salvarObs}>💾 Salvar observação</button>
-      </div>
-    </div>
-  );
-}
-
-// ============================================================
-// ALUNO — HIDRATAÇÃO
-// ============================================================
-function AlunoHidratacao({user,showToast}){
-  const [ml, , saveMl] = useAlunoData(user.id, "agua_hoje", 0);
-  const [meta, , saveMeta] = useAlunoData(user.id, "meta_agua", 3000);
-  const [novaMeta,setNovaMeta]=useState(meta||3000);
-  const pct=Math.min(((ml||0)/(meta||3000))*100,100);
-  async function add(q){
-    const n=Math.min((ml||0)+q,9999);
-    await saveMl(n);
-    if(n>=(meta||3000)&&(ml||0)<(meta||3000))showToast&&showToast("🎉 Meta de hidratação atingida!");
-  }
-  async function salvarMeta(){
-    const n=Math.max(Number(novaMeta)||3000,500);
-    setNovaMeta(n);
-    await saveMeta(n);
-    showToast&&showToast(`Meta atualizada: ${(n/1000).toFixed(1)}L por dia`);
-  }
-  const hist=DB.getData&&[]; // hist via Supabase (future)
-  return(
-    <div className="page">
-      <div className="page-header">
-        <div className="page-title green">HIDRATAÇÃO</div>
-        <div className="page-sub">{getDateStr()}</div>
-      </div>
-      <div className="card" style={{textAlign:"center"}}>
-        <div style={{fontSize:"5rem",fontFamily:"var(--font-display)",color:"var(--blue)",lineHeight:1}}>{(ml/1000).toFixed(1)}</div>
-        <div style={{fontSize:"1.2rem",color:"var(--text2)",marginBottom:"1.5rem"}}>litros de {(meta/1000).toFixed(1)}L</div>
-        <div className="prog-track" style={{height:"14px",marginBottom:"1.5rem"}}><div className="prog-fill blue" style={{width:`${pct}%`}}/></div>
-        <div style={{color:pct>=100?"var(--green)":"var(--text2)",fontWeight:600,marginBottom:"1rem"}}>{pct>=100?"🎉 Meta atingida!":`Faltam ${((meta-ml)/1000).toFixed(1)}L`}</div>
-        <div className="quick-btns" style={{justifyContent:"center"}}>
-          {[150,200,300,500,750,1000].map(q=><div key={q} className="quick-btn" onClick={()=>add(q)}><div className="quick-btn-icon">💧</div>+{q>=1000?"1L":`${q}ml`}</div>)}
-        </div>
-        {ml>0&&<button className="btn btn-ghost" style={{marginTop:"1rem"}} onClick={()=>{setMl(0);DB.setData("agua_hoje",user.id,0);}}>Zerar</button>}
-      </div>
-      <div className="card">
-        <div className="card-title">⚙️ META DIÁRIA</div>
-        <div style={{display:"flex",gap:"0.75rem"}}>
-          <input className="form-input" type="number" value={novaMeta} onChange={e=>setNovaMeta(e.target.value)}/>
-          <button className="btn btn-blue" onClick={salvarMeta}>Salvar</button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ============================================================
-// ALUNO — SAÚDE
-// ============================================================
-function AlunoSaude({user,showToast}){
-  const [sData,sReady]=useAsyncData(()=>DB.getData("saude",user.id),[user.id]);
-  const s=sData||{};
-  const [doente,setDoente]=useState(false);
-  useEffect(()=>{ if(sReady&&sData){setDoente(sData.doente||false);setSintomas(sData.sintomas||"");setDoenteDe(sData.doente_desde||null);setMens(sData.mens||false);setMeds(sData.meds||"");setObs(sData.obs||"");setDores(sData.dores||[]);}},[sReady]);
-  const [sintomas,setSintomas]=useState("");
-  const [doenteDe,setDoenteDe]=useState(null);
-  const [mens,setMens]=useState(false);
-  const [meds,setMeds]=useState("");
-  const [obs,setObs]=useState("");
-  const [dores,setDores]=useState([]);
-  const [musculoSel,setMusculoSel]=useState([]);
-  async function salvar(ov={}){await DB.setData("saude",user.id,{doente,sintomas,doente_desde:doenteDe,mens,meds,obs,dores,...ov});showToast&&showToast("✅ Saúde atualizada!");}
-  function marcarDoente(){const agora=new Date().toISOString();setDoente(true);setDoenteDe(agora);salvar({doente:true,doente_desde:agora});}
-  function marcarRecuperado(){setDoente(false);setDoenteDe(null);setSintomas("");salvar({doente:false,doente_desde:null,sintomas:""});showToast&&showToast("Ótimo! Recuperação registrada! 💪");}
-  function adicionarDor(){if(!musculoSel.length)return;const agora=new Date().toISOString();const novas=[...dores,...musculoSel.filter(m=>!dores.find(d=>d.musculo===m)).map(m=>({musculo:m,desde:agora,intensidade:5}))];setDores(novas);setMusculoSel([]);salvar({dores:novas});}
-  function removerDor(idx){const novas=dores.filter((_,i)=>i!==idx);setDores(novas);salvar({dores:novas});}
-  return(
-    <div className="page">
-      <div className="page-title green">SAÚDE</div>
-      <div className="page-sub">Treinador e nutricionista verão estas informações</div>
-      <div className="card">
-        <div className="card-title">📊 STATUS ATUAL</div>
-        <SaudeStatusCard status={{doente,doente_desde:doenteDe,sintomas,dores}} onRecuperado={marcarRecuperado} onDorRecuperado={removerDor} soLeitura={false}/>
-      </div>
-      <div className="card">
-        <div className="card-title">🤒 REGISTRAR DOENÇA</div>
-        {!doente?(
-          <><div className="form-group"><label className="form-label">Sintomas</label><input className="form-input" placeholder="Ex: Gripe, febre..." value={sintomas} onChange={e=>setSintomas(e.target.value)}/></div>
-          <button className="btn btn-ghost" onClick={marcarDoente} style={{color:"var(--red)",borderColor:"rgba(231,76,60,0.4)"}}>🤒 Estou doente</button></>
-        ):<div style={{color:"var(--text2)",fontSize:"0.85rem"}}>{diffDays(doenteDe)} {pluralDia(diffDays(doenteDe))} de doença. Clique "Estou recuperado!" no status acima.</div>}
-      </div>
-      <div className="card">
-        <div className="card-title">🔴 REGISTRAR DOR MUSCULAR</div>
-        {(dores||[]).length>0&&<div style={{marginBottom:"1rem"}}>{(dores||[]).map((d,i)=>(
-          <div key={i} style={{display:"flex",alignItems:"center",gap:"0.75rem",padding:"0.65rem",background:"var(--red-dim)",borderRadius:"var(--radius)",marginBottom:"0.5rem",border:"1px solid rgba(231,76,60,0.3)"}}>
-            <span style={{color:"var(--red)",fontWeight:600,fontSize:"0.9rem",flex:1}}>{d.musculo} — {diffDays(d.desde)} {pluralDia(diffDays(d.desde))}</span>
-            <button className="btn btn-sm" style={{background:"var(--green)",color:"#0a0f0d",padding:"0.3rem 0.75rem",fontSize:"0.75rem"}} onClick={()=>removerDor(i)}>✅ Recuperado</button>
-          </div>
-        ))}</div>}
-        <div style={{fontSize:"0.85rem",color:"var(--text2)",marginBottom:"0.75rem"}}>Selecione os músculos com dor:</div>
-        <div className="pain-grid" style={{marginBottom:"1rem"}}>
-          {MUSCLES.map(m=><div key={m} className={`muscle-btn ${musculoSel.includes(m)?"selected":""}`} onClick={()=>setMusculoSel(p=>p.includes(m)?p.filter(x=>x!==m):[...p,m])}>{m}</div>)}
-        </div>
-        {musculoSel.length>0&&<button className="btn btn-ghost" style={{color:"var(--red)",borderColor:"rgba(231,76,60,0.4)"}} onClick={adicionarDor}>🔴 Registrar dor em: {musculoSel.join(", ")}</button>}
-      </div>
-      <div className="card">
-        <div className="card-title">🔢 OUTRAS INFORMAÇÕES</div>
-        <div className="check-item" onClick={()=>{setMens(!mens);salvar({mens:!mens});}}><div className={`check-box ${mens?"checked":""}`}>{mens&&"✓"}</div><span>Semana menstrual</span></div>
-        <div className="form-group" style={{marginTop:"0.75rem"}}><label className="form-label">💊 Medicamentos</label><textarea className="form-textarea" placeholder="Ex: Vitamina D 2000UI, Creatina 5g..." value={meds} onChange={e=>setMeds(e.target.value)}/></div>
-        <div className="form-group"><label className="form-label">📝 Observações</label><textarea className="form-textarea" placeholder="Qualquer informação para sua equipe..." value={obs} onChange={e=>setObs(e.target.value)}/></div>
-        <button className="btn btn-primary" onClick={()=>salvar()}>💾 Salvar</button>
-      </div>
-    </div>
-  );
-}
-
-// ============================================================
-// ALUNO — AVALIAÇÃO E COMPETIÇÕES
-// ============================================================
-function AlunoAvaliacao({user,showToast}){
-  const [f,setF]=useState({});
-  useEffect(()=>{DB.getData("avaliacao",user.id).then(d=>d&&setF(d));},[user.id]);
-  async function set(k,v){setF(p=>({...p,[k]:v}));}
-  async function salvar(){
-    await DB.setData("avaliacao",user.id,f);
-    const hist=(await DB.getData("avaliacao_hist",user.id))||[];
-    if(f.peso){
-      const entry={peso:f.peso,gordura:f.gordura,data:new Date().toISOString()};
-      await DB.setData("avaliacao_hist",user.id,[...hist.slice(-11),entry]);
-    }
-    showToast&&showToast("Avaliação física salva! ✅");
-  }
-  const imc=calcIMC(f.peso,f.altura);
-  return(
-    <div className="page">
-      <div className="page-header">
-        <div className="page-title green">AVALIAÇÃO FÍSICA</div>
-        <div className="page-sub">Visível para treinador e nutricionista</div>
-      </div>
-      {imc&&(
-        <div className="card">
-          <div className="card-title">📊 IMC Calculado</div>
-          <div className="grid-2" style={{marginBottom:0}}>
-            <div className="stat-tile"><div className="stat-label">IMC</div><div className="stat-value green">{imc.val}</div><div className="stat-sub">{imc.cat}</div></div>
-            <div className="stat-tile"><div className="stat-label">Peso / Altura</div><div style={{marginTop:"0.4rem",fontWeight:700}}>{f.peso||"—"}kg / {f.altura||"—"}cm</div></div>
-          </div>
-        </div>
-      )}
-      <div className="card">
-        <div className="card-title">📏 MEDIDAS CORPORAIS</div>
-        <div className="grid-2">
-          {[["peso","Peso","kg"],["altura","Altura","cm"],["gordura","% Gordura","%"],["massa","Massa Magra","kg"],["cintura","Cintura","cm"],["quadril","Quadril","cm"],["braco_d","Braço D","cm"],["braco_e","Braço E","cm"],["perna_d","Perna D","cm"],["perna_e","Perna E","cm"]].map(([k,l,u])=>(
-            <div key={k} className="form-group"><label className="form-label">{l}</label>
-              <div style={{display:"flex",gap:"0.5rem",alignItems:"center"}}>
-                <input className="form-input" type="number" placeholder="0" value={f[k]||""} onChange={e=>set(k,e.target.value)}/>
-                <span style={{color:"var(--text2)",flexShrink:0}}>{u}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-        <div className="form-group"><label className="form-label">Observações</label><textarea className="form-textarea" value={f.obs||""} onChange={e=>set("obs",e.target.value)} placeholder="Notas gerais..."/></div>
-        <button className="btn btn-primary" onClick={salvar}>💾 Salvar avaliação</button>
-      </div>
-    </div>
-  );
-}
-
-function AlunoCompeticoes({user,showToast}){
-  const [comps,setComps]=useState([]);
-  useEffect(()=>{DB.getData("competicoes",user.id).then(d=>d&&setComps(d));},[user.id]);
-  const [f,setF]=useState({nome:"",modalidade:"Corrida",data:"",local:"",objetivo:"Completar"});
-  async function set(k,v){setF(p=>({...p,[k]:v}));}
-  async function add(){
-    if(!f.nome||!f.data){return;}
-    const novo=[...comps,{...f,id:Date.now()}];
-    setComps(novo);await DB.setData("competicoes",user.id,novo);
-    setF({nome:"",modalidade:"Corrida",data:"",local:"",objetivo:"Completar"});
-    showToast&&showToast("Competição cadastrada! 🏆");
-  }
-  async function remover(id){const n=comps.filter(c=>c.id!==id);setComps(n);await DB.setData("competicoes",user.id,n);}
-  return(
-    <div className="page">
-      <div className="page-header">
-        <div className="page-title green">COMPETIÇÕES</div>
-        <div className="page-sub">Visível para treinador e nutricionista</div>
-      </div>
-      {(comps||[]).length>0&&<div className="card"><div className="card-title">📅 MEUS EVENTOS</div>{(comps||[]).map((c,i)=>{const d=new Date(c.data);return(<div key={i} className="comp-card" style={{background:"var(--bg2)"}}><div className="comp-date"><div className="comp-date-day">{d.getDate()}</div><div className="comp-date-month">{d.toLocaleDateString("pt-BR",{month:"short"})}</div></div><div style={{flex:1}}><div style={{fontWeight:600}}>{c.nome}</div><div style={{fontSize:"0.8rem",color:"var(--text2)"}}>{c.modalidade} • {c.local}</div></div><span className="tag tag-orange">{c.objetivo.toUpperCase()}</span></div>);})}</div>}
-      <div className="card">
-        <div className="card-title">➕ CADASTRAR COMPETIÇÃO</div>
-        <div className="grid-2">
-          <div className="form-group"><label className="form-label">Nome do evento</label><input className="form-input" placeholder="Ex: Ironman Florianópolis" value={f.nome} onChange={e=>set("nome",e.target.value)}/></div>
-          <div className="form-group"><label className="form-label">Modalidade</label><select className="form-select" value={f.modalidade} onChange={e=>set("modalidade",e.target.value)}>{["Corrida","Natação","Triathlon / Ironman","Luta","Fisiculturismo","Ciclismo","Caminhada"].map(m=><option key={m}>{m}</option>)}</select></div>
-          <div className="form-group"><label className="form-label">Data</label><input className="form-input" type="date" value={f.data} onChange={e=>set("data",e.target.value)}/></div>
-          <div className="form-group"><label className="form-label">Local</label><input className="form-input" placeholder="Cidade / Local" value={f.local} onChange={e=>set("local",e.target.value)}/></div>
-        </div>
-        <div className="form-group"><label className="form-label">Objetivo</label><select className="form-select" value={f.objetivo} onChange={e=>set("objetivo",e.target.value)}>{["Completar","Bater meu recorde","Subir no pódio","Subir no palco","Definição de peso"].map(o=><option key={o}>{o}</option>)}</select></div>
-        <button className="btn btn-primary" onClick={add}>+ Cadastrar evento</button>
-      </div>
-    </div>
-  );
-}
-
-// ============================================================
-// ALUNO — DASHBOARD
-// ============================================================
-function AlunoDash({user,setPage}){
-  const [vinculo,,]=useAsyncData(()=>DB.getVinculoAluno(user.id),[user.id],{});
-  const [treinador,,]=useAsyncData(()=>vinculo?.treinadorId?DB.getUserById(vinculo.treinadorId):Promise.resolve(null),[vinculo?.treinadorId],null);
-  const [nutri,,]=useAsyncData(()=>vinculo?.nutriId?DB.getUserById(vinculo.nutriId):Promise.resolve(null),[vinculo?.nutriId],null);
-  const [agua,,]=useAlunoData(user.id,"agua_hoje",0);
-  const [meta,,]=useAlunoData(user.id,"meta_agua",3000);
-  const [saude,,]=useAlunoData(user.id,"saude",{});
-  const [planoTreino,,]=useAlunoData(user.id,"plano_treino_aluno",null);
-  const [avalDash,,]=useAlunoData(user.id,"avaliacao",{});
-  const pct=Math.min(Math.round(((agua||0)/Math.max(meta||3000,1))*100),100);
-  const hoje=new Date().getDay();const diaHoje=hoje===0?6:hoje-1;
-  const treinoHoje=planoTreino?.dias?.[diaHoje];
-  return(
-    <div className="page">
-      <div className="page-title green">{getGreeting()}, {firstName(user.nome)} 👋</div>
-      <div className="page-sub">{getDateStr()}</div>
-      {!treinador&&!nutri&&<div className="alert alert-warn">⚠️ Sem equipe vinculada. Vá em <b>Minha Equipe</b> e insira o código do seu treinador e nutricionista!</div>}
-      <div className="grid-4">
-        <div className="stat-tile" style={{cursor:"pointer"}} onClick={()=>setPage&&setPage("vinculo")}>
-          <div className="stat-label">Treinador</div>
-          <div style={{marginTop:"0.4rem",fontWeight:700,fontSize:"0.92rem",color:"var(--orange)"}}>{treinador?treinador.nome.split(" ")[0]:"Vincular →"}</div>
-        </div>
-        <div className="stat-tile" style={{cursor:"pointer"}} onClick={()=>setPage&&setPage("vinculo")}>
-          <div className="stat-label">Nutricionista</div>
-          <div style={{marginTop:"0.4rem",fontWeight:700,fontSize:"0.92rem",color:"var(--blue)"}}>{nutri?nutri.nome.split(" ")[0]:"Vincular →"}</div>
-        </div>
-        <div className="stat-tile" style={{cursor:"pointer"}} onClick={()=>setPage&&setPage("hidratacao")}>
-          <div className="stat-label">Água hoje</div>
-          <div className="stat-value blue">{(agua/1000).toFixed(1)}<span className="stat-unit">L</span></div>
-          <div className="stat-sub">{Math.min(Math.round((agua/meta)*100),100)}% da meta</div>
-        </div>
-        <div className="stat-tile" style={{cursor:"pointer"}} onClick={()=>setPage&&setPage("avaliacao")}>
-          <div className="stat-label">Peso / IMC</div>
-          {(()=>{const imc=calcIMC(avalDash.peso,avalDash.altura);return(<><div className="stat-value green">{avalDash.peso||"—"}<span className="stat-unit">{avalDash.peso?" kg":""}</span></div>{imc&&<div className="stat-sub">IMC {imc.val} — {imc.cat}</div>}</>);})()}
-        </div>
-      </div>
-      <div className="card">
-        <div className="card-title">❤️ STATUS DE SAÚDE</div>
-        <SaudeStatusCard status={saude} soLeitura={true}/>
-      </div>
-      {treinoHoje&&(
-        <div className="card card-clickable" onClick={()=>setPage&&setPage("treinos")}>
-          <div className="card-title">🏋️ Treino de hoje — {DIAS_SEMANA[diaHoje]}</div>
-          {treinoHoje.tipo==="descanso"?(
-            <div style={{textAlign:"center",padding:"1rem 0"}}>
-              <div style={{fontSize:"2.5rem",marginBottom:"0.35rem"}}>😴</div>
-              <div style={{fontFamily:"var(--font-display)",fontSize:"1.5rem",color:"var(--orange)"}}>DIA DE DESCANSO</div>
-              <div style={{fontSize:"0.8rem",color:"var(--text2)",marginTop:"0.25rem"}}>Recuperação é parte do treino!</div>
-            </div>
-          ):(
-            <>
-              <div style={{fontWeight:700,fontSize:"0.95rem",marginBottom:"0.65rem"}}>{treinoHoje.nome}</div>
-              {treinoHoje.distancia&&<div style={{fontSize:"0.82rem",color:"var(--blue)",marginBottom:"0.5rem",background:"var(--blue-dim)",padding:"0.45rem 0.75rem",borderRadius:"var(--radius)",display:"inline-block"}}>📏 {treinoHoje.distancia}{treinoHoje.ritmo&&` • ${treinoHoje.ritmo}`}{treinoHoje.zona&&` • ${treinoHoje.zona}`}</div>}
-              {treinoHoje.rounds&&<div style={{fontSize:"0.82rem",color:"var(--red)",marginBottom:"0.5rem",background:"var(--red-dim)",padding:"0.45rem 0.75rem",borderRadius:"var(--radius)",display:"inline-block"}}>🥊 {treinoHoje.rounds}{treinoHoje.tempoRound&&` • ${treinoHoje.tempoRound}`}</div>}
-              {treinoHoje.exercicios?.slice(0,4).map((ex,i)=>(
-                <div key={i} style={{display:"flex",justifyContent:"space-between",padding:"0.45rem 0",borderBottom:"1px solid var(--border)",fontSize:"0.85rem"}}>
-                  <span style={{fontWeight:600}}>{ex.nome}</span>
-                  <span style={{color:"var(--text2)"}}>{ex.series&&`${ex.series}x`} {ex.reps} {ex.carga&&`• ${ex.carga}`}</span>
-                </div>
-              ))}
-              {treinoHoje.exercicios?.length>4&&<div style={{fontSize:"0.75rem",color:"var(--text3)",marginTop:"0.5rem",textAlign:"center"}}>+{treinoHoje.exercicios.length-4} exercícios — toque para ver →</div>}
-            </>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ============================================================
-// TREINADOR — PRESCREVER TREINO
-// ============================================================
-function TreinadorPrescrever({user,showToast}){
-  const [alunos,]=useAsyncData(()=>DB.getAlunosDe(user.id),[user.id],[]);
-  const [alunoSel,setAlunoSel]=useState(null);
-  const [nomePlano,setNomePlano]=useState("Treino A/B/C");
-  const [modalidade,setModalidade]=useState("musculacao");
-  const [duracao,setDuracao]=useState(1);
-  const [inicio,setInicio]=useState(()=>new Date().toISOString().split("T")[0]);
-  const [dias,setDias]=useState(()=>DIAS_SEMANA.map((_,i)=>({nome:`Treino ${String.fromCharCode(65+i)}`,tipo:i<5?"academia":"descanso",obs:"",exercicios:[],distancia:"",ritmo:"",zona:"",duracaoTotal:"",rounds:"",tempoRound:"",foco:"",modalidadeLuta:""})));
-  const [diaEdit,setDiaEdit]=useState(0);
-  const [novoEx,setNovoEx]=useState({nome:"",series:"",reps:"",carga:"",duracao:""});
-  const [salvandoRascunho,setSalvandoRascunho]=useState(false);
-  // Auto-save rascunho a cada 30s quando tem aluno selecionado
-  useEffect(()=>{
-    if(!alunoSel)return;
-    const t=setTimeout(async()=>{
-      setSalvandoRascunho(true);
-      await DB.setData("rascunho_treino",user.id,{alunoId:alunoSel.id,nomePlano,modalidade,duracao,inicio,dias,savedAt:new Date().toISOString()});
-      setSalvandoRascunho(false);
-    },30000);
-    return()=>clearTimeout(t);
-  },[dias,nomePlano,modalidade,alunoSel]);
-  function setDiaTipo(i,tipo){setDias(p=>{const n=[...p];n[i]={...n[i],tipo};return n;});}
-  function setDiaNome(i,nome){setDias(p=>{const n=[...p];n[i]={...n[i],nome};return n;});}
-  function setDiaObs(i,obs){setDias(p=>{const n=[...p];n[i]={...n[i],obs};return n;});}
-  function addEx(diaIdx){
-    if(!novoEx.nome.trim())return;
-    setDias(p=>{const n=[...p];n[diaIdx]={...n[diaIdx],exercicios:[...(n[diaIdx].exercicios||[]),{...novoEx}]};return n;});
-    setNovoEx({nome:"",series:"",reps:"",carga:"",duracao:""});
-  }
-  async function removeEx(diaIdx,exIdx){setDias(p=>{const n=[...p];n[diaIdx]={...n[diaIdx],exercicios:n[diaIdx].exercicios.filter((_,i)=>i!==exIdx)};return n;});}
-
-  async function salvar(){
-    if(!alunoSel){showToast&&showToast("Selecione um aluno primeiro","warn");return;}
-    const planoExistente=await DB.getData("plano_treino_aluno",alunoSel.id);
-    if(planoExistente&&!window.confirm(`Substituir o treino de ${alunoSel.nome.split(" ")[0]}? O plano atual será perdido.`))return;
-    const fimDate=addMonths(new Date(inicio),duracao);
-    const plano={nome:nomePlano,modalidade,duracao,inicio,fim:fimDate.toISOString(),dias,criadoEm:new Date().toISOString()};
-    await DB.setData("plano_treino_aluno",alunoSel.id,plano);
-    showToast&&showToast(`✅ Treino prescrito para ${alunoSel.nome.split(" ")[0]}! O aluno já pode ver no app.`);
-    
-  }
-
-  const diaAtual=dias[diaEdit]||{exercicios:[]};
-
-  return(
-    <div className="page">
-      <div className="page-title orange">PRESCREVER TREINO</div>
-      <div className="page-sub">Monte a semana completa de treinos para um aluno</div>
-      {alunos.length===0&&<div className="alert alert-warn">⚠️ Nenhum aluno vinculado. Código: <b style={{fontFamily:"var(--font-mono)"}}>{user.codigo||"------"}</b></div>}
-
-      {/* SELECIONAR ALUNO */}
-      <div className="card">
-        <div className="card-title">👤 SELECIONAR ALUNO</div>
-        <AlunoSelector alunos={alunos||[]} selecionado={alunoSel} onSelect={setAlunoSel} accentClass="sel-orange"/>
-        {(alunos||[]).length===0&&<div style={{color:"var(--text3)",fontSize:"0.85rem",padding:"0.5rem 0"}}>⏳ Nenhum aluno vinculado ainda. Compartilhe seu código com seus alunos para que eles se conectem.</div>}
-        {!alunoSel&&(alunos||[]).length>0&&<div style={{color:"var(--text3)",fontSize:"0.85rem"}}>Selecione um aluno acima para montar o plano.</div>}
-      </div>
-
-      {alunoSel&&(
-        <>
-          {/* CONFIGURAÇÕES DO PLANO */}
+        ):(
           <div className="card">
-            <div className="card-title">⚙️ CONFIGURAÇÕES DO PLANO</div>
-            <div className="grid-2">
-              <div className="form-group"><label className="form-label">Nome do plano</label><input className="form-input" value={nomePlano} onChange={e=>setNomePlano(e.target.value)} placeholder="Ex: Treino A/B/C, Hipertrofia..."/></div>
-              <div className="form-group"><label className="form-label">Modalidade principal</label>
-                <select className="form-select" value={modalidade} onChange={e=>setModalidade(e.target.value)}>
-                  {MODALIDADES.map(m=><option key={m.v} value={m.v}>{m.l}</option>)}
-                </select>
-              </div>
-              <div className="form-group"><label className="form-label">Data de início</label><input className="form-input" type="date" value={inicio} onChange={e=>setInicio(e.target.value)}/></div>
-              <div className="form-group"><label className="form-label">Duração do plano</label>
-                <select className="form-select" value={duracao} onChange={e=>setDuracao(Number(e.target.value))}>
-                  <option value={1}>1 mês</option><option value={2}>2 meses</option><option value={3}>3 meses</option>
-                </select>
-              </div>
+            <div className="card-title">⭐ FINALIZAR TREINO</div>
+            <div className="form-group">
+              <label className="form-label">Avalie o treino de hoje</label>
+              <div className="stars">{[1,2,3,4,5].map(s=><div key={s} style={{fontSize:"2rem",cursor:"pointer",color:s<=rating?"var(--orange)":"var(--border)"}} onClick={()=>setRating(s)}>★</div>)}</div>
             </div>
-            <div className="periodo-card">
-              <div style={{fontSize:"0.8rem",color:"var(--text3)",marginBottom:"0.25rem"}}>Vigência do plano</div>
-              <div style={{fontWeight:600}}>{fmtDate(inicio)} → {fmtDate(addMonths(new Date(inicio),duracao))}</div>
-              <div style={{fontSize:"0.8rem",color:"var(--text2)",marginTop:"0.15rem"}}>{duracao} {duracao===1?"mês":"meses"} para {alunoSel.nome.split(" ")[0]}</div>
-            </div>
-          </div>
-
-          {/* DIAS DA SEMANA */}
-          <div className="card">
-            <div className="card-title">📅 MONTAR OS DIAS DA SEMANA</div>
-            <div className="week-tabs">
-              {DIAS_SEMANA.map((d,i)=>(
-                <button key={i} className={`week-tab ${diaEdit===i?"active orange":""}`} onClick={()=>setDiaEdit(i)}>
-                  {d.slice(0,3)}{dias[i].tipo==="descanso"?" 💤":""}
-                </button>
-              ))}
-            </div>
-
-            {/* EDIT DIA */}
-            <div style={{background:"var(--bg2)",borderRadius:"var(--radius-lg)",padding:"1.25rem"}}>
-              <div style={{fontFamily:"var(--font-display)",fontSize:"1.3rem",color:"var(--orange)",marginBottom:"1rem"}}>{DIAS_SEMANA[diaEdit]}</div>
-              <div className="form-group">
-                <label className="form-label">Tipo do dia</label>
-                <div style={{display:"flex",gap:"0.5rem",flexWrap:"wrap"}}>
-                  {[["descanso","😴 Descanso"],["academia","🏋️ Academia"],["corrida","🏃 Corrida"],["natacao","🏊 Natação"],["luta","🥊 Luta"],["ciclismo","🚴 Ciclismo"],["funcional","⚡ Funcional"],["caminhada","🚶 Caminhada"]].map(([v,l])=>(
-                    <button key={v} className={`toggle-btn ${diaAtual.tipo===v?"active-orange":""}`} onClick={()=>setDiaTipo(diaEdit,v)}>{l}</button>
-                  ))}
+            <div className="form-group"><label className="form-label">Feedback para o treinador (opcional)</label><textarea className="form-textarea" rows={2} placeholder="Como foi o treino? Alguma dificuldade?" value={feedback} onChange={e=>setFeedback(e.target.value)}/></div>
+            {!confirmandoFinalizar?(
+              <button className="btn btn-green btn-full" onClick={()=>{
+                const feitos=(diaInfo?.exercicios||[]).filter((_,j)=>checked[`${diaAtivo}_${j}`]).length;
+                const total=(diaInfo?.exercicios||[]).length;
+                if(total>0&&feitos<total){setConfirmandoFinalizar(true);}
+                else{finalizarTreino();}
+              }}>🏁 Finalizar treino</button>
+            ):(
+              <div style={{background:"var(--card2)",borderRadius:"var(--radius)",padding:"1rem",marginTop:"0.5rem"}}>
+                <div style={{fontWeight:600,marginBottom:"0.5rem"}}>⚠️ {`${(diaInfo?.exercicios||[]).filter((_,j)=>checked[`${diaAtivo}_${j}`]).length} de ${(diaInfo?.exercicios||[]).length} exercícios concluídos`}</div>
+                <div style={{fontSize:"0.85rem",color:"var(--text2)",marginBottom:"0.75rem"}}>Deseja finalizar mesmo assim?</div>
+                <div style={{display:"flex",gap:"0.5rem"}}>
+                  <button className="btn btn-ghost btn-sm" onClick={()=>setConfirmandoFinalizar(false)}>Continuar treinando</button>
+                  <button className="btn btn-green btn-sm" onClick={finalizarTreino}>Finalizar assim mesmo</button>
                 </div>
               </div>
-              {diaAtual.tipo!=="descanso"&&(
-                <>
-                  <div className="form-group"><label className="form-label">Nome do treino</label><input className="form-input" value={diaAtual.nome} onChange={e=>setDiaNome(diaEdit,e.target.value)} placeholder={
-                    diaAtual.tipo==="corrida"?"Ex: Corrida leve 5km Z2":
-                    diaAtual.tipo==="natacao"?"Ex: Natação técnica 2000m":
-                    diaAtual.tipo==="luta"?"Ex: Treino de Jiu-Jitsu":
-                    diaAtual.tipo==="ciclismo"?"Ex: Ciclismo Z2 40km":
-                    "Ex: Treino A — Peito + Tríceps"
-                  }/></div>
-                  <div className="form-group"><label className="form-label">Observações do dia</label><input className="form-input" value={diaAtual.obs} onChange={e=>setDiaObs(diaEdit,e.target.value)} placeholder="Instruções específicas..."/></div>
-
-                  {/* CAMPOS ESPECÍFICOS POR MODALIDADE */}
-                  {(diaAtual.tipo==="corrida"||diaAtual.tipo==="natacao"||diaAtual.tipo==="ciclismo"||diaAtual.tipo==="caminhada")&&(
-                    <div style={{background:"rgba(52,152,219,0.08)",border:"1px solid rgba(52,152,219,0.2)",borderRadius:"var(--radius)",padding:"1rem",marginBottom:"1rem"}}>
-                      <div style={{fontSize:"0.8rem",color:"var(--blue)",marginBottom:"0.75rem",textTransform:"uppercase",letterSpacing:"0.1em"}}>
-                        {diaAtual.tipo==="corrida"?"🏃 Prescrição de corrida":diaAtual.tipo==="natacao"?"🏊 Prescrição de natação":diaAtual.tipo==="ciclismo"?"🚴 Prescrição de ciclismo":"🚶 Prescrição de caminhada"}
-                      </div>
-                      <div className="grid-2">
-                        <div className="form-group"><label className="form-label">Distância</label><input className="form-input" placeholder={diaAtual.tipo==="natacao"?"Ex: 2000m":"Ex: 5km ou 10km"} value={diaAtual.distancia||""} onChange={e=>setDias(p=>{const n=[...p];n[diaEdit]={...n[diaEdit],distancia:e.target.value};return n;})}/></div>
-                        <div className="form-group"><label className="form-label">Tempo / Ritmo</label><input className="form-input" placeholder={diaAtual.tipo==="natacao"?"Ex: 2min/100m":"Ex: 6min/km ou 30min"} value={diaAtual.ritmo||""} onChange={e=>setDias(p=>{const n=[...p];n[diaEdit]={...n[diaEdit],ritmo:e.target.value};return n;})}/></div>
-                        <div className="form-group"><label className="form-label">Zona / Intensidade</label><input className="form-input" placeholder="Ex: Z2, leve, moderado..." value={diaAtual.zona||""} onChange={e=>setDias(p=>{const n=[...p];n[diaEdit]={...n[diaEdit],zona:e.target.value};return n;})}/></div>
-                        <div className="form-group"><label className="form-label">Duração total</label><input className="form-input" placeholder="Ex: 45min" value={diaAtual.duracaoTotal||""} onChange={e=>setDias(p=>{const n=[...p];n[diaEdit]={...n[diaEdit],duracaoTotal:e.target.value};return n;})}/></div>
-                      </div>
-                    </div>
-                  )}
-                  {diaAtual.tipo==="luta"&&(
-                    <div style={{background:"rgba(231,76,60,0.08)",border:"1px solid rgba(231,76,60,0.2)",borderRadius:"var(--radius)",padding:"1rem",marginBottom:"1rem"}}>
-                      <div style={{fontSize:"0.8rem",color:"var(--red)",marginBottom:"0.75rem",textTransform:"uppercase",letterSpacing:"0.1em"}}>🥊 Prescrição de luta</div>
-                      <div className="grid-2">
-                        <div className="form-group"><label className="form-label">Rounds</label><input className="form-input" placeholder="Ex: 5 rounds" value={diaAtual.rounds||""} onChange={e=>setDias(p=>{const n=[...p];n[diaEdit]={...n[diaEdit],rounds:e.target.value};return n;})}/></div>
-                        <div className="form-group"><label className="form-label">Tempo por round</label><input className="form-input" placeholder="Ex: 5min / 1min descanso" value={diaAtual.tempoRound||""} onChange={e=>setDias(p=>{const n=[...p];n[diaEdit]={...n[diaEdit],tempoRound:e.target.value};return n;})}/></div>
-                        <div className="form-group"><label className="form-label">Foco do treino</label><input className="form-input" placeholder="Ex: Sparring, técnica, condicionamento" value={diaAtual.foco||""} onChange={e=>setDias(p=>{const n=[...p];n[diaEdit]={...n[diaEdit],foco:e.target.value};return n;})}/></div>
-                        <div className="form-group"><label className="form-label">Modalidade</label><input className="form-input" placeholder="Ex: BJJ, Muay Thai, MMA" value={diaAtual.modalidadeLuta||""} onChange={e=>setDias(p=>{const n=[...p];n[diaEdit]={...n[diaEdit],modalidadeLuta:e.target.value};return n;})}/></div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* EXERCÍCIOS (academia/funcional) */}
-                  {(diaAtual.tipo==="academia"||diaAtual.tipo==="funcional")&&(
-                    <>
-                  {diaAtual.exercicios&&diaAtual.exercicios.length>0&&(
-                    <div style={{marginBottom:"1rem"}}>
-                      {(diaAtual?.exercicios||[]).map((ex,j)=>(
-                        <div key={j} style={{display:"flex",alignItems:"center",gap:"0.75rem",padding:"0.65rem",background:"var(--card)",borderRadius:"var(--radius)",marginBottom:"0.4rem",fontSize:"0.85rem"}}>
-                          <span style={{fontWeight:600,flex:1}}>{ex.nome}</span>
-                          <span style={{color:"var(--text2)"}}>{ex.series&&`${ex.series}x`} {ex.reps} {ex.carga&&`• ${ex.carga}`}</span>
-                          <button className="btn btn-sm btn-ghost" onClick={()=>removeEx(diaEdit,j)}>✕</button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  <div style={{background:"var(--card)",borderRadius:"var(--radius)",padding:"1rem"}}>
-                    <div style={{fontSize:"0.8rem",color:"var(--text3)",marginBottom:"0.75rem",textTransform:"uppercase",letterSpacing:"0.1em"}}>+ Adicionar exercício</div>
-                    <div className="grid-2">
-                      <div className="form-group"><label className="form-label">Nome</label><input className="form-input" placeholder="Ex: Supino Reto" value={novoEx.nome} onChange={e=>setNovoEx(p=>({...p,nome:e.target.value}))}/></div>
-                      <div className="form-group"><label className="form-label">Séries</label><input className="form-input" placeholder="Ex: 4" value={novoEx.series} onChange={e=>setNovoEx(p=>({...p,series:e.target.value}))}/></div>
-                      <div className="form-group"><label className="form-label">Reps / Tempo</label><input className="form-input" placeholder="Ex: 8-10 ou 30s" value={novoEx.reps} onChange={e=>setNovoEx(p=>({...p,reps:e.target.value}))}/></div>
-                      <div className="form-group"><label className="form-label">Carga</label><input className="form-input" placeholder="Ex: 80kg ou Corporal" value={novoEx.carga} onChange={e=>setNovoEx(p=>({...p,carga:e.target.value}))}/></div>
-                    </div>
-                    <button className="btn btn-orange btn-sm" onClick={()=>addEx(diaEdit)}>+ Adicionar</button>
-                  </div>
-                    </>
-                  )}
-                </>
-              )}
-            </div>
+            )}
           </div>
-
-          <button className="btn btn-orange btn-full" onClick={salvar}>📤 Enviar plano para {alunoSel.nome.split(" ")[0]}</button>
-        </>
-      )}
-    </div>
-  );
-}
-
-// ============================================================
-// TREINADOR — DASHBOARD + ACOMPANHAMENTO
-// ============================================================
-
-// Resumo semanal (visão de acompanhamento)
-function ResumoSemanalAluno({aluno,onVerCompleto}){
-  const [saude]=useAlunoData(aluno.id,"saude",{});
-  const [agua]=useAlunoData(aluno.id,"agua_hoje",0);
-  const [meta]=useAlunoData(aluno.id,"meta_agua",3000);
-  const [planoTreino]=useAlunoData(aluno.id,"plano_treino_aluno",null);
-  const [av]=useAlunoData(aluno.id,"treino_avaliacao",{});
-  const diasDoente=saude.doente_desde?diffDays(saude.doente_desde):0;
-
-  // Contar dias de treino feitos (baseado no check)
-  const [check]=useAlunoData(aluno.id,"treino_check_hoje",{});
-  // Simular quais dias têm exercícios marcados essa semana
-  const diasTreino=planoTreino?.dias||[];
-  const diasComTreino=diasTreino.filter(d=>d.tipo!=="descanso").length;
-
-  // Média de água (só temos hoje, mostrar o de hoje)
-  const pctAgua=Math.round((agua/meta)*100);
-
-  // Ícone da modalidade principal
-  const modIcons={musculacao:"🏋️",corrida:"🏃",natacao:"🏊",luta:"🥊",ciclismo:"🚴",funcional:"⚡",caminhada:"🚶"};
-  const modIcon=modIcons[planoTreino?.modalidade]||"🏋️";
-
-  return(
-    <div className="card" style={{cursor:"pointer"}} onClick={onVerCompleto}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:"1rem"}}>
-        <div>
-          <div style={{fontFamily:"var(--font-display)",fontSize:"1.3rem",letterSpacing:"0.05em"}}>{aluno.nome}</div>
-          {planoTreino&&<div style={{fontSize:"0.78rem",color:"var(--text2)",marginTop:"0.15rem"}}>{modIcon} {planoTreino.nome} • até {fmtDate(planoTreino.fim)}</div>}
-        </div>
-        <div style={{display:"flex",gap:"0.4rem",flexWrap:"wrap",alignItems:"center"}}>
-          {saude.doente&&<span className="tag tag-red">🤒 {diasDoente}d</span>}
-          {saude.dores&&saude.dores.length>0&&<span className="tag tag-orange">🔴 {saude.dores.length} dor{saude.dores.length>1?"es":""}</span>}
-          {saude.mens&&<span className="tag tag-orange">🔴 Ciclo</span>}
-        </div>
-      </div>
-
-      {/* LINHA DE RESUMO */}
-      <div className="grid-3" style={{marginBottom:"1rem"}}>
-        <div style={{background:"var(--bg2)",borderRadius:"var(--radius)",padding:"0.85rem",textAlign:"center"}}>
-          <div style={{fontSize:"0.65rem",color:"var(--text3)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:"0.25rem"}}>Água hoje</div>
-          <div style={{fontFamily:"var(--font-display)",fontSize:"1.5rem",color:"var(--blue)"}}>{pctAgua}%</div>
-          <div style={{fontSize:"0.7rem",color:"var(--text3)"}}>{(agua/1000).toFixed(1)}L / {(meta/1000).toFixed(1)}L</div>
-        </div>
-        <div style={{background:"var(--bg2)",borderRadius:"var(--radius)",padding:"0.85rem",textAlign:"center"}}>
-          <div style={{fontSize:"0.65rem",color:"var(--text3)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:"0.25rem"}}>Dias treino/sem</div>
-          <div style={{fontFamily:"var(--font-display)",fontSize:"1.5rem",color:"var(--green)"}}>{diasComTreino}</div>
-          <div style={{fontSize:"0.7rem",color:"var(--text3)"}}>dias com treino</div>
-        </div>
-        <div style={{background:"var(--bg2)",borderRadius:"var(--radius)",padding:"0.85rem",textAlign:"center"}}>
-          <div style={{fontSize:"0.65rem",color:"var(--text3)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:"0.25rem"}}>Último treino</div>
-          <div style={{fontSize:"1.2rem"}}>{av.rating>0?"★".repeat(av.rating):"—"}</div>
-          <div style={{fontSize:"0.7rem",color:"var(--text3)"}}>{av.rating>0?`nota ${av.rating}/5`:"Sem avaliação"}</div>
-        </div>
-      </div>
-
-      {/* DIAS DA SEMANA RESUMO */}
-      {planoTreino?.dias&&(
-        <div>
-          <div style={{fontSize:"0.7rem",color:"var(--text3)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:"0.5rem"}}>Semana de treinos</div>
-          <div style={{display:"flex",gap:"0.3rem"}}>
-            {(planoTreino?.dias||[]).map((d,i)=>{
-              const tipoIcons={descanso:"😴",academia:"🏋️",corrida:"🏃",natacao:"🏊",luta:"🥊",ciclismo:"🚴",funcional:"⚡",caminhada:"🚶",treino:"🏋️"};
-              return(
-                <div key={i} style={{flex:1,textAlign:"center",padding:"0.4rem 0.2rem",background:"var(--bg2)",borderRadius:"8px",fontSize:"0.65rem"}}>
-                  <div style={{fontSize:"1rem",marginBottom:"0.15rem"}}>{tipoIcons[d.tipo]||"🏋️"}</div>
-                  <div style={{color:"var(--text3)"}}>{DIAS_SEMANA[i].slice(0,3)}</div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+        )
       )}
 
       <div style={{fontSize:"0.8rem",color:"var(--orange)",marginTop:"1rem"}}>Ver relatório completo do mês →</div>
