@@ -103,14 +103,15 @@ export const DB = {
   },
 
   async getUserById(id) {
-    const { data } = await supabase
-      .from('profiles')
-      .select('id, nome, role, codigo')
-      .eq('id', id)
-      .maybeSingle();
-    if (!data) return null;
-    const { data: u } = await supabase.auth.admin?.getUserById?.(id) || {};
-    return { ...data, email: u?.email || '' };
+    if (!id) return null;
+    try {
+      const { data } = await supabase
+        .from('profiles')
+        .select('id, nome, role, codigo')
+        .eq('id', id)
+        .maybeSingle();
+      return data || null;
+    } catch(e) { return null; }
   },
 
   // ----------------------------------------------------------
