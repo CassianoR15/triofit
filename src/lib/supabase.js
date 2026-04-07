@@ -6,8 +6,8 @@ import { createClient } from '@supabase/supabase-js';
 
 // Coloque suas credenciais aqui (ou em .env)
 // VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY no arquivo .env
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || '';
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://vboknerswhvpheuymakx.supabase.co';
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZib2tuZXJzd2h2cGhldXltYWt4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNDc1NTksImV4cCI6MjA5MDcyMzU1OX0.-Y7NzFkA2Qyd8N1yqT77Iied7rdR5CkSlCNjqCMLlaM';
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
