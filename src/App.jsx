@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase, DB } from "./lib/supabase.js";
 
-const _v='TRIOFIT_BUILD_1775569649';
+const _v='TRIOFIT_BUILD_1775570684';
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -743,6 +743,7 @@ function AlunoTreinos({user,showToast}){
   const [rating,setRating]=useState(0);
   const [feedback,setFeedback]=useState("");
   const [mostrarTroca,setMostrarTroca]=useState(false);
+  const [diaOriginal,setDiaOriginal]=useState(null); // null = sem troca ativa
   // Load saved avaliacao
   useEffect(()=>{
     DB.getData("treino_avaliacao",user.id).then(d=>{
@@ -754,7 +755,8 @@ function AlunoTreinos({user,showToast}){
   const hoje=new Date().getDay();
   const diaHoje=hoje===0?6:hoje-1;
 
-  useEffect(()=>setDiaAtivo(diaHoje),[]);
+  const diaHojeRef=useRef(diaHoje);
+  useEffect(()=>{setDiaAtivo(diaHojeRef.current);},[]);
 
   async function toggleEx(diaIdx,exIdx){
     const key=`${diaIdx}_${exIdx}`;
@@ -802,17 +804,16 @@ function AlunoTreinos({user,showToast}){
           const feitos=d.exercicios?d.exercicios.filter((_,j)=>checked[`${i}_${j}`]).length:0;
           const todos=d.exercicios?d.exercicios.length:0;
           const completo=temEx&&feitos===todos;
-          // Calcular data do dia baseado no inicio do plano
-          const inicioPl=planoTreino?.inicio?new Date(planoTreino.inicio+'T12:00:00'):new Date();
-          const dataDia=new Date(inicioPl);
-          dataDia.setDate(inicioPl.getDate()+i);
-          const hoje2=new Date();hoje2.setHours(0,0,0,0);
-          const dataDia2=new Date(dataDia);dataDia2.setHours(0,0,0,0);
-          const ehHoje=dataDia2.getTime()===hoje2.getTime();
-          const passado=dataDia2<hoje2;
-          const futuro=dataDia2>hoje2;
+          // Data correta: segunda-feira desta semana + i dias
+          // diaHoje: 0=seg,1=ter,...,6=dom. Hoje = segunda + diaHoje
+          const hojeMs=new Date();hojeMs.setHours(0,0,0,0);
+          const dataSeg=new Date(hojeMs);dataSeg.setDate(hojeMs.getDate()-diaHoje);
+          const dataDia=new Date(dataSeg);dataDia.setDate(dataSeg.getDate()+i);
+          const ehHoje=i===diaHoje;
+          const passado=i<diaHoje;
+          const futuro=i>diaHoje;
           const diaStr=dataDia.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
-          const semana=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'][dataDia.getDay()];
+          const nomeDia=['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'][i];
           return(
             <button key={i}
               onClick={()=>setDiaAtivo(i)}
@@ -820,13 +821,13 @@ function AlunoTreinos({user,showToast}){
                 display:"flex",flexDirection:"column",alignItems:"center",
                 padding:"6px 10px",borderRadius:"8px",border:"none",cursor:"pointer",
                 minWidth:"52px",flexShrink:0,
-                background: diaAtivo===i?"var(--green)":ehHoje?"rgba(46,213,115,0.15)":passado?"var(--card2)":"rgba(255,193,7,0.12)",
-                color: diaAtivo===i?"#fff":passado?"var(--text3)":futuro?"#f0c040":"var(--green)",
-                opacity: passado&&diaAtivo!==i?0.55:1,
-                fontWeight: ehHoje?700:500,
-                outline: ehHoje&&diaAtivo!==i?"2px solid var(--green)":"none",
+                background:diaAtivo===i?"var(--green)":ehHoje?"rgba(46,213,115,0.15)":passado?"var(--card2)":"rgba(255,193,7,0.10)",
+                color:diaAtivo===i?"#fff":passado?"var(--text3)":futuro?"#c9a227":"var(--green)",
+                opacity:passado&&diaAtivo!==i?0.5:1,
+                fontWeight:ehHoje?700:500,
+                outline:ehHoje&&diaAtivo!==i?"2px solid var(--green)":"none",
               }}>
-              <span style={{fontSize:"11px",fontWeight:600}}>{semana}</span>
+              <span style={{fontSize:"11px",fontWeight:600}}>{nomeDia}</span>
               <span style={{fontSize:"10px",opacity:0.8}}>{diaStr}</span>
               {completo&&<span style={{fontSize:"9px"}}>✓</span>}
               {ehHoje&&diaAtivo!==i&&<span style={{fontSize:"9px",color:"var(--green)"}}>hoje</span>}
@@ -852,13 +853,17 @@ function AlunoTreinos({user,showToast}){
               </div>
               {diaAtivo===diaHoje&&(
                 <div style={{position:"relative"}}>
-                  <button className="btn btn-ghost btn-sm" style={{fontSize:"0.75rem"}} onClick={()=>setMostrarTroca(p=>!p)}>🔄 Trocar treino</button>
+                  {diaOriginal!==null
+                    ?<button className="btn btn-ghost btn-sm" style={{fontSize:"0.75rem",color:"var(--text2)"}} onClick={()=>{setDiaAtivo(diaHoje);setDiaOriginal(null);showToast&&showToast("Voltou ao treino de hoje");}}>↩ Voltar ao hoje</button>
+                    :<button className="btn btn-ghost btn-sm" style={{fontSize:"0.75rem"}} onClick={()=>setMostrarTroca(p=>!p)}>🔄 Trocar treino</button>
+                  }
                   {mostrarTroca&&(
-                    <div style={{position:"absolute",right:0,top:"100%",zIndex:10,background:"var(--card)",border:"1px solid var(--border)",borderRadius:"var(--radius)",padding:"0.5rem",minWidth:"160px",boxShadow:"0 4px 12px rgba(0,0,0,0.2)"}}>
-                      <div style={{fontSize:"0.75rem",color:"var(--text2)",marginBottom:"0.4rem",fontWeight:600}}>Fazer treino de outro dia:</div>
+                    <div style={{position:"absolute",right:0,top:"100%",zIndex:10,background:"var(--card)",border:"1px solid var(--border)",borderRadius:"var(--radius)",padding:"0.5rem",minWidth:"170px",boxShadow:"0 4px 12px rgba(0,0,0,0.2)"}}>
+                      <div style={{fontSize:"0.75rem",color:"var(--text2)",marginBottom:"0.4rem",fontWeight:600}}>Fazer treino de outro dia hoje:</div>
                       {(dias||[]).map((d2,i2)=>i2!==diaHoje&&d2.tipo!=="descanso"?(
-                        <button key={i2} className="btn btn-ghost btn-sm" style={{display:"block",width:"100%",textAlign:"left",fontSize:"0.8rem",padding:"0.3rem 0.5rem"}} onClick={()=>{setDiaAtivo(i2);setMostrarTroca(false);showToast&&showToast(`Trocado para ${d2.nome} 💪`);}}>
-                          {DIAS_SEMANA[i2].slice(0,3)} — {d2.nome}
+                        <button key={i2} className="btn btn-ghost btn-sm" style={{display:"block",width:"100%",textAlign:"left",fontSize:"0.8rem",padding:"0.3rem 0.5rem"}}
+                          onClick={()=>{setDiaOriginal(diaHoje);setDiaAtivo(i2);setMostrarTroca(false);showToast&&showToast(`Fazendo ${d2.nome} hoje 💪`);}}>
+                          {['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'][i2]} — {d2.nome}
                         </button>
                       ):null)}
                     </div>
