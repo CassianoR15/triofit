@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase, DB } from "./lib/supabase.js";
 
-const _v='TRIOFIT_BUILD_1775573175';
+const _v='TRIOFIT_BUILD_1775573545';
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -707,10 +707,10 @@ function AlunoVinculo({user,showToast}){
       if(vc.nutriId)setNutri(await DB.getUserById(vc.nutriId));
     });
   },[user.id]);
-  async function vincT(u){const n={...vinculo,treinadorId:u.id};await DB.setVinculoAluno(user.id,n.treinadorId,n.nutriId);setVinculo(n);setTreinador(u);showToast&&showToast(`✅ Treinador ${u.nome.split(" ")[0]} vinculado!`);}
-  async function vincN(u){const n={...vinculo,nutriId:u.id};await DB.setVinculoAluno(user.id,n.treinadorId,n.nutriId);setVinculo(n);setNutri(u);showToast&&showToast(`✅ Nutricionista ${u.nome.split(" ")[0]} vinculada!`);}
-  async function desT(){const n={...vinculo,treinadorId:null};await DB.setVinculoAluno(user.id,null,n.nutriId);setVinculo(n);setTreinador(null);showToast&&showToast("Treinador desvinculado.","warn");}
-  async function desN(){const n={...vinculo,nutriId:null};await DB.setVinculoAluno(user.id,n.treinadorId,null);setVinculo(n);setNutri(null);showToast&&showToast("Nutricionista desvinculada.","warn");}
+  async function vincT(u){const n={...vinculo,treinadorId:u.id};await DB.setVinculoAluno(user.id,n.treinadorId,n.nutriId);setVinculo(n);setTreinador(u);try{localStorage.setItem("tf_vinculo_"+user.id,JSON.stringify(n));localStorage.setItem("tf_treinador_"+user.id,JSON.stringify(u));}catch{}showToast&&showToast(`✅ Treinador ${u.nome.split(" ")[0]} vinculado!`);}
+  async function vincN(u){const n={...vinculo,nutriId:u.id};await DB.setVinculoAluno(user.id,n.treinadorId,n.nutriId);setVinculo(n);setNutri(u);try{localStorage.setItem("tf_vinculo_"+user.id,JSON.stringify(n));localStorage.setItem("tf_nutri_"+user.id,JSON.stringify(u));}catch{}showToast&&showToast(`✅ Nutricionista ${u.nome.split(" ")[0]} vinculada!`);}
+  async function desT(){const n={...vinculo,treinadorId:null};await DB.setVinculoAluno(user.id,null,n.nutriId);setVinculo(n);setTreinador(null);try{localStorage.setItem("tf_vinculo_"+user.id,JSON.stringify(n));localStorage.removeItem("tf_treinador_"+user.id);}catch{}showToast&&showToast("Treinador desvinculado.","warn");}
+  async function desN(){const n={...vinculo,nutriId:null};await DB.setVinculoAluno(user.id,n.treinadorId,null);setVinculo(n);setNutri(null);try{localStorage.setItem("tf_vinculo_"+user.id,JSON.stringify(n));localStorage.removeItem("tf_nutri_"+user.id);}catch{}showToast&&showToast("Nutricionista desvinculada.","warn");}
   return(
     <div className="page">
       <div className="page-title green">MINHA EQUIPE</div>
@@ -2087,10 +2087,34 @@ const NAV_NUTRI=[
 function AlunoApp({user,onLogout}){
   const {show,ToastEl}=useToast();
   const [page,setPage]=useState("dashboard");
-  // Vínculo no nível do App para não perder ao trocar de página
-  const [vinculoApp,,]=useAsyncData(()=>DB.getVinculoAluno(user.id),[user.id],null);
-  const [treinadorApp,,]=useAsyncData(()=>vinculoApp?.treinadorId?DB.getUserById(vinculoApp.treinadorId):Promise.resolve(null),[vinculoApp?.treinadorId],null);
-  const [nutriApp,,]=useAsyncData(()=>vinculoApp?.nutriId?DB.getUserById(vinculoApp.nutriId):Promise.resolve(null),[vinculoApp?.nutriId],null);
+  // Cache do vínculo no localStorage para carregar instantaneamente ao voltar
+  const cacheKey="tf_vinculo_"+user.id;
+  const cacheT="tf_vinculo_t_"+user.id;
+  const cachedVinculo=useMemo(()=>{try{const c=localStorage.getItem(cacheKey);return c?JSON.parse(c):null;}catch{return null;}},[user.id]);
+  const cachedTreinador=useMemo(()=>{try{const c=localStorage.getItem("tf_treinador_"+user.id);return c?JSON.parse(c):null;}catch{return null;}},[user.id]);
+  const cachedNutri=useMemo(()=>{try{const c=localStorage.getItem("tf_nutri_"+user.id);return c?JSON.parse(c):null;}catch{return null;}},[user.id]);
+  const [vinculoApp,setVinculoApp]=useState(cachedVinculo);
+  const [treinadorApp,setTreinadorApp]=useState(cachedTreinador);
+  const [nutriApp,setNutriApp]=useState(cachedNutri);
+  // Busca em background e atualiza cache
+  useEffect(()=>{
+    let cancelled=false;
+    DB.getVinculoAluno(user.id).then(async v=>{
+      if(cancelled)return;
+      const vc=v||null;
+      setVinculoApp(vc);
+      try{localStorage.setItem(cacheKey,JSON.stringify(vc));}catch{}
+      if(vc?.treinadorId){
+        const t=await DB.getUserById(vc.treinadorId);
+        if(!cancelled){setTreinadorApp(t);try{localStorage.setItem("tf_treinador_"+user.id,JSON.stringify(t));}catch{}}
+      } else {setTreinadorApp(null);try{localStorage.removeItem("tf_treinador_"+user.id);}catch{}}
+      if(vc?.nutriId){
+        const n=await DB.getUserById(vc.nutriId);
+        if(!cancelled){setNutriApp(n);try{localStorage.setItem("tf_nutri_"+user.id,JSON.stringify(n));}catch{}}
+      } else {setNutriApp(null);try{localStorage.removeItem("tf_nutri_"+user.id);}catch{}}
+    }).catch(()=>{});
+    return()=>{cancelled=true;};
+  },[user.id]);
   const pages={dashboard:<AlunoDash user={user} setPage={setPage} vinculo={vinculoApp} treinador={treinadorApp} nutri={nutriApp}/>,saude:<AlunoSaude user={user} showToast={show}/>,treinos:<AlunoTreinos user={user} showToast={show}/>,alimentacao:<AlunoAlimentacao user={user} showToast={show}/>,hidratacao:<AlunoHidratacao user={user} showToast={show}/>,competicoes:<AlunoCompeticoes user={user} showToast={show}/>,avaliacao:<AlunoAvaliacao user={user} showToast={show}/>,vinculo:<AlunoVinculo user={user} showToast={show}/>};
   return(<>{ToastEl}<Shell user={user} onLogout={onLogout} nav={NAV_ALUNO} active={page} setActive={setPage} accent="">{pages[page]}</Shell></>);
 }
