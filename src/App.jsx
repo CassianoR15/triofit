@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase, DB } from "./lib/supabase.js";
 
-const _v='TRIOFIT_BUILD_1775583619';
+const _v='TRIOFIT_BUILD_1775583830';
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -2087,37 +2087,24 @@ const NAV_NUTRI=[
 // ============================================================
 // ALUNO — MEU PERFIL
 // ============================================================
-function MeuPerfil({user,treinador,showToast}){
-  const [perfil,setPerfil]=useState(null);
+function MeuPerfil({user,treinador,nutri,vinculo,onVinculoChange,showToast}){
   const [editando,setEditando]=useState(false);
   const [form,setForm]=useState({nome:"",sobrenome:"",nascimento:"",telefone:"",email:"",localTreino:"",obs:""});
   const [salvando,setSalvando]=useState(false);
 
   useEffect(()=>{
-    if(!user?.id||!treinador?.id)return;
-    // Busca dados cadastrados pelo treinador
-    DB.getData("alunos_cadastrados",treinador.id).then(lista=>{
-      const encontrado=(lista||[]).find(a=>a.email&&a.email.toLowerCase()===user.email?.toLowerCase());
-      if(encontrado){
-        setPerfil(encontrado);
-        setForm({
-          nome:encontrado.nome||"",
-          sobrenome:encontrado.sobrenome||"",
-          nascimento:encontrado.nascimento||"",
-          telefone:encontrado.telefone||"",
-          email:encontrado.email||user.email||"",
-          localTreino:encontrado.localTreino||"",
-          obs:encontrado.obs||""
-        });
-      } else {
-        // Aluno não encontrado no cadastro do treinador — preenche com dados básicos
-        setForm(p=>({...p,nome:user.nome||"",email:user.email||""}));
-      }
-    });
-    // Dados complementares do próprio aluno
+    // Carrega dados do próprio aluno
     DB.getData("perfil_aluno",user.id).then(d=>{
-      if(d)setForm(p=>({...p,...d}));
+      if(d) setForm(p=>({...p,...d}));
+      else setForm(p=>({...p,nome:user.nome||"",email:user.email||""}));
     });
+    // Complementa com dados do cadastro do treinador se existir
+    if(treinador?.id){
+      DB.getData("alunos_cadastrados",treinador.id).then(lista=>{
+        const enc=(lista||[]).find(a=>a.email?.toLowerCase()===user.email?.toLowerCase());
+        if(enc) setForm(p=>({...p,...enc,nome:p.nome||enc.nome,email:p.email||enc.email}));
+      });
+    }
   },[user?.id,treinador?.id]);
 
   function set(k,v){setForm(p=>({...p,[k]:v}));}
@@ -2125,15 +2112,23 @@ function MeuPerfil({user,treinador,showToast}){
   async function salvar(){
     setSalvando(true);
     await DB.setData("perfil_aluno",user.id,form);
-    // Atualiza no cadastro do treinador se encontrou
-    if(perfil&&treinador?.id){
-      const lista=await DB.getData("alunos_cadastrados",treinador.id)||[];
-      const novaLista=lista.map(a=>a.id===perfil.id?{...a,...form}:a);
-      await DB.setData("alunos_cadastrados",treinador.id,novaLista);
-    }
     setSalvando(false);
     setEditando(false);
     showToast&&showToast("✅ Perfil atualizado!");
+  }
+
+  async function desvincularTreinador(){
+    if(!window.confirm("Remover vínculo com "+treinador?.nome+"?"))return;
+    await DB.setVinculoAluno(user.id,null,vinculo?.nutriId||null);
+    onVinculoChange&&await onVinculoChange();
+    showToast&&showToast("Treinador desvinculado.","warn");
+  }
+
+  async function desvincularNutri(){
+    if(!window.confirm("Remover vínculo com "+nutri?.nome+"?"))return;
+    await DB.setVinculoAluno(user.id,vinculo?.treinadorId||null,null);
+    onVinculoChange&&await onVinculoChange();
+    showToast&&showToast("Nutricionista desvinculada.","warn");
   }
 
   const idade=form.nascimento?Math.floor((new Date()-new Date(form.nascimento))/31557600000):null;
@@ -2164,7 +2159,23 @@ function MeuPerfil({user,treinador,showToast}){
               </div>
             ))}
             {form.obs&&<div style={{marginTop:"0.5rem",padding:"0.6rem",background:"var(--card2)",borderRadius:"var(--radius)",fontSize:"0.82rem",color:"var(--text2)"}}>📝 {form.obs}</div>}
-            {treinador&&<div style={{marginTop:"0.75rem",padding:"0.6rem",background:"rgba(46,213,115,0.08)",borderRadius:"var(--radius)",fontSize:"0.82rem"}}>🏋️ Treinador: <b>{treinador.nome}</b></div>}
+            {treinador&&(
+              <div style={{marginTop:"0.75rem",padding:"0.6rem 0.75rem",background:"rgba(46,213,115,0.08)",borderRadius:"var(--radius)",fontSize:"0.82rem",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <span>🏋️ Treinador: <b>{treinador.nome}</b></span>
+                <button className="btn btn-ghost btn-sm" style={{fontSize:"0.7rem",color:"var(--red)",padding:"2px 8px"}} onClick={desvincularTreinador}>Remover</button>
+              </div>
+            )}
+            {nutri&&(
+              <div style={{marginTop:"0.4rem",padding:"0.6rem 0.75rem",background:"rgba(52,152,219,0.08)",borderRadius:"var(--radius)",fontSize:"0.82rem",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <span>🥗 Nutricionista: <b>{nutri.nome}</b></span>
+                <button className="btn btn-ghost btn-sm" style={{fontSize:"0.7rem",color:"var(--red)",padding:"2px 8px"}} onClick={desvincularNutri}>Remover</button>
+              </div>
+            )}
+            {!treinador&&!nutri&&(
+              <div style={{marginTop:"0.75rem",padding:"0.6rem",background:"var(--card2)",borderRadius:"var(--radius)",fontSize:"0.82rem",color:"var(--text2)"}}>
+                Sem profissionais vinculados. Vá em <b>Minha Equipe</b> para vincular.
+              </div>
+            )}
           </div>
         ):(
           <>
@@ -2243,7 +2254,7 @@ function AlunoApp({user,onLogout}){
       try{localStorage.setItem("tfn_"+user.id,JSON.stringify(n));}catch{}
     } else {setNutriApp(null);try{localStorage.removeItem("tfn_"+user.id);}catch{}}
   },[user?.id]);
-  const pages={dashboard:<AlunoDash user={user} setPage={setPage} vinculo={vinculoApp} treinador={treinadorApp} nutri={nutriApp}/>,perfil:<MeuPerfil user={user} treinador={treinadorApp} showToast={show}/>,saude:<AlunoSaude user={user} showToast={show}/>,treinos:<AlunoTreinos user={user} showToast={show}/>,alimentacao:<AlunoAlimentacao user={user} showToast={show}/>,hidratacao:<AlunoHidratacao user={user} showToast={show}/>,competicoes:<AlunoCompeticoes user={user} showToast={show}/>,avaliacao:<AlunoAvaliacao user={user} showToast={show}/>,vinculo:<AlunoVinculo user={user} showToast={show} onVinculoChange={refreshVinculo}/>};
+  const pages={dashboard:<AlunoDash user={user} setPage={setPage} vinculo={vinculoApp} treinador={treinadorApp} nutri={nutriApp}/>,perfil:<MeuPerfil user={user} treinador={treinadorApp} nutri={nutriApp} vinculo={vinculoApp} onVinculoChange={refreshVinculo} showToast={show}/>,saude:<AlunoSaude user={user} showToast={show}/>,treinos:<AlunoTreinos user={user} showToast={show}/>,alimentacao:<AlunoAlimentacao user={user} showToast={show}/>,hidratacao:<AlunoHidratacao user={user} showToast={show}/>,competicoes:<AlunoCompeticoes user={user} showToast={show}/>,avaliacao:<AlunoAvaliacao user={user} showToast={show}/>,vinculo:<AlunoVinculo user={user} showToast={show} onVinculoChange={refreshVinculo}/>};
   return(<>{ToastEl}<Shell user={user} onLogout={onLogout} nav={NAV_ALUNO} active={page} setActive={setPage} accent="">{pages[page]}</Shell></>);
 }
 // ============================================================
