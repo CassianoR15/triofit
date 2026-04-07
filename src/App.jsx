@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase, DB } from "./lib/supabase.js";
 
-const _v='TRIOFIT_BUILD_1775565237';
+const _v='TRIOFIT_BUILD_1775566366';
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -1625,10 +1625,9 @@ function DiarioAluno({aluno,onBack}){
 function TreinadorDash({user}){
   const [alunos,alunosReady]=useAsyncData(()=>DB.getAlunosDe(user.id),[user.id],[]);
   const [alunoVer,setAlunoVer]=useState(null);
-  if(alunoVer)return<DiarioAluno aluno={alunoVer} onBack={()=>setAlunoVer(null)}/>;
-  const alunosList=Array.isArray(alunos)?alunos:[];
   const [saudeMap,setSaudeMap]=useState({});
   const [planoMap,setPlanoMap]=useState({});
+  const alunosList=Array.isArray(alunos)?alunos:[];
   useEffect(()=>{
     if(!alunosList.length)return;
     Promise.all(alunosList.map(a=>
@@ -1641,6 +1640,7 @@ function TreinadorDash({user}){
     });
   },[alunos?.length]);
   const comAlerta=alunosList.filter(a=>{const s=saudeMap[a.id]||{};return s.doente||(s.dores&&s.dores.length>0);});
+  if(alunoVer)return<DiarioAluno aluno={alunoVer} onBack={()=>setAlunoVer(null)}/>;
   return(
     <div className="page">
       <div className="page-title orange">{getGreeting()}, {firstName(user.nome)} 👋</div>
@@ -1805,10 +1805,10 @@ function NutriPrescrever({user,showToast}){
 function NutriDash({user}){
   const [pacientes,]=useAsyncData(()=>DB.getAlunosDe(user.id),[user.id],[]);
   const [pacVer,setPacVer]=useState(null);
-  const pacientesList=Array.isArray(pacientes)?pacientes:[];
   const [saudeMapN,setSaudeMapN]=useState({});
   const [planoMapN,setPlanoMapN]=useState({});
   const [checkMapN,setCheckMapN]=useState({});
+  const pacientesList=Array.isArray(pacientes)?pacientes:[];
   useEffect(()=>{
     if(!pacientesList.length)return;
     Promise.all(pacientesList.map(p=>
@@ -1868,12 +1868,12 @@ function NutriDash({user}){
 function NutriAcompanhamento({user}){
   const [pacientes,]=useAsyncData(()=>DB.getAlunosDe(user.id),[user.id],[]);
   const [pacVer,setPacVer]=useState(null);
-  const pacientesList=Array.isArray(pacientes)?pacientes:[];
   const [saudeMapNA,setSaudeMapNA]=useState({});
   const [planoMapNA,setPlanoMapNA]=useState({});
   const [checkMapNA,setCheckMapNA]=useState({});
   const [aguaMapNA,setAguaMapNA]=useState({});
   const [metaMapNA,setMetaMapNA]=useState({});
+  const pacientesList=Array.isArray(pacientes)?pacientes:[];
   useEffect(()=>{
     if(!pacientesList.length)return;
     Promise.all(pacientesList.map(p=>
@@ -1959,8 +1959,7 @@ function TreinadorApp({user,onLogout}){
   const [alertCount,setAlertCount]=useState(0);
   useEffect(()=>{
     DB.getAlunosDe(user.id).then(alunos=>{
-      const count=comAlerta.length;
-      setAlertCount(0); // simplified - alerts shown in dashboard
+      setAlertCount(0);
     });
   },[user.id]);
   const pages={dashboard:<TreinadorDash user={user}/>,prescrever:<TreinadorPrescrever user={user} showToast={show}/>,acompanhamento:<TreinadorAcompanhamento user={user}/>};
