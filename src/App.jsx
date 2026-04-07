@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase, DB } from "./lib/supabase.js";
 
-const _v='TRIOFIT_BUILD_1775563822';
+const _v='TRIOFIT_BUILD_1775564408';
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -994,7 +994,7 @@ function AlunoSaude({user,showToast}){
   const [obs,setObs]=useState("");
   const [dores,setDores]=useState([]);
   const [musculoSel,setMusculoSel]=useState([]);
-  async function salvar(ov={}){await DB.setData("saude",user.id,{doente,sintomas,doente_desde:doenteDe,mens,meds,obs,dores,...ov});showToast&&showToast("Saúde atualizada!");}
+  async function salvar(ov={}){await DB.setData("saude",user.id,{doente,sintomas,doente_desde:doenteDe,mens,meds,obs,dores,...ov});showToast&&showToast("✅ Saúde atualizada!");}
   function marcarDoente(){const agora=new Date().toISOString();setDoente(true);setDoenteDe(agora);salvar({doente:true,doente_desde:agora});}
   function marcarRecuperado(){setDoente(false);setDoenteDe(null);setSintomas("");salvar({doente:false,doente_desde:null,sintomas:""});showToast&&showToast("Ótimo! Recuperação registrada! 💪");}
   function adicionarDor(){if(!musculoSel.length)return;const agora=new Date().toISOString();const novas=[...dores,...musculoSel.filter(m=>!dores.find(d=>d.musculo===m)).map(m=>({musculo:m,desde:agora,intensidade:5}))];setDores(novas);setMusculoSel([]);salvar({dores:novas});}
@@ -1109,7 +1109,7 @@ function AlunoCompeticoes({user,showToast}){
         <div className="page-title green">COMPETIÇÕES</div>
         <div className="page-sub">Visível para treinador e nutricionista</div>
       </div>
-      {((comps)||[]).length>0&&<div className="card"><div className="card-title">📅 MEUS EVENTOS</div>{(comps||[]).map((c,i)=>{const d=new Date(c.data);return(<div key={i} className="comp-card" style={{background:"var(--bg2)"}}><div className="comp-date"><div className="comp-date-day">{d.getDate()}</div><div className="comp-date-month">{d.toLocaleDateString("pt-BR",{month:"short"})}</div></div><div style={{flex:1}}><div style={{fontWeight:600}}>{c.nome}</div><div style={{fontSize:"0.8rem",color:"var(--text2)"}}>{c.modalidade} • {c.local}</div></div><span className="tag tag-orange">{c.objetivo.toUpperCase()}</span></div>);})}</div>}
+      {(comps||[]).length>0&&<div className="card"><div className="card-title">📅 MEUS EVENTOS</div>{(comps||[]).map((c,i)=>{const d=new Date(c.data);return(<div key={i} className="comp-card" style={{background:"var(--bg2)"}}><div className="comp-date"><div className="comp-date-day">{d.getDate()}</div><div className="comp-date-month">{d.toLocaleDateString("pt-BR",{month:"short"})}</div></div><div style={{flex:1}}><div style={{fontWeight:600}}>{c.nome}</div><div style={{fontSize:"0.8rem",color:"var(--text2)"}}>{c.modalidade} • {c.local}</div></div><span className="tag tag-orange">{c.objetivo.toUpperCase()}</span></div>);})}</div>}
       <div className="card">
         <div className="card-title">➕ CADASTRAR COMPETIÇÃO</div>
         <div className="grid-2">
@@ -1210,6 +1210,17 @@ function TreinadorPrescrever({user,showToast}){
   const [dias,setDias]=useState(()=>DIAS_SEMANA.map((_,i)=>({nome:`Treino ${String.fromCharCode(65+i)}`,tipo:i<5?"academia":"descanso",obs:"",exercicios:[],distancia:"",ritmo:"",zona:"",duracaoTotal:"",rounds:"",tempoRound:"",foco:"",modalidadeLuta:""})));
   const [diaEdit,setDiaEdit]=useState(0);
   const [novoEx,setNovoEx]=useState({nome:"",series:"",reps:"",carga:"",duracao:""});
+  const [salvandoRascunho,setSalvandoRascunho]=useState(false);
+  // Auto-save rascunho a cada 30s quando tem aluno selecionado
+  useEffect(()=>{
+    if(!alunoSel)return;
+    const t=setTimeout(async()=>{
+      setSalvandoRascunho(true);
+      await DB.setData("rascunho_treino",user.id,{alunoId:alunoSel.id,nomePlano,modalidade,duracao,inicio,dias,savedAt:new Date().toISOString()});
+      setSalvandoRascunho(false);
+    },30000);
+    return()=>clearTimeout(t);
+  },[dias,nomePlano,modalidade,alunoSel]);
   function setDiaTipo(i,tipo){setDias(p=>{const n=[...p];n[i]={...n[i],tipo};return n;});}
   function setDiaNome(i,nome){setDias(p=>{const n=[...p];n[i]={...n[i],nome};return n;});}
   function setDiaObs(i,obs){setDias(p=>{const n=[...p];n[i]={...n[i],obs};return n;});}
@@ -1227,7 +1238,7 @@ function TreinadorPrescrever({user,showToast}){
     const fimDate=addMonths(new Date(inicio),duracao);
     const plano={nome:nomePlano,modalidade,duracao,inicio,fim:fimDate.toISOString(),dias,criadoEm:new Date().toISOString()};
     await DB.setData("plano_treino_aluno",alunoSel.id,plano);
-    showToast&&showToast(`✅ Plano enviado para ${alunoSel.nome.split(" ")[0]}!`);
+    showToast&&showToast(`✅ Treino prescrito para ${alunoSel.nome.split(" ")[0]}! O aluno já pode ver no app.`);
     
   }
 
@@ -1616,7 +1627,13 @@ function TreinadorDash({user}){
   const [alunoVer,setAlunoVer]=useState(null);
   if(alunoVer)return<DiarioAluno aluno={alunoVer} onBack={()=>setAlunoVer(null)}/>;
   const alunosList=Array.isArray(alunos)?alunos:[];
-  const comAlerta=[];
+  const [saudeMap,setSaudeMap]=useState({});
+  useEffect(()=>{
+    if(!alunosList.length)return;
+    Promise.all(alunosList.map(a=>DB.getData("saude",a.id).then(s=>({id:a.id,s:s||{}}))))
+      .then(results=>{const m={};results.forEach(({id,s})=>{m[id]=s;});setSaudeMap(m);});
+  },[alunos]);
+  const comAlerta=alunosList.filter(a=>{const s=saudeMap[a.id]||{};return s.doente||(s.dores&&s.dores.length>0);});
   return(
     <div className="page">
       <div className="page-title orange">{getGreeting()}, {firstName(user.nome)} 👋</div>
@@ -1626,7 +1643,7 @@ function TreinadorDash({user}){
         <div className="stat-tile"><div className="stat-label">Alunos</div><div className="stat-value orange">{alunos.length}</div></div>
         <div className="stat-tile"><div className="stat-label">Alertas</div><div className="stat-value red">{comAlerta.length}</div></div>
         <div className="stat-tile"><div className="stat-label">Código</div><div style={{marginTop:"0.35rem",fontFamily:"var(--font-mono)",fontSize:"1.1rem",color:"var(--green)",letterSpacing:"0.1em"}}>{user.codigo||"------"}</div></div>
-        <div className="stat-tile"><div className="stat-label">Planos ativos</div><div className="stat-value green">{alunosList.filter(a=>DB.getData("plano_treino_aluno",a.id)).length}</div></div>
+        <div className="stat-tile"><div className="stat-label">Planos ativos</div><div className="stat-value green">{alunosList.length}</div></div>
       </div>
       {comAlerta.length>0&&<div className="alert alert-danger">🔴 {comAlerta.map(a=>a.nome.split(" ")[0]).join(", ")} — verificar saúde!</div>}
       {alunosList.length===0?(
@@ -1783,6 +1800,7 @@ function NutriDash({user}){
   const [pacVer,setPacVer]=useState(null);
   const pacientesList=Array.isArray(pacientes)?pacientes:[];
   if(pacVer)return<DiarioAluno aluno={pacVer} onBack={()=>setPacVer(null)}/>;
+  if(pacientes===null)return<div className="page"><div className="page-title blue">{getGreeting()}, {firstName(user.nome)} 👋</div><div style={{display:"flex",justifyContent:"center",padding:"3rem"}}><span className="spinner"/></div></div>;
   return(
     <div className="page">
       <div className="page-title blue">{getGreeting()}, {firstName(user.nome)} 👋</div>
@@ -1790,7 +1808,7 @@ function NutriDash({user}){
       <div className="card" style={{padding:"1rem 1.5rem"}}><CodigoProfissional user={user}/></div>
       <div className="grid-4">
         <div className="stat-tile"><div className="stat-label">Pacientes</div><div className="stat-value blue">{pacientesList.length}</div></div>
-        <div className="stat-tile"><div className="stat-label">Planos ativos</div><div className="stat-value green">{pacientesList.filter(p=>DB.getData("plano_alim_aluno",p.id)).length}</div></div>
+        <div className="stat-tile"><div className="stat-label">Planos ativos</div><div className="stat-value green">{pacientesList.length}</div></div>
         <div className="stat-tile"><div className="stat-label">Código</div><div style={{marginTop:"0.35rem",fontFamily:"var(--font-mono)",fontSize:"1.1rem",color:"var(--green)",letterSpacing:"0.1em"}}>{user.codigo||"------"}</div></div>
         <div className="stat-tile"><div className="stat-label">Alertas</div><div className="stat-value orange">{pacientesList.filter(p=>{const s=DB.getData("saude",p.id)||{};return s.doente||s.mens;}).length}</div></div>
       </div>
