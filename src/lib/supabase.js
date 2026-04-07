@@ -93,6 +93,15 @@ export const DB = {
     return data[0];
   },
 
+  async getProfile(id) {
+    const { data } = await supabase
+      .from('profiles')
+      .select('id, nome, role, codigo')
+      .eq('id', id)
+      .maybeSingle();
+    return data || null;
+  },
+
   async getUserById(id) {
     const { data } = await supabase
       .from('profiles')

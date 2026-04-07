@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase, DB } from "./lib/supabase.js";
 
-const _v='TRIOFIT_BUILD_1775561140';
+const _v='TRIOFIT_BUILD_1775563822';
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -399,8 +399,8 @@ function useAlunoData(userId, chave, defaultVal=null) {
 function AuthScreen({onLogin}){
   const [tab,setTab]=useState("login");
   useEffect(()=>{
-    // Only clear if there's a stale token in URL (OAuth redirect)
-    if(window.location.hash.includes('access_token')) {
+    // Limpar token JWT da URL se presente
+    if(window.location.hash.includes('access_token')||window.location.search.includes('access_token')){
       window.history.replaceState(null,'',window.location.pathname);
     }
   },[]);
@@ -544,7 +544,8 @@ function Shell({user,onLogout,nav,active,setActive,accent,children}){
 // SHARED COMPONENTS
 // ============================================================
 function CodigoProfissional({user}){
-  const codigo=user.codigo||gerarCodigo(user.id)||"------";
+  const [profile,,]=useAsyncData(()=>DB.getProfile(user.id),[user.id],null);
+  const codigo=profile?.codigo||user.codigo||gerarCodigo(user.id)||"------";
   const [copiado,setCopiado]=useState(false);
   function copiar(){navigator.clipboard&&navigator.clipboard.writeText(codigo);setCopiado(true);setTimeout(()=>setCopiado(false),2000);}
   return(
@@ -618,7 +619,7 @@ function SaudeStatusCard({status,onRecuperado,onDorRecuperado,soLeitura}){
           </div>
         </div>
       )}
-      {status.dores&&status.dores.map((d,i)=>(
+      {(status?.dores||[]).map((d,i)=>(
         <div key={i} className="saude-status-box dor">
           <div className="saude-status-icon">🔴</div>
           <div style={{flex:1}}>
@@ -1221,6 +1222,8 @@ function TreinadorPrescrever({user,showToast}){
 
   async function salvar(){
     if(!alunoSel){showToast&&showToast("Selecione um aluno primeiro","warn");return;}
+    const planoExistente=await DB.getData("plano_treino_aluno",alunoSel.id);
+    if(planoExistente&&!window.confirm(`Substituir o plano de treino atual de ${alunoSel.nome.split(" ")[0]}?`))return;
     const fimDate=addMonths(new Date(inicio),duracao);
     const plano={nome:nomePlano,modalidade,duracao,inicio,fim:fimDate.toISOString(),dias,criadoEm:new Date().toISOString()};
     await DB.setData("plano_treino_aluno",alunoSel.id,plano);
@@ -1240,7 +1243,8 @@ function TreinadorPrescrever({user,showToast}){
       <div className="card">
         <div className="card-title">👤 SELECIONAR ALUNO</div>
         <AlunoSelector alunos={alunos||[]} selecionado={alunoSel} onSelect={setAlunoSel} accentClass="sel-orange"/>
-        {!alunoSel&&alunos.length>0&&<div style={{color:"var(--text3)",fontSize:"0.85rem"}}>Selecione um aluno acima para montar o plano.</div>}
+        {(alunos||[]).length===0&&<div style={{color:"var(--text3)",fontSize:"0.85rem",padding:"0.5rem 0"}}>⏳ Nenhum aluno vinculado ainda. Compartilhe seu código com seus alunos para que eles se conectem.</div>}
+        {!alunoSel&&(alunos||[]).length>0&&<div style={{color:"var(--text3)",fontSize:"0.85rem"}}>Selecione um aluno acima para montar o plano.</div>}
       </div>
 
       {alunoSel&&(
@@ -1534,7 +1538,7 @@ function DiarioAluno({aluno,onBack}){
           <div className="diario-section">
             <div className="diario-label">🔴 Dores musculares ativas</div>
             <div className="diario-val" style={{fontFamily:"var(--font-display)",fontSize:"1.8rem",color:saude.dores?.length?"var(--orange)":"var(--green)"}}>{saude.dores?.length||0}<span style={{fontSize:"0.8rem",color:"var(--text2)"}}> grupos</span></div>
-            {saude?.dores?.length>0&&<div style={{fontSize:"0.8rem",color:"var(--text2)",marginTop:"0.25rem"}}>{saude.dores.map(d=>`${d.musculo} (${diffDays(d.desde)}d)`).join(", ")}</div>}
+            {(saude?.dores||[]).length>0&&<div style={{fontSize:"0.8rem",color:"var(--text2)",marginTop:"0.25rem"}}>{saude.dores.map(d=>`${d.musculo} (${diffDays(d.desde)}d)`).join(", ")}</div>}
           </div>
           <div className="diario-section">
             <div className="diario-label">🔴 Ciclo menstrual</div>
@@ -1653,6 +1657,7 @@ function TreinadorAcompanhamento({user}){
   const [alunoVer,setAlunoVer]=useState(null);
   const alunosList=Array.isArray(alunos)?alunos:[];
   if(alunoVer)return<DiarioAluno aluno={alunoVer} onBack={()=>setAlunoVer(null)}/>;
+  if(!alunos&&alunosList.length===0)return<div className="page"><div className="page-title orange">ACOMPANHAMENTO</div><div style={{display:"flex",justifyContent:"center",padding:"3rem"}}><span className="spinner"/></div></div>;
   return(
     <div className="page">
       <div className="page-title orange">ACOMPANHAMENTO</div>
@@ -1693,6 +1698,8 @@ function NutriPrescrever({user,showToast}){
 
   async function salvar(){
     if(!alunoSel)return;
+    const planoExistente=await DB.getData("plano_alim_aluno",alunoSel.id);
+    if(planoExistente&&!window.confirm(`Substituir o plano alimentar atual de ${alunoSel.nome.split(" ")[0]}?`))return;
     const fimDate=addMonths(new Date(inicio),duracao);
     const plano={nome:nomePlano,protocolo,duracao,inicio,fim:fimDate.toISOString(),refeicoes,kcalMeta:fases[protocolo],criadoEm:new Date().toISOString()};
     await DB.setData("plano_alim_aluno",alunoSel.id,plano);
@@ -1821,6 +1828,7 @@ function NutriAcompanhamento({user}){
   const [pacVer,setPacVer]=useState(null);
   const pacientesList=Array.isArray(pacientes)?pacientes:[];
   if(pacVer)return<DiarioAluno aluno={pacVer} onBack={()=>setPacVer(null)}/>;
+  if(!pacientes&&pacientesList.length===0)return<div className="page"><div className="page-title blue">ACOMPANHAMENTO</div><div style={{display:"flex",justifyContent:"center",padding:"3rem"}}><span className="spinner"/></div></div>;
   return(
     <div className="page">
       <div className="page-title blue">ACOMPANHAMENTO</div>
