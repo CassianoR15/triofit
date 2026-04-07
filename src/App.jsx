@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase, DB } from "./lib/supabase.js";
 
-const _v='TRIOFIT_BUILD_1775574916';
+const _v='TRIOFIT_BUILD_1775575284';
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -2090,13 +2090,13 @@ function AlunoApp({user,onLogout}){
   // Vínculo persistente — carrega do banco e mantém em estado
   // Carrega do sessionStorage imediatamente (persiste na aba, mesmo ao minimizar)
   const [vinculoApp,setVinculoApp]=useState(()=>{
-    try{const c=sessionStorage.getItem("tfv_"+user.id);return c?JSON.parse(c):null;}catch{return null;}
+    try{const c=localStorage.getItem("tfv_"+user.id);return c?JSON.parse(c):null;}catch{return null;}
   });
   const [treinadorApp,setTreinadorApp]=useState(()=>{
-    try{const c=sessionStorage.getItem("tft_"+user.id);return c?JSON.parse(c):null;}catch{return null;}
+    try{const c=localStorage.getItem("tft_"+user.id);return c?JSON.parse(c):null;}catch{return null;}
   });
   const [nutriApp,setNutriApp]=useState(()=>{
-    try{const c=sessionStorage.getItem("tfn_"+user.id);return c?JSON.parse(c):null;}catch{return null;}
+    try{const c=localStorage.getItem("tfn_"+user.id);return c?JSON.parse(c):null;}catch{return null;}
   });
   useEffect(()=>{
     if(!user?.id)return;
@@ -2105,21 +2105,21 @@ function AlunoApp({user,onLogout}){
       if(cancelled)return;
       const vc=v||null;
       setVinculoApp(vc);
-      try{sessionStorage.setItem("tfv_"+user.id,JSON.stringify(vc));}catch{}
+      try{localStorage.setItem("tfv_"+user.id,JSON.stringify(vc));}catch{}
       if(vc?.treinadorId){
         DB.getUserById(vc.treinadorId).then(t=>{
           if(cancelled)return;
           setTreinadorApp(t);
-          try{sessionStorage.setItem("tft_"+user.id,JSON.stringify(t));}catch{}
+          try{localStorage.setItem("tft_"+user.id,JSON.stringify(t));}catch{}
         });
-      } else {setTreinadorApp(null);try{sessionStorage.removeItem("tft_"+user.id);}catch{}}
+      } else {setTreinadorApp(null);try{localStorage.removeItem("tft_"+user.id);}catch{}}
       if(vc?.nutriId){
         DB.getUserById(vc.nutriId).then(n=>{
           if(cancelled)return;
           setNutriApp(n);
-          try{sessionStorage.setItem("tfn_"+user.id,JSON.stringify(n));}catch{}
+          try{localStorage.setItem("tfn_"+user.id,JSON.stringify(n));}catch{}
         });
-      } else {setNutriApp(null);try{sessionStorage.removeItem("tfn_"+user.id);}catch{}}
+      } else {setNutriApp(null);try{localStorage.removeItem("tfn_"+user.id);}catch{}}
     }).catch(()=>{});
     return()=>{cancelled=true;};
   },[user?.id]);
@@ -2127,17 +2127,17 @@ function AlunoApp({user,onLogout}){
   const refreshVinculo=useCallback(async()=>{
     const v=await DB.getVinculoAluno(user.id).catch(()=>null);
     setVinculoApp(v);
-    try{sessionStorage.setItem("tfv_"+user.id,JSON.stringify(v));}catch{}
+    try{localStorage.setItem("tfv_"+user.id,JSON.stringify(v));}catch{}
     if(v?.treinadorId){
       const t=await DB.getUserById(v.treinadorId).catch(()=>null);
       setTreinadorApp(t);
-      try{sessionStorage.setItem("tft_"+user.id,JSON.stringify(t));}catch{}
-    } else {setTreinadorApp(null);try{sessionStorage.removeItem("tft_"+user.id);}catch{}}
+      try{localStorage.setItem("tft_"+user.id,JSON.stringify(t));}catch{}
+    } else {setTreinadorApp(null);try{localStorage.removeItem("tft_"+user.id);}catch{}}
     if(v?.nutriId){
       const n=await DB.getUserById(v.nutriId).catch(()=>null);
       setNutriApp(n);
-      try{sessionStorage.setItem("tfn_"+user.id,JSON.stringify(n));}catch{}
-    } else {setNutriApp(null);try{sessionStorage.removeItem("tfn_"+user.id);}catch{}}
+      try{localStorage.setItem("tfn_"+user.id,JSON.stringify(n));}catch{}
+    } else {setNutriApp(null);try{localStorage.removeItem("tfn_"+user.id);}catch{}}
   },[user?.id]);
   const pages={dashboard:<AlunoDash user={user} setPage={setPage} vinculo={vinculoApp} treinador={treinadorApp} nutri={nutriApp}/>,saude:<AlunoSaude user={user} showToast={show}/>,treinos:<AlunoTreinos user={user} showToast={show}/>,alimentacao:<AlunoAlimentacao user={user} showToast={show}/>,hidratacao:<AlunoHidratacao user={user} showToast={show}/>,competicoes:<AlunoCompeticoes user={user} showToast={show}/>,avaliacao:<AlunoAvaliacao user={user} showToast={show}/>,vinculo:<AlunoVinculo user={user} showToast={show} onVinculoChange={refreshVinculo}/>};
   return(<>{ToastEl}<Shell user={user} onLogout={onLogout} nav={NAV_ALUNO} active={page} setActive={setPage} accent="">{pages[page]}</Shell></>);
@@ -2188,7 +2188,7 @@ export default function TrioFit(){
     try { await supabase.auth.signOut({ scope: 'global' }); } catch{}
     try {
       Object.keys(localStorage)
-        .filter(k=>k.startsWith('sb-'))
+        .filter(k=>k.startsWith('sb-')||k.startsWith('tfv_')||k.startsWith('tft_')||k.startsWith('tfn_'))
         .forEach(k=>localStorage.removeItem(k));
     } catch{}
     window.location.href = '/';
