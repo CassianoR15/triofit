@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase, DB } from "./lib/supabase.js";
 
-const _v='TRIOFIT_BUILD_1775571949';
+const _v='TRIOFIT_BUILD_1775573175';
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -1265,7 +1265,7 @@ function AlunoCompeticoes({user,showToast}){
 // ============================================================
 // ALUNO — DASHBOARD
 // ============================================================
-function AlunoDash({user,setPage}){
+function AlunoDash({user,setPage,vinculo:vinculoProp,treinador:treinadorProp,nutri:nutriProp}){
   const [vinculo,,]=useAsyncData(()=>DB.getVinculoAluno(user.id),[user.id],{});
   const [treinador,,]=useAsyncData(()=>vinculo?.treinadorId?DB.getUserById(vinculo.treinadorId):Promise.resolve(null),[vinculo?.treinadorId],null);
   const [nutri,,]=useAsyncData(()=>vinculo?.nutriId?DB.getUserById(vinculo.nutriId):Promise.resolve(null),[vinculo?.nutriId],null);
@@ -2087,7 +2087,11 @@ const NAV_NUTRI=[
 function AlunoApp({user,onLogout}){
   const {show,ToastEl}=useToast();
   const [page,setPage]=useState("dashboard");
-  const pages={dashboard:<AlunoDash user={user} setPage={setPage}/>,saude:<AlunoSaude user={user} showToast={show}/>,treinos:<AlunoTreinos user={user} showToast={show}/>,alimentacao:<AlunoAlimentacao user={user} showToast={show}/>,hidratacao:<AlunoHidratacao user={user} showToast={show}/>,competicoes:<AlunoCompeticoes user={user} showToast={show}/>,avaliacao:<AlunoAvaliacao user={user} showToast={show}/>,vinculo:<AlunoVinculo user={user} showToast={show}/>};
+  // Vínculo no nível do App para não perder ao trocar de página
+  const [vinculoApp,,]=useAsyncData(()=>DB.getVinculoAluno(user.id),[user.id],null);
+  const [treinadorApp,,]=useAsyncData(()=>vinculoApp?.treinadorId?DB.getUserById(vinculoApp.treinadorId):Promise.resolve(null),[vinculoApp?.treinadorId],null);
+  const [nutriApp,,]=useAsyncData(()=>vinculoApp?.nutriId?DB.getUserById(vinculoApp.nutriId):Promise.resolve(null),[vinculoApp?.nutriId],null);
+  const pages={dashboard:<AlunoDash user={user} setPage={setPage} vinculo={vinculoApp} treinador={treinadorApp} nutri={nutriApp}/>,saude:<AlunoSaude user={user} showToast={show}/>,treinos:<AlunoTreinos user={user} showToast={show}/>,alimentacao:<AlunoAlimentacao user={user} showToast={show}/>,hidratacao:<AlunoHidratacao user={user} showToast={show}/>,competicoes:<AlunoCompeticoes user={user} showToast={show}/>,avaliacao:<AlunoAvaliacao user={user} showToast={show}/>,vinculo:<AlunoVinculo user={user} showToast={show}/>};
   return(<>{ToastEl}<Shell user={user} onLogout={onLogout} nav={NAV_ALUNO} active={page} setActive={setPage} accent="">{pages[page]}</Shell></>);
 }
 function TreinadorApp({user,onLogout}){
