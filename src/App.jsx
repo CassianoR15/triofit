@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase, DB } from "./lib/supabase.js";
 
-const _v='TRIOFIT_BUILD_1775568740';
+const _v='TRIOFIT_BUILD_1775569649';
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -742,6 +742,7 @@ function AlunoTreinos({user,showToast}){
   const [checked, ,saveChecked]=useAlunoData(user.id,"treino_check_hoje",{});
   const [rating,setRating]=useState(0);
   const [feedback,setFeedback]=useState("");
+  const [mostrarTroca,setMostrarTroca]=useState(false);
   // Load saved avaliacao
   useEffect(()=>{
     DB.getData("treino_avaliacao",user.id).then(d=>{
@@ -795,16 +796,40 @@ function AlunoTreinos({user,showToast}){
       <PeriodoBadge plano={planoTreino}/>
 
       {/* ABAS DOS DIAS */}
-      <div className="week-tabs">
+      <div className="week-tabs" style={{overflowX:"auto",display:"flex",gap:"4px",paddingBottom:"4px"}}>
         {(dias||[]).map((d,i)=>{
           const temEx=d.exercicios&&d.exercicios.length>0;
           const feitos=d.exercicios?d.exercicios.filter((_,j)=>checked[`${i}_${j}`]).length:0;
           const todos=d.exercicios?d.exercicios.length:0;
           const completo=temEx&&feitos===todos;
+          // Calcular data do dia baseado no inicio do plano
+          const inicioPl=planoTreino?.inicio?new Date(planoTreino.inicio+'T12:00:00'):new Date();
+          const dataDia=new Date(inicioPl);
+          dataDia.setDate(inicioPl.getDate()+i);
+          const hoje2=new Date();hoje2.setHours(0,0,0,0);
+          const dataDia2=new Date(dataDia);dataDia2.setHours(0,0,0,0);
+          const ehHoje=dataDia2.getTime()===hoje2.getTime();
+          const passado=dataDia2<hoje2;
+          const futuro=dataDia2>hoje2;
+          const diaStr=dataDia.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+          const semana=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'][dataDia.getDay()];
           return(
-            <button key={i} className={`week-tab ${diaAtivo===i?(d.tipo==="descanso"?"active orange":"active"):(completo?"done":"")}`} onClick={()=>setDiaAtivo(i)}>
-              {DIAS_SEMANA[i].slice(0,3)}
-              {completo&&" ✓"}
+            <button key={i}
+              onClick={()=>setDiaAtivo(i)}
+              style={{
+                display:"flex",flexDirection:"column",alignItems:"center",
+                padding:"6px 10px",borderRadius:"8px",border:"none",cursor:"pointer",
+                minWidth:"52px",flexShrink:0,
+                background: diaAtivo===i?"var(--green)":ehHoje?"rgba(46,213,115,0.15)":passado?"var(--card2)":"rgba(255,193,7,0.12)",
+                color: diaAtivo===i?"#fff":passado?"var(--text3)":futuro?"#f0c040":"var(--green)",
+                opacity: passado&&diaAtivo!==i?0.55:1,
+                fontWeight: ehHoje?700:500,
+                outline: ehHoje&&diaAtivo!==i?"2px solid var(--green)":"none",
+              }}>
+              <span style={{fontSize:"11px",fontWeight:600}}>{semana}</span>
+              <span style={{fontSize:"10px",opacity:0.8}}>{diaStr}</span>
+              {completo&&<span style={{fontSize:"9px"}}>✓</span>}
+              {ehHoje&&diaAtivo!==i&&<span style={{fontSize:"9px",color:"var(--green)"}}>hoje</span>}
             </button>
           );
         })}
@@ -820,9 +845,26 @@ function AlunoTreinos({user,showToast}){
       ):(
         <div className="treino-card">
           <div className="treino-card-header">
-            <div>
-              <div className="treino-nome">{diaInfo.nome||`Treino ${diaAtivo+1}`}</div>
-              <div className="treino-periodo">{DIAS_SEMANA[diaAtivo]} • {modLabel}</div>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:"0.5rem"}}>
+              <div>
+                <div className="treino-nome">{diaInfo.nome||`Treino ${diaAtivo+1}`}</div>
+                <div className="treino-periodo">{DIAS_SEMANA[diaAtivo]} • {modLabel}</div>
+              </div>
+              {diaAtivo===diaHoje&&(
+                <div style={{position:"relative"}}>
+                  <button className="btn btn-ghost btn-sm" style={{fontSize:"0.75rem"}} onClick={()=>setMostrarTroca(p=>!p)}>🔄 Trocar treino</button>
+                  {mostrarTroca&&(
+                    <div style={{position:"absolute",right:0,top:"100%",zIndex:10,background:"var(--card)",border:"1px solid var(--border)",borderRadius:"var(--radius)",padding:"0.5rem",minWidth:"160px",boxShadow:"0 4px 12px rgba(0,0,0,0.2)"}}>
+                      <div style={{fontSize:"0.75rem",color:"var(--text2)",marginBottom:"0.4rem",fontWeight:600}}>Fazer treino de outro dia:</div>
+                      {(dias||[]).map((d2,i2)=>i2!==diaHoje&&d2.tipo!=="descanso"?(
+                        <button key={i2} className="btn btn-ghost btn-sm" style={{display:"block",width:"100%",textAlign:"left",fontSize:"0.8rem",padding:"0.3rem 0.5rem"}} onClick={()=>{setDiaAtivo(i2);setMostrarTroca(false);showToast&&showToast(`Trocado para ${d2.nome} 💪`);}}>
+                          {DIAS_SEMANA[i2].slice(0,3)} — {d2.nome}
+                        </button>
+                      ):null)}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
             {diaInfo.exercicios&&(
               <div style={{textAlign:"right"}}>
