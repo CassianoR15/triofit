@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase, DB } from "./lib/supabase.js";
 
-const _v='TRIOFIT_BUILD_1775584194';
+const _v='TRIOFIT_BUILD_1775592309';
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -2091,6 +2091,7 @@ function MeuPerfil({user,treinador,nutri,vinculo,onVinculoChange,showToast}){
   const [editando,setEditando]=useState(false);
   const [form,setForm]=useState({nome:"",sobrenome:"",nascimento:"",telefone:"",email:"",localTreino:"",obs:""});
   const [salvando,setSalvando]=useState(false);
+  const [emailEnviado,setEmailEnviado]=useState(false);
 
   useEffect(()=>{
     // Carrega dados do próprio aluno
@@ -2274,28 +2275,51 @@ function CadastrarAluno({user,showToast}){
 
   async function salvar(){
     if(!form.nome.trim()){showToast&&showToast("Informe o nome do aluno","warn");return;}
+    if(!form.email.trim()){showToast&&showToast("E-mail é obrigatório para criar a conta","warn");return;}
     setSalvando(true);
-    const novo={
-      id:Date.now().toString(),
-      nome:form.nome.trim(),
-      sobrenome:form.sobrenome.trim(),
-      nascimento:form.nascimento,
-      telefone:form.telefone.trim(),
-      email:form.email.trim(),
-      localTreino:form.localTreino.trim(),
-      obs:form.obs.trim(),
-      criadoEm:new Date().toISOString(),
-      treinadorId:user.id,
-    };
-    const novos=[...(alunos||[]),novo];
-    await DB.setData("alunos_cadastrados",user.id,novos);
-    setAlunos(novos);
-    setForm({nome:"",sobrenome:"",nascimento:"",telefone:"",email:"",localTreino:"",obs:""});
+    try{
+      const resp=await fetch("https://vboknerswhvpheuymakx.supabase.co/functions/v1/criar-aluno",{
+        method:"POST",
+        headers:{
+          "Content-Type":"application/json",
+          "Authorization":"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZib2tuZXJzd2h2cGhldXltYWt4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNDc1NTksImV4cCI6MjA5MDcyMzU1OX0.-Y7NzFkA2Qyd8N1yqT77Iied7rdR5CkSlCNjqCMLlaM",
+          "apikey":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZib2tuZXJzd2h2cGhldXltYWt4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNDc1NTksImV4cCI6MjA5MDcyMzU1OX0.-Y7NzFkA2Qyd8N1yqT77Iied7rdR5CkSlCNjqCMLlaM",
+        },
+        body:JSON.stringify({
+          nome:form.nome.trim(),
+          sobrenome:form.sobrenome.trim(),
+          email:form.email.trim(),
+          telefone:form.telefone.trim(),
+          nascimento:form.nascimento,
+          localTreino:form.localTreino.trim(),
+          obs:form.obs.trim(),
+          treinadorId:user.id,
+          codigoTreinador:user.codigo||"------",
+          treinadorNome:user.nome,
+        })
+      });
+      const result=await resp.json();
+      if(!result.ok){
+        showToast&&showToast(result.msg||"Erro ao cadastrar","warn");
+        setSalvando(false);return;
+      }
+      const novo={
+        id:result.userId||Date.now().toString(),
+        nome:form.nome.trim(),sobrenome:form.sobrenome.trim(),
+        email:form.email.trim(),telefone:form.telefone.trim(),
+        nascimento:form.nascimento,localTreino:form.localTreino.trim(),
+        obs:form.obs.trim(),criadoEm:new Date().toISOString(),
+        treinadorId:user.id,senhaTemp:result.senhaTemp,contaCriada:true,
+      };
+      const novos=[...(alunos||[]),novo];
+      await DB.setData("alunos_cadastrados",user.id,novos);
+      setAlunos(novos);
+      setForm({nome:"",sobrenome:"",nascimento:"",telefone:"",email:"",localTreino:"",obs:""});
+      showToast&&showToast(`✅ Conta criada para ${novo.nome}! Senha: ${result.senhaTemp}`);
+      setAba("lista");
+    }catch(e){showToast&&showToast("Erro: "+e.message,"warn");}
     setSalvando(false);
-    showToast&&showToast(`✅ ${novo.nome} cadastrado! Compartilhe o link do app para ele criar a conta.`);
-    setAba("lista");
   }
-
   async function remover(id){
     if(!window.confirm("Remover este aluno do cadastro?"))return;
     const novos=(alunos||[]).filter(a=>a.id!==id);
@@ -2305,8 +2329,20 @@ function CadastrarAluno({user,showToast}){
   }
 
   function abrirWhatsApp(aluno){
-    const msg=encodeURIComponent(`Olá ${aluno.nome}! Você foi cadastrado no TrioFit. Acesse seu treino aqui: https://triofit.vercel.app — crie sua conta com este e-mail: ${aluno.email||"(informe seu e-mail)"} e conecte-se comigo usando meu código: ${user.codigo||"------"} 💪`);
-    window.open(`https://wa.me/55${aluno.telefone.replace(/\D/g,"")}?text=${msg}`,"_blank");
+    const msg=aluno.contaCriada
+      ?encodeURIComponent(`Olá ${aluno.nome}! 🎉 Sua conta no TrioFit foi criada!
+
+📱 Acesse: https://triofit.vercel.app
+✉️ E-mail: ${aluno.email}
+🔑 Senha temporária: ${aluno.senhaTemp}
+
+Ao entrar, vá em Meu Perfil para alterar a senha. Seu treinador ${user.nome} já está vinculado! 💪`)
+      :encodeURIComponent(`Olá ${aluno.nome}! Você foi cadastrado no TrioFit.
+
+📱 Acesse: https://triofit.vercel.app
+✉️ Crie sua conta com: ${aluno.email||"seu e-mail"}
+🔑 Código do treinador: ${user.codigo||"------"} 💪`);
+    window.open(`https://wa.me/55${aluno.telefone.replace(/[^0-9]/g,"")}?text=${msg}`,"_blank");
   }
 
   return(
@@ -2334,7 +2370,7 @@ function CadastrarAluno({user,showToast}){
           <div className="form-group"><label className="form-label">Observações</label><textarea className="form-textarea" rows={3} placeholder="Limitações, objetivos, histórico de saúde..." value={form.obs} onChange={e=>set("obs",e.target.value)}/></div>
           <div className="card" style={{background:"var(--card2)",marginTop:"0.5rem"}}>
             <div style={{fontSize:"0.82rem",color:"var(--text2)",lineHeight:1.6}}>
-              📲 <b>Como funciona:</b> após cadastrar, envie o link <b>triofit.vercel.app</b> para o aluno criar a conta. Ele deve se registrar e vincular com seu código <b style={{color:"var(--orange)",fontFamily:"var(--font-mono)"}}>{user.codigo||"------"}</b>.
+              🤖 <b>Automático:</b> ao cadastrar com e-mail, a conta do aluno é criada automaticamente e ele já fica vinculado a você. Basta enviar as credenciais por WhatsApp! O aluno entra com a senha temporária e pode alterar depois.
             </div>
           </div>
           <button className="btn btn-primary btn-full" style={{marginTop:"1rem"}} onClick={salvar} disabled={salvando}>{salvando?"Salvando...":"✅ Cadastrar aluno"}</button>
@@ -2349,13 +2385,21 @@ function CadastrarAluno({user,showToast}){
           ):(alunos||[]).map(a=>(
             <div key={a.id} style={{background:"var(--card2)",borderRadius:"var(--radius)",padding:"0.75rem 1rem",marginBottom:"0.5rem"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:"0.5rem"}}>
-                <div>
-                  <div style={{fontWeight:600,fontSize:"1rem"}}>{a.nome} {a.sobrenome}</div>
+                <div style={{flex:1}}>
+                  <div style={{display:"flex",alignItems:"center",gap:"6px"}}>
+                    <div style={{display:"flex",alignItems:"center",gap:"0.5rem",flexWrap:"wrap"}}>
+                      <span style={{fontWeight:600,fontSize:"1rem"}}>{a.nome} {a.sobrenome}</span>
+                      {a.contaCriada&&<span style={{fontSize:"10px",background:"rgba(46,213,115,0.2)",color:"var(--green)",padding:"2px 6px",borderRadius:"4px"}}>✓ conta criada</span>}
+                    </div>
+                    {a.senhaTemp&&<div style={{fontSize:"0.75rem",marginTop:"3px",color:"var(--text2)"}}>🔑 Senha temp: <b style={{fontFamily:"var(--font-mono)"}}>{a.senhaTemp}</b></div>}
+                    {a.contaCriada&&<span style={{fontSize:"10px",background:"rgba(46,213,115,0.15)",color:"var(--green)",padding:"1px 6px",borderRadius:"4px"}}>✓ conta criada</span>}
+                  </div>
                   <div style={{fontSize:"0.8rem",color:"var(--text2)",marginTop:"2px"}}>
                     {a.email&&<span>✉️ {a.email} </span>}
                     {a.telefone&&<span>📱 {a.telefone} </span>}
                     {a.localTreino&&<span>📍 {a.localTreino}</span>}
                   </div>
+                  {a.senhaTemp&&<div style={{fontSize:"0.78rem",color:"var(--orange)",marginTop:"4px",background:"rgba(255,140,0,0.08)",padding:"3px 8px",borderRadius:"4px",display:"inline-block"}}>🔑 Senha temp: <b>{a.senhaTemp}</b></div>}
                   {a.obs&&<div style={{fontSize:"0.78rem",color:"var(--text3)",marginTop:"4px"}}>📝 {a.obs}</div>}
                 </div>
                 <div style={{display:"flex",gap:"6px",flexShrink:0}}>
