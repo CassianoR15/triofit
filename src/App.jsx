@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase, DB } from "./lib/supabase.js";
 
-const _v='TRIOFIT_BUILD_1775502524';
+const _v='TRIOFIT_BUILD_1775561140';
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -1047,7 +1047,7 @@ function AlunoAvaliacao({user,showToast}){
   async function set(k,v){setF(p=>({...p,[k]:v}));}
   async function salvar(){
     await DB.setData("avaliacao",user.id,f);
-    const hist=DB.getData("avaliacao_hist",user.id)||[];
+    const hist=(await DB.getData("avaliacao_hist",user.id))||[];
     if(f.peso){
       const entry={peso:f.peso,gordura:f.gordura,data:new Date().toISOString()};
       await DB.setData("avaliacao_hist",user.id,[...hist.slice(-11),entry]);
@@ -1108,7 +1108,7 @@ function AlunoCompeticoes({user,showToast}){
         <div className="page-title green">COMPETIÇÕES</div>
         <div className="page-sub">Visível para treinador e nutricionista</div>
       </div>
-      {(comps||[]).length>0&&<div className="card"><div className="card-title">📅 MEUS EVENTOS</div>{(comps||[]).map((c,i)=>{const d=new Date(c.data);return(<div key={i} className="comp-card" style={{background:"var(--bg2)"}}><div className="comp-date"><div className="comp-date-day">{d.getDate()}</div><div className="comp-date-month">{d.toLocaleDateString("pt-BR",{month:"short"})}</div></div><div style={{flex:1}}><div style={{fontWeight:600}}>{c.nome}</div><div style={{fontSize:"0.8rem",color:"var(--text2)"}}>{c.modalidade} • {c.local}</div></div><span className="tag tag-orange">{c.objetivo.toUpperCase()}</span></div>);})}</div>}
+      {((comps)||[]).length>0&&<div className="card"><div className="card-title">📅 MEUS EVENTOS</div>{(comps||[]).map((c,i)=>{const d=new Date(c.data);return(<div key={i} className="comp-card" style={{background:"var(--bg2)"}}><div className="comp-date"><div className="comp-date-day">{d.getDate()}</div><div className="comp-date-month">{d.toLocaleDateString("pt-BR",{month:"short"})}</div></div><div style={{flex:1}}><div style={{fontWeight:600}}>{c.nome}</div><div style={{fontSize:"0.8rem",color:"var(--text2)"}}>{c.modalidade} • {c.local}</div></div><span className="tag tag-orange">{c.objetivo.toUpperCase()}</span></div>);})}</div>}
       <div className="card">
         <div className="card-title">➕ CADASTRAR COMPETIÇÃO</div>
         <div className="grid-2">
@@ -1135,6 +1135,7 @@ function AlunoDash({user,setPage}){
   const [meta,,]=useAlunoData(user.id,"meta_agua",3000);
   const [saude,,]=useAlunoData(user.id,"saude",{});
   const [planoTreino,,]=useAlunoData(user.id,"plano_treino_aluno",null);
+  const [avalDash,,]=useAlunoData(user.id,"avaliacao",{});
   const pct=Math.min(Math.round(((agua||0)/Math.max(meta||3000,1))*100),100);
   const hoje=new Date().getDay();const diaHoje=hoje===0?6:hoje-1;
   const treinoHoje=planoTreino?.dias?.[diaHoje];
@@ -1159,7 +1160,7 @@ function AlunoDash({user,setPage}){
         </div>
         <div className="stat-tile" style={{cursor:"pointer"}} onClick={()=>setPage&&setPage("avaliacao")}>
           <div className="stat-label">Peso / IMC</div>
-          {(()=>{const aval=DB.getData("avaliacao",user.id)||{};const imc=calcIMC(aval.peso,aval.altura);return(<><div className="stat-value green">{aval.peso||"—"}<span className="stat-unit">{aval.peso?" kg":""}</span></div>{imc&&<div className="stat-sub">IMC {imc.val} — {imc.cat}</div>}</>);})()}
+          {(()=>{const imc=calcIMC(avalDash.peso,avalDash.altura);return(<><div className="stat-value green">{avalDash.peso||"—"}<span className="stat-unit">{avalDash.peso?" kg":""}</span></div>{imc&&<div className="stat-sub">IMC {imc.val} — {imc.cat}</div>}</>);})()}
         </div>
       </div>
       <div className="card">
@@ -1371,15 +1372,15 @@ function TreinadorPrescrever({user,showToast}){
 
 // Resumo semanal (visão de acompanhamento)
 function ResumoSemanalAluno({aluno,onVerCompleto}){
-  const saude=DB.getData("saude",aluno.id)||{};
-  const agua=DB.getData("agua_hoje",aluno.id)||0;
-  const meta=DB.getData("meta_agua",aluno.id)||3000;
-  const planoTreino=DB.getData("plano_treino_aluno",aluno.id);
-  const av=DB.getData("treino_avaliacao",aluno.id)||{};
+  const [saude]=useAlunoData(aluno.id,"saude",{});
+  const [agua]=useAlunoData(aluno.id,"agua_hoje",0);
+  const [meta]=useAlunoData(aluno.id,"meta_agua",3000);
+  const [planoTreino]=useAlunoData(aluno.id,"plano_treino_aluno",null);
+  const [av]=useAlunoData(aluno.id,"treino_avaliacao",{});
   const diasDoente=saude.doente_desde?diffDays(saude.doente_desde):0;
 
   // Contar dias de treino feitos (baseado no check)
-  const check=DB.getData("treino_check_hoje",aluno.id)||{};
+  const [check]=useAlunoData(aluno.id,"treino_check_hoje",{});
   // Simular quais dias têm exercícios marcados essa semana
   const diasTreino=planoTreino?.dias||[];
   const diasComTreino=diasTreino.filter(d=>d.tipo!=="descanso").length;
@@ -1449,16 +1450,16 @@ function ResumoSemanalAluno({aluno,onVerCompleto}){
 
 // Diário completo — visão mensal
 function DiarioAluno({aluno,onBack}){
-  const saude=DB.getData("saude",aluno.id)||{};
-  const treino=DB.getData("treino_avaliacao",aluno.id)||{};
-  const alimCheck=DB.getData("alim_check_hoje",aluno.id)||{};
-  const planoAlim=DB.getData("plano_alim_aluno",aluno.id);
-  const agua=DB.getData("agua_hoje",aluno.id)||0;
-  const metaAgua=DB.getData("meta_agua",aluno.id)||3000;
-  const aval=DB.getData("avaliacao",aluno.id)||{};
-  const comps=DB.getData("competicoes",aluno.id)||[];
-  const planoTreino=DB.getData("plano_treino_aluno",aluno.id);
-  const refeicoes=planoAlim?.refeicoes||[];
+  const [saude]=useAlunoData(aluno.id,"saude",{});
+  const [treino]=useAlunoData(aluno.id,"treino_avaliacao",{});
+  const [alimCheck]=useAlunoData(aluno.id,"alim_check_hoje",{});
+  const [planoAlim]=useAlunoData(aluno.id,"plano_alim_aluno",null);
+  const [agua]=useAlunoData(aluno.id,"agua_hoje",0);
+  const [metaAgua]=useAlunoData(aluno.id,"meta_agua",3000);
+  const [aval]=useAlunoData(aluno.id,"avaliacao",{});
+  const [comps]=useAlunoData(aluno.id,"competicoes",[]);
+  const [planoTreino]=useAlunoData(aluno.id,"plano_treino_aluno",null);
+  const refeicoes=(planoAlim?.refeicoes)||[];
   const qtdComido=Object.values(alimCheck).filter(Boolean).length;
   const diasDoente=saude.doente_desde?diffDays(saude.doente_desde):0;
 
