@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase, DB } from "./lib/supabase.js";
 
-const _v='TRIOFIT_BUILD_1775566366';
+const _v='TRIOFIT_BUILD_1775568379';
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -362,15 +362,18 @@ const MUSCLES=["Ombro D","Ombro E","Bíceps D","Bíceps E","Tríceps D","Trícep
 function useAsyncData(fetcher, deps=[], defaultVal=null) {
   const [data, setData] = useState(defaultVal);
   const [loading, setLoading] = useState(true);
-  const mountedRef = useRef(true);
 
   useEffect(() => {
-    mountedRef.current = true;
+    let cancelled = false;
     setLoading(true);
-    fetcher().then(result => {
-      if (mountedRef.current) { setData(result ?? defaultVal); setLoading(false); }
-    }).catch(() => { if (mountedRef.current) { setData(defaultVal); setLoading(false); } });
-    return () => { mountedRef.current = false; };
+    fetcher()
+      .then(result => {
+        if (!cancelled) { setData(result ?? defaultVal); setLoading(false); }
+      })
+      .catch(() => {
+        if (!cancelled) { setData(defaultVal); setLoading(false); }
+      });
+    return () => { cancelled = true; };
   // eslint-disable-next-line
   }, deps);
 
@@ -383,7 +386,13 @@ function useAlunoData(userId, chave, defaultVal=null) {
   const [ready, setReady] = useState(false);
   useEffect(() => {
     if (!userId) return;
-    DB.getData(chave, userId).then(d => { setVal(d ?? defaultVal); setReady(true); });
+    let cancelled = false;
+    DB.getData(chave, userId).then(d => {
+      if (!cancelled) { setVal(d ?? defaultVal); setReady(true); }
+    }).catch(() => {
+      if (!cancelled) { setVal(defaultVal); setReady(true); }
+    });
+    return () => { cancelled = true; };
   }, [userId, chave]);
   async function save(newVal) {
     setVal(newVal);
