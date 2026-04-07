@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase, DB } from "./lib/supabase.js";
 
-const _v='TRIOFIT_BUILD_1775568379';
+const _v='TRIOFIT_BUILD_1775568740';
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -726,7 +726,18 @@ function AlunoVinculo({user,showToast}){
 // ALUNO — SEMANA DE TREINOS
 // ============================================================
 function AlunoTreinos({user,showToast}){
-  const [planoTreino,planoReady]=useAsyncData(()=>DB.getData("plano_treino_aluno",user.id),[user.id]);
+  const [planoTreino,setPlanoTreino]=useState(undefined);
+  const [planoReady,setPlanoReady]=useState(false);
+  useEffect(()=>{
+    let cancelled=false;
+    DB.getData("plano_treino_aluno",user.id).then(d=>{
+      if(!cancelled){setPlanoTreino(d);setPlanoReady(true);}
+    }).catch(()=>{
+      if(!cancelled){setPlanoTreino(null);setPlanoReady(true);}
+    });
+    const timeout=setTimeout(()=>{if(!cancelled){setPlanoReady(true);}},5000);
+    return()=>{cancelled=true;clearTimeout(timeout);};
+  },[user.id]);
   const [diaAtivo,setDiaAtivo]=useState(0);
   const [checked, ,saveChecked]=useAlunoData(user.id,"treino_check_hoje",{});
   const [rating,setRating]=useState(0);
@@ -865,7 +876,18 @@ function AlunoTreinos({user,showToast}){
 // ALUNO — ALIMENTAÇÃO (checkbox)
 // ============================================================
 function AlunoAlimentacao({user,showToast}){
-  const [planoAlim,planoAlimReady]=useAsyncData(()=>DB.getData("plano_alim_aluno",user.id),[user.id]);
+  const [planoAlim,setPlanoAlim]=useState(undefined);
+  const [planoAlimReady,setPlanoAlimReady]=useState(false);
+  useEffect(()=>{
+    let cancelled=false;
+    DB.getData("plano_alim_aluno",user.id).then(d=>{
+      if(!cancelled){setPlanoAlim(d);setPlanoAlimReady(true);}
+    }).catch(()=>{
+      if(!cancelled){setPlanoAlim(null);setPlanoAlimReady(true);}
+    });
+    const timeout=setTimeout(()=>{if(!cancelled){setPlanoAlimReady(true);}},5000);
+    return()=>{cancelled=true;clearTimeout(timeout);};
+  },[user.id]);
   const [comido,,saveComido]=useAlunoData(user.id,"alim_check_hoje",{});
   const [obs,setObs]=useState("");
   useEffect(()=>{DB.getData("alim_obs_hoje",user.id).then(d=>d&&setObs(d));},[user.id]);

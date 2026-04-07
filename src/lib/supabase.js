@@ -144,13 +144,20 @@ export const DB = {
   // DADOS GENÉRICOS (substitui localStorage tf_KEY_UID)
   // ----------------------------------------------------------
   async getData(chave, userId) {
-    const { data } = await supabase
-      .from('dados')
-      .select('valor')
-      .eq('user_id', userId)
-      .eq('chave', chave)
-      .maybeSingle();
-    return data?.valor ?? null;
+    if (!userId) return null;
+    try {
+      const { data, error } = await supabase
+        .from('dados')
+        .select('valor')
+        .eq('user_id', userId)
+        .eq('chave', chave)
+        .maybeSingle();
+      if (error) { console.warn('getData error:', chave, error.message); return null; }
+      return data?.valor ?? null;
+    } catch(e) {
+      console.warn('getData exception:', chave, e);
+      return null;
+    }
   },
 
   async setData(chave, userId, valor) {
