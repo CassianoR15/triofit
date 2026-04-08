@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase, DB } from "./lib/supabase.js";
 
-const _v='TRIOFIT_BUILD_1775592309';
+const _v='TRIOFIT_BUILD_1775656375';
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -700,12 +700,15 @@ function AlunoVinculo({user,showToast,onVinculoChange}){
   const [treinador,setTreinador]=useState(null);
   const [nutri,setNutri]=useState(null);
   useEffect(()=>{
+    let cancelled=false;
     DB.getVinculoAluno(user.id).then(async v=>{
+      if(cancelled)return;
       const vc=v||{};
       setVinculo(vc);
-      if(vc.treinadorId)setTreinador(await DB.getUserById(vc.treinadorId));
-      if(vc.nutriId)setNutri(await DB.getUserById(vc.nutriId));
-    });
+      if(vc.treinadorId){const t=await DB.getUserById(vc.treinadorId);if(!cancelled)setTreinador(t);}
+      if(vc.nutriId){const n=await DB.getUserById(vc.nutriId);if(!cancelled)setNutri(n);}
+    }).catch(()=>{});
+    return()=>{cancelled=true;};
   },[user.id]);
   async function vincT(u){const n={...vinculo,treinadorId:u.id};await DB.setVinculoAluno(user.id,n.treinadorId,n.nutriId);setVinculo(n);setTreinador(u);onVinculoChange&&onVinculoChange();showToast&&showToast(`✅ Treinador ${u.nome.split(" ")[0]} vinculado!`);}
   async function vincN(u){const n={...vinculo,nutriId:u.id};await DB.setVinculoAluno(user.id,n.treinadorId,n.nutriId);setVinculo(n);setNutri(u);onVinculoChange&&onVinculoChange();showToast&&showToast(`✅ Nutricionista ${u.nome.split(" ")[0]} vinculada!`);}
@@ -748,9 +751,11 @@ function AlunoTreinos({user,showToast}){
   const [confirmandoFinalizar,setConfirmandoFinalizar]=useState(false);
   // Load saved avaliacao
   useEffect(()=>{
+    let cancelled=false;
     DB.getData("treino_avaliacao",user.id).then(d=>{
-      if(d){setRating(d.rating||0);setFeedback(d.feedback||"");}
-    });
+      if(!cancelled&&d){setRating(d.rating||0);setFeedback(d.feedback||"");}
+    }).catch(()=>{});
+    return()=>{cancelled=true;};
   },[user.id]);
 
   // Determina o dia atual da semana (0=seg)
@@ -766,15 +771,19 @@ function AlunoTreinos({user,showToast}){
       showToast&&showToast("Treino já finalizado. Clique em '+ Novo treino' para treinar novamente.","warn");
       return;
     }
-    const key=`${diaIdx}_${exIdx}`;
-    const novo={...(checked||{}),[key]:!(checked||{})[key]};
-    await saveChecked(novo);
+    try{
+      const key=`${diaIdx}_${exIdx}`;
+      const novo={...(checked||{}),[key]:!(checked||{})[key]};
+      await saveChecked(novo);
+    }catch(e){showToast&&showToast("Erro ao salvar. Tente novamente.","warn");}
   }
 
   async function salvarAvaliacao(){
     if(!rating){showToast&&showToast("Selecione uma nota de 1-5 estrelas","warn");return;}
-    await DB.setData("treino_avaliacao",user.id,{rating,feedback,data:new Date().toISOString()});
-    showToast&&showToast("Avaliação salva! Treinador notificado ✅");
+    try{
+      await DB.setData("treino_avaliacao",user.id,{rating,feedback,data:new Date().toISOString()});
+      showToast&&showToast("Avaliação salva! Treinador notificado ✅");
+    }catch(e){showToast&&showToast("Erro ao salvar avaliação.","warn");}
   }
 
   // Chave do dia atual para verificar se já foi finalizado
@@ -783,19 +792,21 @@ function AlunoTreinos({user,showToast}){
   const treinoDeHojeFinalizado=!!(treinosFinalizados||{})[chaveHoje];
 
   async function finalizarTreino(diaIdx,diaInfo2,checked2){
-    const chave=dataHojeStr+"_dia"+diaIdx;
-    const novo={...(treinosFinalizados||{}),[chave]:{
-      dia:diaIdx,nome:diaInfo2?.nome,
-      data:new Date().toISOString(),
-      exercicios:(diaInfo2?.exercicios||[]).length,
-      rating
-    }};
-    await saveTreinosFinalizados(novo);
-    if(rating>0){
-      await DB.setData("treino_avaliacao",user.id,{rating,feedback,data:new Date().toISOString()});
-    }
-    setConfirmandoFinalizar(false);
-    showToast&&showToast("🏆 Treino finalizado! Ótimo trabalho!");
+    try{
+      const chave=dataHojeStr+"_dia"+diaIdx;
+      const novo={...(treinosFinalizados||{}),[chave]:{
+        dia:diaIdx,nome:diaInfo2?.nome,
+        data:new Date().toISOString(),
+        exercicios:(diaInfo2?.exercicios||[]).length,
+        rating
+      }};
+      await saveTreinosFinalizados(novo);
+      if(rating>0){
+        await DB.setData("treino_avaliacao",user.id,{rating,feedback,data:new Date().toISOString()});
+      }
+      setConfirmandoFinalizar(false);
+      showToast&&showToast("🏆 Treino finalizado! Ótimo trabalho!");
+    }catch(e){showToast&&showToast("Erro ao finalizar. Tente novamente.","warn");}
   }
 
   if(!planoReady){
@@ -996,11 +1007,13 @@ function AlunoAlimentacao({user,showToast}){
   },[user.id]);
   const [comido,,saveComido]=useAlunoData(user.id,"alim_check_hoje",{});
   const [obs,setObs]=useState("");
-  useEffect(()=>{DB.getData("alim_obs_hoje",user.id).then(d=>d&&setObs(d));},[user.id]);
+  useEffect(()=>{let c=false;DB.getData("alim_obs_hoje",user.id).then(d=>{if(!c&&d)setObs(d);}).catch(()=>{});return()=>{c=true;};},[user.id]);
 
   async function toggleRefeicao(i){
-    const novo={...(comido||{}),[i]:!(comido||{})[i]};
-    await saveComido(novo);
+    try{
+      const novo={...(comido||{}),[i]:!(comido||{})[i]};
+      await saveComido(novo);
+    }catch(e){showToast&&showToast("Erro ao salvar.","warn");}
   }
   async function salvarObs(){
     await DB.setData("alim_obs_hoje",user.id,obs);
@@ -1181,7 +1194,7 @@ function AlunoSaude({user,showToast}){
 // ============================================================
 function AlunoAvaliacao({user,showToast}){
   const [f,setF]=useState({});
-  useEffect(()=>{DB.getData("avaliacao",user.id).then(d=>d&&setF(d));},[user.id]);
+  useEffect(()=>{let c=false;DB.getData("avaliacao",user.id).then(d=>{if(!c&&d)setF(d);}).catch(()=>{});return()=>{c=true;};},[user.id]);
   async function set(k,v){setF(p=>({...p,[k]:v}));}
   async function salvar(){
     await DB.setData("avaliacao",user.id,f);
@@ -1229,7 +1242,7 @@ function AlunoAvaliacao({user,showToast}){
 
 function AlunoCompeticoes({user,showToast}){
   const [comps,setComps]=useState([]);
-  useEffect(()=>{DB.getData("competicoes",user.id).then(d=>d&&setComps(d));},[user.id]);
+  useEffect(()=>{let c=false;DB.getData("competicoes",user.id).then(d=>{if(!c&&d)setComps(d);}).catch(()=>{});return()=>{c=true;};},[user.id]);
   const [f,setF]=useState({nome:"",modalidade:"Corrida",data:"",local:"",objetivo:"Completar"});
   async function set(k,v){setF(p=>({...p,[k]:v}));}
   async function add(){
