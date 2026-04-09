@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase, DB } from "./lib/supabase.js";
 
-const _v='TRIOFIT_BUILD_1775759642';
+const _v='TRIOFIT_BUILD_1775760129';
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -2507,51 +2507,27 @@ function CadastrarAluno({user,showToast}){
 
   async function salvar(){
     if(!form.nome.trim()){showToast&&showToast("Informe o nome do aluno","warn");return;}
-    if(!form.email.trim()){showToast&&showToast("E-mail é obrigatório para criar a conta","warn");return;}
     setSalvando(true);
     try{
-      const resp=await fetch("https://vboknerswhvpheuymakx.supabase.co/functions/v1/criar-aluno",{
-        method:"POST",
-        headers:{
-          "Content-Type":"application/json",
-          "Authorization":"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZib2tuZXJzd2h2cGhldXltYWt4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNDc1NTksImV4cCI6MjA5MDcyMzU1OX0.-Y7NzFkA2Qyd8N1yqT77Iied7rdR5CkSlCNjqCMLlaM",
-          "apikey":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZib2tuZXJzd2h2cGhldXltYWt4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNDc1NTksImV4cCI6MjA5MDcyMzU1OX0.-Y7NzFkA2Qyd8N1yqT77Iied7rdR5CkSlCNjqCMLlaM",
-        },
-        body:JSON.stringify({
-          nome:form.nome.trim(),
-          sobrenome:form.sobrenome.trim(),
-          email:form.email.trim(),
-          telefone:form.telefone.trim(),
-          nascimento:form.nascimento,
-          localTreino:form.localTreino.trim(),
-          obs:form.obs.trim(),
-          treinadorId:user.id,
-          codigoTreinador:user.codigo||"------",
-          treinadorNome:user.nome,
-        })
-      });
-      const result=await resp.json();
-      if(!result.ok){
-        showToast&&showToast(result.msg||"Erro ao cadastrar","warn");
-        setSalvando(false);return;
-      }
       const novo={
-        id:result.userId||Date.now().toString(),
+        id:Date.now().toString(),
         nome:form.nome.trim(),sobrenome:form.sobrenome.trim(),
         email:form.email.trim(),telefone:form.telefone.trim(),
         nascimento:form.nascimento,localTreino:form.localTreino.trim(),
         obs:form.obs.trim(),criadoEm:new Date().toISOString(),
-        treinadorId:user.id,senhaTemp:result.senhaTemp,contaCriada:true,
+        treinadorId:user.id,contaCriada:false,
       };
       const novos=[...(alunos||[]),novo];
       await DB.setData("alunos_cadastrados",user.id,novos);
       setAlunos(novos);
       setForm({nome:"",sobrenome:"",nascimento:"",telefone:"",email:"",localTreino:"",obs:""});
-      showToast&&showToast(`✅ Conta criada para ${novo.nome}! Senha: ${result.senhaTemp}`);
+      const msg=`Olá ${novo.nome}! Seu treinador ${user.nome} te cadastrou no TrioFit. Acesse triofit.vercel.app, crie sua conta${novo.email?" com o email "+novo.email:""} e vincule com o código ${user.codigo||"------"} 💪`;
+      showToast&&showToast(`✅ ${novo.nome} cadastrado!`);
       setAba("lista");
-    }catch(e){showToast&&showToast("Erro: "+e.message,"warn");}
+    }catch(e){showToast&&showToast("Erro ao cadastrar","warn");}
     setSalvando(false);
   }
+
   async function remover(id){
     const okA=await confirm("Remover este aluno do cadastro?");if(!okA)return;
     const novos=(alunos||[]).filter(a=>a.id!==id);
@@ -2654,7 +2630,10 @@ function TreinadorApp({user,onLogout}){
   useEffect(()=>{
     DB.getAlunosDe(user.id).then(alunos=>{setAlertCount(0);});
     // Checar mensagens não lidas
-    
+    const checkMsgs=()=>DB.getMensagensNaoLidas(user.id).then(d=>setAlertCount(d.length)).catch(()=>{});
+    checkMsgs();
+    const interval=setInterval(checkMsgs,30000);
+    return()=>clearInterval(interval);
   },[user.id]);
   const pages={dashboard:<TreinadorDash user={user}/>,cadastrar:<CadastrarAluno user={user} showToast={show}/>,prescrever:<TreinadorPrescrever user={user} showToast={show}/>,acompanhamento:<TreinadorAcompanhamento user={user}/>,chat:<ProfChat user={user} showToast={show}/>};
   return(<>{ToastEl}<Shell user={user} onLogout={onLogout} nav={NAV_TREINADOR} active={page} setActive={setPage} accent="orange" alertCount={alertCount}>{pages[page]}</Shell></>);
