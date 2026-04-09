@@ -170,6 +170,89 @@ export const DB = {
   },
 
   // ----------------------------------------------------------
+  // CHAT
+  // ----------------------------------------------------------
+  async getMensagens(meuId, outroId) {
+    const { data } = await supabase
+      .from('mensagens')
+      .select('*')
+      .or(`and(de_id.eq.${meuId},para_id.eq.${outroId}),and(de_id.eq.${outroId},para_id.eq.${meuId})`)
+      .order('criado_em', { ascending: true })
+      .limit(100);
+    return data || [];
+  },
+
+  async enviarMensagem(deId, paraId, texto) {
+    const { data, error } = await supabase
+      .from('mensagens')
+      .insert({ de_id: deId, para_id: paraId, texto })
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  },
+
+  async marcarLidas(meuId, deId) {
+    await supabase
+      .from('mensagens')
+      .update({ lida: true })
+      .eq('para_id', meuId)
+      .eq('de_id', deId)
+      .eq('lida', false);
+  },
+
+  async getMensagensNaoLidas(meuId) {
+    const { data } = await supabase
+      .from('mensagens')
+      .select('de_id')
+      .eq('para_id', meuId)
+      .eq('lida', false);
+    return data || [];
+  },
+
+  subscribeMensagens(meuId, callback) {
+    return supabase
+      .channel('mensagens_' + meuId)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'mensagens',
+        filter: `para_id=eq.${meuId}`
+      }, callback)
+      .subscribe();
+  },
+
+  // ----------------------------------------------------------
+  // NOTIFICAÇÕES
+  // ----------------------------------------------------------
+  async criarNotificacao(userId, tipo, titulo, corpo) {
+    await supabase.from('notificacoes').insert({ user_id: userId, tipo, titulo, corpo });
+  },
+
+  async getNotificacoes(userId) {
+    const { data } = await supabase
+      .from('notificacoes')
+      .select('*')
+      .eq('user_id', userId)
+      .order('criado_em', { ascending: false })
+      .limit(20);
+    return data || [];
+  },
+
+  async marcarNotifLida(id) {
+    await supabase.from('notificacoes').update({ lida: true }).eq('id', id);
+  },
+
+  async getNaoLidasCount(userId) {
+    const { count } = await supabase
+      .from('notificacoes')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('lida', false);
+    return count || 0;
+  },
+
+  // ----------------------------------------------------------
   // HELPER: buscar vários dados de um aluno de uma vez
   // (para dashboards do profissional — evita N+1 queries)
   // ----------------------------------------------------------
@@ -184,4 +267,3 @@ export const DB = {
     return result;
   },
 };
-// build trigger 

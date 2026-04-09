@@ -2654,10 +2654,7 @@ function TreinadorApp({user,onLogout}){
   useEffect(()=>{
     DB.getAlunosDe(user.id).then(alunos=>{setAlertCount(0);});
     // Checar mensagens não lidas
-    const checkMsgs=()=>DB.getMensagensNaoLidas(user.id).then(d=>setAlertCount(d.length)).catch(()=>{});
-    checkMsgs();
-    const interval=setInterval(checkMsgs,30000);
-    return()=>clearInterval(interval);
+    
   },[user.id]);
   const pages={dashboard:<TreinadorDash user={user}/>,cadastrar:<CadastrarAluno user={user} showToast={show}/>,prescrever:<TreinadorPrescrever user={user} showToast={show}/>,acompanhamento:<TreinadorAcompanhamento user={user}/>,chat:<ProfChat user={user} showToast={show}/>};
   return(<>{ToastEl}<Shell user={user} onLogout={onLogout} nav={NAV_TREINADOR} active={page} setActive={setPage} accent="orange" alertCount={alertCount}>{pages[page]}</Shell></>);
