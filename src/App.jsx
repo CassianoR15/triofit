@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase, DB } from "./lib/supabase.js";
 
-const _v='TRIOFIT_BUILD_1775760129';
+const _v='TRIOFIT_BUILD_1775761031';
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -1453,6 +1453,7 @@ function TreinadorPrescrever({user,showToast}){
   const diaAtual=dias[diaEdit]||{exercicios:[]};
 
   return(
+    <>{ConfirmModalEl}
     <div className="page">
       <div className="page-title orange">PRESCREVER TREINO</div>
       <div className="page-sub">Monte a semana completa de treinos para um aluno</div>
@@ -1586,6 +1587,7 @@ function TreinadorPrescrever({user,showToast}){
         </>
       )}
     </div>
+    </>
   );
 }
 
