@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase, DB } from "./lib/supabase.js";
 
-const _v='TRIOFIT_BUILD_1775758528';
+const _v='TRIOFIT_BUILD_1775759642';
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -2139,14 +2139,14 @@ function NutriAcompanhamento({user}){
 // NAV
 // ============================================================
 const NAV_ALUNO=[
-  {section:"VISÃO GERAL",items:[{id:"dashboard",icon:"🏠",label:"Dashboard"},{id:"perfil",icon:"👤",label:"Meu Perfil"}]},
+  {section:"VISÃO GERAL",items:[{id:"dashboard",icon:"🏠",label:"Dashboard"},{id:"perfil",icon:"👤",label:"Meu Perfil"},{id:"chat",icon:"💬",label:"Chat"}]},
   {section:"DIÁRIO",items:[{id:"treinos",icon:"🏋️",label:"Treinos da Semana"},{id:"alimentacao",icon:"🥗",label:"Alimentação"},{id:"hidratacao",icon:"💧",label:"Hidratação"},{id:"saude",icon:"❤️",label:"Saúde"}]},
   {section:"PROGRESSO",items:[{id:"avaliacao",icon:"📊",label:"Avaliação Física"},{id:"competicoes",icon:"🏆",label:"Competições"}]},
   {section:"EQUIPE",items:[{id:"vinculo",icon:"🔗",label:"Minha Equipe"}]},
 ];
 const NAV_TREINADOR=[
   {section:"VISÃO GERAL",items:[{id:"dashboard",icon:"🏠",label:"Dashboard"}]},
-  {section:"ALUNOS",items:[{id:"cadastrar",icon:"➕",label:"Cadastrar Aluno"},{id:"acompanhamento",icon:"👁️",label:"Acompanhamento"},{id:"prescrever",icon:"📋",label:"Prescrever Treino"}]},
+  {section:"ALUNOS",items:[{id:"cadastrar",icon:"➕",label:"Cadastrar Aluno"},{id:"acompanhamento",icon:"👁️",label:"Acompanhamento"},{id:"prescrever",icon:"📋",label:"Prescrever Treino"},{id:"chat",icon:"💬",label:"Chat"}]},
 ];
 const NAV_NUTRI=[
   {section:"VISÃO GERAL",items:[{id:"dashboard",icon:"🏠",label:"Dashboard"}]},
@@ -2273,6 +2273,164 @@ function MeuPerfil({user,treinador,nutri,vinculo,onVinculoChange,showToast}){
   );
 }
 
+// ============================================================
+// CHAT — Treinador / Aluno / Nutri
+// ============================================================
+function ChatComponent({user,contato,showToast}){
+  const [msgs,setMsgs]=useState([]);
+  const [texto,setTexto]=useState("");
+  const [enviando,setEnviando]=useState(false);
+  const endRef=useRef(null);
+
+  useEffect(()=>{
+    if(!contato?.id)return;
+    let cancelled=false;
+    // Carregar mensagens
+    DB.getMensagens(user.id,contato.id).then(d=>{if(!cancelled)setMsgs(d||[]);});
+    // Marcar como lidas
+    DB.marcarLidas(user.id,contato.id).catch(()=>{});
+    // Subscribe realtime
+    const sub=DB.subscribeMensagens(user.id,(payload)=>{
+      if(!cancelled)setMsgs(p=>[...p,payload.new]);
+      DB.marcarLidas(user.id,contato.id).catch(()=>{});
+    });
+    return()=>{cancelled=true;sub?.unsubscribe?.();};
+  },[user.id,contato?.id]);
+
+  useEffect(()=>{endRef.current?.scrollIntoView({behavior:"smooth"});},[msgs]);
+
+  async function enviar(){
+    if(!texto.trim()||enviando)return;
+    setEnviando(true);
+    try{
+      const msg=await DB.enviarMensagem(user.id,contato.id,texto.trim());
+      setMsgs(p=>[...p,msg]);
+      setTexto("");
+    }catch(e){showToast&&showToast("Erro ao enviar mensagem","warn");}
+    setEnviando(false);
+  }
+
+  if(!contato){
+    return(
+      <div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"60vh",color:"var(--text2)",flexDirection:"column",gap:"0.5rem"}}>
+        <div style={{fontSize:"2rem"}}>💬</div>
+        <div>Sem contato vinculado para conversar</div>
+      </div>
+    );
+  }
+
+  return(
+    <div style={{display:"flex",flexDirection:"column",height:"calc(100vh - 120px)"}}>
+      {/* Header */}
+      <div style={{padding:"0.75rem 1rem",background:"var(--card)",borderBottom:"1px solid var(--border)",display:"flex",alignItems:"center",gap:"0.75rem",flexShrink:0}}>
+        <div style={{width:"36px",height:"36px",borderRadius:"50%",background:"var(--green)",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontWeight:700,fontSize:"0.9rem"}}>
+          {contato.nome?.[0]?.toUpperCase()||"?"}
+        </div>
+        <div>
+          <div style={{fontWeight:600,fontSize:"0.95rem"}}>{contato.nome}</div>
+          <div style={{fontSize:"0.75rem",color:"var(--text2)"}}>{contato.role==="treinador"?"Personal Trainer":contato.role==="nutri"?"Nutricionista":"Aluno"}</div>
+        </div>
+      </div>
+      {/* Mensagens */}
+      <div style={{flex:1,overflowY:"auto",padding:"1rem",display:"flex",flexDirection:"column",gap:"0.5rem"}}>
+        {msgs.length===0&&(
+          <div style={{textAlign:"center",color:"var(--text2)",fontSize:"0.85rem",marginTop:"2rem"}}>
+            Nenhuma mensagem ainda. Diga olá! 👋
+          </div>
+        )}
+        {msgs.map((m,i)=>{
+          const minha=m.de_id===user.id;
+          return(
+            <div key={m.id||i} style={{display:"flex",justifyContent:minha?"flex-end":"flex-start"}}>
+              <div style={{
+                maxWidth:"75%",padding:"0.5rem 0.75rem",borderRadius:minha?"12px 12px 2px 12px":"12px 12px 12px 2px",
+                background:minha?"var(--green)":"var(--card2)",
+                color:minha?"#fff":"var(--text)",
+                fontSize:"0.9rem",lineHeight:1.4,
+              }}>
+                <div>{m.texto}</div>
+                <div style={{fontSize:"0.68rem",opacity:0.7,marginTop:"2px",textAlign:"right"}}>
+                  {new Date(m.criado_em).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}
+                  {minha&&<span style={{marginLeft:"4px"}}>{m.lida?"✓✓":"✓"}</span>}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+        <div ref={endRef}/>
+      </div>
+      {/* Input */}
+      <div style={{padding:"0.75rem",background:"var(--card)",borderTop:"1px solid var(--border)",display:"flex",gap:"0.5rem",flexShrink:0}}>
+        <input
+          className="form-input"
+          style={{flex:1}}
+          placeholder="Digite uma mensagem..."
+          value={texto}
+          onChange={e=>setTexto(e.target.value)}
+          onKeyDown={e=>e.key==="Enter"&&!e.shiftKey&&enviar()}
+        />
+        <button className="btn btn-primary btn-sm" onClick={enviar} disabled={enviando||!texto.trim()}>
+          {enviando?"...":"Enviar"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// Wrapper para aluno — usa treinador ou nutri como contato
+function AlunoChat({user,treinador,nutri,showToast}){
+  const [aba,setAba]=useState("treinador");
+  const contato=aba==="treinador"?treinador:nutri;
+  return(
+    <div className="page" style={{padding:0}}>
+      {(treinador||nutri)&&(
+        <div style={{display:"flex",gap:"8px",padding:"0.75rem",background:"var(--bg)"}}>
+          {treinador&&<button className={`btn btn-sm ${aba==="treinador"?"btn-primary":"btn-ghost"}`} onClick={()=>setAba("treinador")}>🏋️ Treinador</button>}
+          {nutri&&<button className={`btn btn-sm ${aba==="nutri"?"btn-primary":"btn-ghost"}`} onClick={()=>setAba("nutri")}>🥗 Nutricionista</button>}
+        </div>
+      )}
+      <ChatComponent user={user} contato={contato} showToast={showToast}/>
+    </div>
+  );
+}
+
+// Wrapper para treinador/nutri — escolhe aluno da lista
+function ProfChat({user,showToast}){
+  const [alunos,setAlunos]=useState([]);
+  const [alunoSel,setAlunoSel]=useState(null);
+  useEffect(()=>{
+    DB.getAlunosDe(user.id).then(d=>setAlunos(d||[]));
+  },[user.id]);
+  return(
+    <div className="page" style={{padding:0}}>
+      {!alunoSel?(
+        <div style={{padding:"1rem"}}>
+          <div className="page-title orange" style={{marginBottom:"1rem"}}>💬 CHAT</div>
+          {alunos.length===0?(
+            <div style={{color:"var(--text2)",textAlign:"center",padding:"2rem"}}>Nenhum aluno vinculado ainda.</div>
+          ):(alunos.map(a=>(
+            <div key={a.id} className="card" style={{cursor:"pointer",display:"flex",alignItems:"center",gap:"0.75rem"}} onClick={()=>setAlunoSel(a)}>
+              <div style={{width:"40px",height:"40px",borderRadius:"50%",background:"var(--orange)",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontWeight:700,flexShrink:0}}>
+                {a.nome?.[0]?.toUpperCase()||"?"}
+              </div>
+              <div>
+                <div style={{fontWeight:600}}>{a.nome}</div>
+                <div style={{fontSize:"0.8rem",color:"var(--text2)"}}>Toque para conversar</div>
+              </div>
+              <div style={{marginLeft:"auto",color:"var(--text3)"}}>›</div>
+            </div>
+          )))}
+        </div>
+      ):(
+        <div>
+          <button className="btn btn-ghost btn-sm" style={{margin:"0.5rem"}} onClick={()=>setAlunoSel(null)}>← Voltar</button>
+          <ChatComponent user={user} contato={alunoSel} showToast={showToast}/>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function AlunoApp({user,onLogout}){
   const {show,ToastEl}=useToast();
   const [page,setPage]=useState("dashboard");
@@ -2328,7 +2486,7 @@ function AlunoApp({user,onLogout}){
       try{localStorage.setItem("tfn_"+user.id,JSON.stringify(n));}catch{}
     } else {setNutriApp(null);try{localStorage.removeItem("tfn_"+user.id);}catch{}}
   },[user?.id]);
-  const pages={dashboard:<AlunoDash user={user} setPage={setPage} vinculo={vinculoApp} treinador={treinadorApp} nutri={nutriApp}/>,perfil:<MeuPerfil user={user} treinador={treinadorApp} nutri={nutriApp} vinculo={vinculoApp} onVinculoChange={refreshVinculo} showToast={show}/>,saude:<AlunoSaude user={user} showToast={show}/>,treinos:<AlunoTreinos user={user} showToast={show}/>,alimentacao:<AlunoAlimentacao user={user} showToast={show}/>,hidratacao:<AlunoHidratacao user={user} showToast={show}/>,competicoes:<AlunoCompeticoes user={user} showToast={show}/>,avaliacao:<AlunoAvaliacao user={user} showToast={show}/>,vinculo:<AlunoVinculo user={user} showToast={show} onVinculoChange={refreshVinculo}/>};
+  const pages={dashboard:<AlunoDash user={user} setPage={setPage} vinculo={vinculoApp} treinador={treinadorApp} nutri={nutriApp}/>,perfil:<MeuPerfil user={user} treinador={treinadorApp} nutri={nutriApp} vinculo={vinculoApp} onVinculoChange={refreshVinculo} showToast={show}/>,chat:<AlunoChat user={user} treinador={treinadorApp} nutri={nutriApp} showToast={show}/>,saude:<AlunoSaude user={user} showToast={show}/>,treinos:<AlunoTreinos user={user} showToast={show}/>,alimentacao:<AlunoAlimentacao user={user} showToast={show}/>,hidratacao:<AlunoHidratacao user={user} showToast={show}/>,competicoes:<AlunoCompeticoes user={user} showToast={show}/>,avaliacao:<AlunoAvaliacao user={user} showToast={show}/>,vinculo:<AlunoVinculo user={user} showToast={show} onVinculoChange={refreshVinculo}/>};
   return(<>{ToastEl}<Shell user={user} onLogout={onLogout} nav={NAV_ALUNO} active={page} setActive={setPage} accent="">{pages[page]}</Shell></>);
 }
 // ============================================================
@@ -2494,11 +2652,14 @@ function TreinadorApp({user,onLogout}){
   const [page,setPage]=useState("dashboard");
   const [alertCount,setAlertCount]=useState(0);
   useEffect(()=>{
-    DB.getAlunosDe(user.id).then(alunos=>{
-      setAlertCount(0);
-    });
+    DB.getAlunosDe(user.id).then(alunos=>{setAlertCount(0);});
+    // Checar mensagens não lidas
+    const checkMsgs=()=>DB.getMensagensNaoLidas(user.id).then(d=>setAlertCount(d.length)).catch(()=>{});
+    checkMsgs();
+    const interval=setInterval(checkMsgs,30000);
+    return()=>clearInterval(interval);
   },[user.id]);
-  const pages={dashboard:<TreinadorDash user={user}/>,cadastrar:<CadastrarAluno user={user} showToast={show}/>,prescrever:<TreinadorPrescrever user={user} showToast={show}/>,acompanhamento:<TreinadorAcompanhamento user={user}/>};
+  const pages={dashboard:<TreinadorDash user={user}/>,cadastrar:<CadastrarAluno user={user} showToast={show}/>,prescrever:<TreinadorPrescrever user={user} showToast={show}/>,acompanhamento:<TreinadorAcompanhamento user={user}/>,chat:<ProfChat user={user} showToast={show}/>};
   return(<>{ToastEl}<Shell user={user} onLogout={onLogout} nav={NAV_TREINADOR} active={page} setActive={setPage} accent="orange" alertCount={alertCount}>{pages[page]}</Shell></>);
 }
 function NutriApp({user,onLogout}){
