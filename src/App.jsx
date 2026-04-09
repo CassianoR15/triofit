@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase, DB } from "./lib/supabase.js";
 
-const _v='TRIOFIT_BUILD_1775761031';
+const _v='TRIOFIT_BUILD_1775762874';
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -733,12 +733,14 @@ function AlunoTreinos({user,showToast}){
   const [planoReady,setPlanoReady]=useState(false);
   useEffect(()=>{
     let cancelled=false;
+    setPlanoReady(false);
+    setPlanoTreino(undefined);
     DB.getData("plano_treino_aluno",user.id).then(d=>{
       if(!cancelled){setPlanoTreino(d);setPlanoReady(true);}
     }).catch(()=>{
       if(!cancelled){setPlanoTreino(null);setPlanoReady(true);}
     });
-    const timeout=setTimeout(()=>{if(!cancelled){setPlanoReady(true);}},5000);
+    const timeout=setTimeout(()=>{if(!cancelled){setPlanoReady(true);}},8000);
     return()=>{cancelled=true;clearTimeout(timeout);};
   },[user.id]);
   const [diaAtivo,setDiaAtivo]=useState(0);
@@ -1008,6 +1010,7 @@ function AlunoAlimentacao({user,showToast}){
   const [comido,,saveComido]=useAlunoData(user.id,"alim_check_hoje",{});
   const [obs,setObs]=useState("");
   useEffect(()=>{let c=false;DB.getData("alim_obs_hoje",user.id).then(d=>{if(!c&&d)setObs(d);}).catch(()=>{});return()=>{c=true;};},[user.id]);
+
 
   async function toggleRefeicao(i){
     try{
