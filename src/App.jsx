@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, Component } from "react";
 import { supabase, DB } from "./lib/supabase.js";
 
 const _v='TRIOFIT_BUILD_1775753008';
@@ -2538,7 +2538,7 @@ function useConfirm(){
   return{confirm,Modal};
 }
 
-class ErrorBoundary extends React.Component{
+class ErrorBoundary extends Component{
   constructor(p){super(p);this.state={hasError:false,error:null};}
   static getDerivedStateFromError(e){return{hasError:true,error:e};}
   componentDidCatch(e,info){console.error("TrioFit Error:",e,info);}
