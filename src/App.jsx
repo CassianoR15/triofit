@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase, DB } from "./lib/supabase.js";
 
-const _v='TRIOFIT_BUILD_1775656375';
+const _v='TRIOFIT_BUILD_1775753008';
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -1194,7 +1194,13 @@ function AlunoSaude({user,showToast}){
 // ============================================================
 function AlunoAvaliacao({user,showToast}){
   const [f,setF]=useState({});
-  useEffect(()=>{let c=false;DB.getData("avaliacao",user.id).then(d=>{if(!c&&d)setF(d);}).catch(()=>{});return()=>{c=true;};},[user.id]);
+  const [hist,setHist]=useState([]);
+  useEffect(()=>{
+    let c=false;
+    DB.getData("avaliacao",user.id).then(d=>{if(!c&&d)setF(d);}).catch(()=>{});
+    DB.getData("avaliacao_hist",user.id).then(d=>{if(!c&&d)setHist(d);}).catch(()=>{});
+    return()=>{c=true;};
+  },[user.id]);
   async function set(k,v){setF(p=>({...p,[k]:v}));}
   async function salvar(){
     await DB.setData("avaliacao",user.id,f);
@@ -1236,6 +1242,57 @@ function AlunoAvaliacao({user,showToast}){
         <div className="form-group"><label className="form-label">Observações</label><textarea className="form-textarea" value={f.obs||""} onChange={e=>set("obs",e.target.value)} placeholder="Notas gerais..."/></div>
         <button className="btn btn-primary" onClick={salvar}>💾 Salvar avaliação</button>
       </div>
+      {hist.length>1&&(
+        <div className="card">
+          <div className="card-title">📈 EVOLUÇÃO</div>
+          {hist.some(h=>h.peso)&&(()=>{
+            const pts=hist.filter(h=>h.peso);
+            const pesos=pts.map(h=>parseFloat(h.peso));
+            const minP=Math.min(...pesos)-2;
+            const maxP=Math.max(...pesos)+2;
+            const w=300,hh=80;
+            const xp=(i)=>20+(i/(pts.length-1||1))*(w-40);
+            const yp=(v)=>hh-10-((v-minP)/(maxP-minP||1))*(hh-20);
+            const pathP=pts.map((p,i)=>`${i===0?"M":"L"}${xp(i).toFixed(1)},${yp(parseFloat(p.peso)).toFixed(1)}`).join(" ");
+            const last=pesos[pesos.length-1];const first=pesos[0];
+            const diff=(last-first).toFixed(1);
+            return(
+              <div>
+                <div style={{display:"flex",gap:"0.75rem",marginBottom:"0.75rem",flexWrap:"wrap"}}>
+                  <div className="stat-tile" style={{flex:1}}><div className="stat-label">Peso atual</div><div className="stat-val" style={{color:"var(--green)"}}>{last}kg</div></div>
+                  <div className="stat-tile" style={{flex:1}}><div className="stat-label">Variação</div><div className="stat-val" style={{color:parseFloat(diff)<0?"var(--green)":parseFloat(diff)>0?"var(--orange)":"var(--text)"}}>{parseFloat(diff)>0?"+":""}{diff}kg</div></div>
+                  <div className="stat-tile" style={{flex:1}}><div className="stat-label">Registros</div><div className="stat-val">{pts.length}</div></div>
+                </div>
+                <svg viewBox={`0 0 ${w} ${hh}`} style={{width:"100%",height:"80px"}}>
+                  <defs><linearGradient id="pesoGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="var(--green)" stopOpacity="0.3"/><stop offset="100%" stopColor="var(--green)" stopOpacity="0"/></linearGradient></defs>
+                  <path d={`${pathP} L${xp(pts.length-1).toFixed(1)},${hh} L20,${hh} Z`} fill="url(#pesoGrad)"/>
+                  <path d={pathP} fill="none" stroke="var(--green)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  {pts.map((p,i)=>(<g key={i}><circle cx={xp(i)} cy={yp(parseFloat(p.peso))} r="3" fill="var(--green)"/>{(i===0||i===pts.length-1)&&<text x={xp(i)} y={yp(parseFloat(p.peso))-7} textAnchor="middle" fontSize="9" fill="var(--text2)">{p.peso}kg</text>}</g>))}
+                </svg>
+                <div style={{fontSize:"0.72rem",color:"var(--text2)",textAlign:"center",marginTop:"2px"}}>{new Date(pts[0].data).toLocaleDateString("pt-BR")} → {new Date(pts[pts.length-1].data).toLocaleDateString("pt-BR")}</div>
+              </div>
+            );
+          })()}
+          {hist.some(h=>h.gordura)&&(()=>{
+            const pts2=hist.filter(h=>h.gordura);
+            const vals=pts2.map(h=>parseFloat(h.gordura));
+            const minG=Math.min(...vals)-2;const maxG=Math.max(...vals)+2;
+            const w=300,hh2=60;
+            const xg=(i)=>20+(i/(pts2.length-1||1))*(w-40);
+            const yg=(v)=>hh2-8-((v-minG)/(maxG-minG||1))*(hh2-16);
+            const pathG=pts2.map((p,i)=>`${i===0?"M":"L"}${xg(i).toFixed(1)},${yg(parseFloat(p.gordura)).toFixed(1)}`).join(" ");
+            return(
+              <div style={{marginTop:"1rem"}}>
+                <div style={{fontSize:"0.8rem",color:"var(--text2)",marginBottom:"4px",fontWeight:500}}>% Gordura corporal</div>
+                <svg viewBox={`0 0 ${w} ${hh2}`} style={{width:"100%",height:"60px"}}>
+                  <path d={pathG} fill="none" stroke="var(--orange)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  {pts2.map((p,i)=>(<g key={i}><circle cx={xg(i)} cy={yg(parseFloat(p.gordura))} r="3" fill="var(--orange)"/>{(i===0||i===pts2.length-1)&&<text x={xg(i)} y={yg(parseFloat(p.gordura))-7} textAnchor="middle" fontSize="9" fill="var(--text2)">{p.gordura}%</text>}</g>))}
+                </svg>
+              </div>
+            );
+          })()}
+        </div>
+      )}
     </div>
   );
 }
@@ -1351,6 +1408,7 @@ function AlunoDash({user,setPage,vinculo:vinculoProp,treinador:treinadorProp,nut
 // TREINADOR — PRESCREVER TREINO
 // ============================================================
 function TreinadorPrescrever({user,showToast}){
+  const {confirm,Modal:ConfirmModalEl}=useConfirm();
   const [alunos,]=useAsyncData(()=>DB.getAlunosDe(user.id),[user.id],[]);
   const [alunoSel,setAlunoSel]=useState(null);
   const [nomePlano,setNomePlano]=useState("Treino A/B/C");
@@ -1384,7 +1442,7 @@ function TreinadorPrescrever({user,showToast}){
   async function salvar(){
     if(!alunoSel){showToast&&showToast("Selecione um aluno primeiro","warn");return;}
     const planoExistente=await DB.getData("plano_treino_aluno",alunoSel.id);
-    if(planoExistente&&!window.confirm(`Substituir o treino de ${alunoSel.nome.split(" ")[0]}? O plano atual será perdido.`))return;
+    if(planoExistente){const ok=await confirm(`Substituir o treino de ${alunoSel.nome.split(" ")[0]}? O plano atual será perdido.`);if(!ok)return;}
     const fimDate=addMonths(new Date(inicio),duracao);
     const plano={nome:nomePlano,modalidade,duracao,inicio,fim:fimDate.toISOString(),dias,criadoEm:new Date().toISOString()};
     await DB.setData("plano_treino_aluno",alunoSel.id,plano);
@@ -1849,6 +1907,7 @@ function TreinadorAcompanhamento({user}){
 // NUTRICIONISTA — PRESCREVER PLANO ALIMENTAR
 // ============================================================
 function NutriPrescrever({user,showToast}){
+  const {confirm,Modal:ConfirmModalNutri}=useConfirm();
   const [alunos,]=useAsyncData(()=>DB.getAlunosDe(user.id),[user.id],[]);
   const [alunoSel,setAlunoSel]=useState(null);
   const [nomePlano,setNomePlano]=useState("Plano Alimentar");
@@ -1873,7 +1932,7 @@ function NutriPrescrever({user,showToast}){
   async function salvar(){
     if(!alunoSel)return;
     const planoExistente=await DB.getData("plano_alim_aluno",alunoSel.id);
-    if(planoExistente&&!window.confirm(`Substituir a dieta de ${alunoSel.nome.split(" ")[0]}? O plano atual será perdido.`))return;
+    if(planoExistente){const ok=await confirm(`Substituir a dieta de ${alunoSel.nome.split(" ")[0]}? O plano atual será perdido.`);if(!ok)return;}
     const fimDate=addMonths(new Date(inicio),duracao);
     const plano={nome:nomePlano,protocolo,duracao,inicio,fim:fimDate.toISOString(),refeicoes,kcalMeta:fases[protocolo],criadoEm:new Date().toISOString()};
     await DB.setData("plano_alim_aluno",alunoSel.id,plano);
@@ -2101,6 +2160,7 @@ const NAV_NUTRI=[
 // ALUNO — MEU PERFIL
 // ============================================================
 function MeuPerfil({user,treinador,nutri,vinculo,onVinculoChange,showToast}){
+  const {confirm,Modal:ConfirmModalPerfil}=useConfirm();
   const [editando,setEditando]=useState(false);
   const [form,setForm]=useState({nome:"",sobrenome:"",nascimento:"",telefone:"",email:"",localTreino:"",obs:""});
   const [salvando,setSalvando]=useState(false);
@@ -2132,14 +2192,14 @@ function MeuPerfil({user,treinador,nutri,vinculo,onVinculoChange,showToast}){
   }
 
   async function desvincularTreinador(){
-    if(!window.confirm("Remover vínculo com "+treinador?.nome+"?"))return;
+    const okT=await confirm("Remover vínculo com "+treinador?.nome+"?");if(!okT)return;
     await DB.setVinculoAluno(user.id,null,vinculo?.nutriId||null);
     onVinculoChange&&await onVinculoChange();
     showToast&&showToast("Treinador desvinculado.","warn");
   }
 
   async function desvincularNutri(){
-    if(!window.confirm("Remover vínculo com "+nutri?.nome+"?"))return;
+    const okN=await confirm("Remover vínculo com "+nutri?.nome+"?");if(!okN)return;
     await DB.setVinculoAluno(user.id,vinculo?.treinadorId||null,null);
     onVinculoChange&&await onVinculoChange();
     showToast&&showToast("Nutricionista desvinculada.","warn");
@@ -2275,6 +2335,7 @@ function AlunoApp({user,onLogout}){
 // TREINADOR — CADASTRAR ALUNO
 // ============================================================
 function CadastrarAluno({user,showToast}){
+  const {confirm,Modal:ConfirmModalCad}=useConfirm();
   const [form,setForm]=useState({nome:"",sobrenome:"",nascimento:"",telefone:"",email:"",localTreino:"",obs:""});
   const [salvando,setSalvando]=useState(false);
   const [alunos,setAlunos]=useState([]);
@@ -2334,7 +2395,7 @@ function CadastrarAluno({user,showToast}){
     setSalvando(false);
   }
   async function remover(id){
-    if(!window.confirm("Remover este aluno do cadastro?"))return;
+    const okA=await confirm("Remover este aluno do cadastro?");if(!okA)return;
     const novos=(alunos||[]).filter(a=>a.id!==id);
     await DB.setData("alunos_cadastrados",user.id,novos);
     setAlunos(novos);
@@ -2450,6 +2511,54 @@ function NutriApp({user,onLogout}){
 // ============================================================
 // ROOT
 // ============================================================
+function ConfirmModal({msg,onConfirm,onCancel}){
+  return(
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",padding:"1rem"}}>
+      <div style={{background:"var(--card)",borderRadius:"var(--radius)",padding:"1.5rem",maxWidth:"320px",width:"100%",boxShadow:"0 8px 32px rgba(0,0,0,0.3)"}}>
+        <div style={{fontSize:"0.95rem",marginBottom:"1.25rem",lineHeight:1.5}}>{msg}</div>
+        <div style={{display:"flex",gap:"0.75rem",justifyContent:"flex-end"}}>
+          <button className="btn btn-ghost btn-sm" onClick={onCancel}>Cancelar</button>
+          <button className="btn btn-primary btn-sm" onClick={onConfirm}>Confirmar</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function useConfirm(){
+  const [state,setState]=useState(null);
+  const confirm=(msg)=>new Promise(resolve=>{
+    setState({msg,resolve});
+  });
+  const Modal=state?(
+    <ConfirmModal msg={state.msg}
+      onConfirm={()=>{state.resolve(true);setState(null);}}
+      onCancel={()=>{state.resolve(false);setState(null);}}/>
+  ):null;
+  return{confirm,Modal};
+}
+
+class ErrorBoundary extends React.Component{
+  constructor(p){super(p);this.state={hasError:false,error:null};}
+  static getDerivedStateFromError(e){return{hasError:true,error:e};}
+  componentDidCatch(e,info){console.error("TrioFit Error:",e,info);}
+  render(){
+    if(this.state.hasError){
+      return(
+        <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:"var(--bg)",padding:"2rem"}}>
+          <div style={{textAlign:"center",maxWidth:"400px"}}>
+            <div style={{fontSize:"3rem",marginBottom:"1rem"}}>⚠️</div>
+            <div style={{fontFamily:"var(--font-display)",fontSize:"1.3rem",color:"var(--green)",marginBottom:"0.5rem"}}>Algo deu errado</div>
+            <div style={{color:"var(--text2)",fontSize:"0.9rem",marginBottom:"1.5rem"}}>Ocorreu um erro inesperado. Tente recarregar a página.</div>
+            <button className="btn btn-primary" onClick={()=>window.location.reload()}>🔄 Recarregar</button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export default function TrioFit(){
   const [user,setUser]=useState(null);
   const [loading,setLoading]=useState(true);
