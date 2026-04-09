@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback, useRef, Component } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase, DB } from "./lib/supabase.js";
 
-const _v='TRIOFIT_BUILD_1775753008';
+const _v='TRIOFIT_BUILD_1775758528';
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -2536,27 +2536,6 @@ function useConfirm(){
       onCancel={()=>{state.resolve(false);setState(null);}}/>
   ):null;
   return{confirm,Modal};
-}
-
-class ErrorBoundary extends Component{
-  constructor(p){super(p);this.state={hasError:false,error:null};}
-  static getDerivedStateFromError(e){return{hasError:true,error:e};}
-  componentDidCatch(e,info){console.error("TrioFit Error:",e,info);}
-  render(){
-    if(this.state.hasError){
-      return(
-        <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:"var(--bg)",padding:"2rem"}}>
-          <div style={{textAlign:"center",maxWidth:"400px"}}>
-            <div style={{fontSize:"3rem",marginBottom:"1rem"}}>⚠️</div>
-            <div style={{fontFamily:"var(--font-display)",fontSize:"1.3rem",color:"var(--green)",marginBottom:"0.5rem"}}>Algo deu errado</div>
-            <div style={{color:"var(--text2)",fontSize:"0.9rem",marginBottom:"1.5rem"}}>Ocorreu um erro inesperado. Tente recarregar a página.</div>
-            <button className="btn btn-primary" onClick={()=>window.location.reload()}>🔄 Recarregar</button>
-          </div>
-        </div>
-      );
-    }
-    return this.props.children;
-  }
 }
 
 export default function TrioFit(){
