@@ -1,7 +1,25 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+
+// Sanitização de input — previne XSS
+function sanitize(str) {
+  if (typeof str !== 'string') return str;
+  return str.replace(/[<>'"&]/g, c => ({'<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;','&':'&amp;'}[c]));
+}
+
+// Validação de email
+function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+// Validação de senha forte
+function validateSenha(senha) {
+  if (senha.length < 8) return 'Senha: mínimo 8 caracteres.';
+  if (!/\d/.test(senha)) return 'Senha: precisa ter pelo menos 1 número.';
+  return null;
+}
 import { supabase, DB } from "./lib/supabase.js";
 
-const _v='TRIOFIT_BUILD_1775762874';
+const _v='TRIOFIT_BUILD_1775848214';
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -422,8 +440,16 @@ function AuthScreen({onLogin}){
   const [error,setError]=useState("");
   const [success,setSuccess]=useState("");
   const [showSenha,setShowSenha]=useState(false);
-  function handleLogin(e){e.preventDefault();setError("");setLoading(true);setTimeout(()=>{const res=DB.login(email,senha);setLoading(false);if(!res.ok){setError(res.msg);return;}DB.saveSession(res.user);onLogin(res.user);},500);}
-  function handleRegister(e){e.preventDefault();setError("");setSuccess("");if(!nome.trim()){setError("Informe seu nome.");return;}if(senha.length<6){setError("Senha: mínimo 6 caracteres.");return;}if(senha!==confirma){setError("Senhas não conferem.");return;}setLoading(true);setTimeout(()=>{const res=DB.register(nome.trim(),email,senha,role);setLoading(false);if(!res.ok){setError(res.msg);return;}setSuccess("Conta criada! Faça login.");setTab("login");setNome("");setSenha("");setConfirma("");},500);}
+  async function handleLogin(e){
+  e.preventDefault();setError("");
+  if(!isValidEmail(email)){setError("Email inválido.");return;}
+  setLoading(true);
+  const res=await DB.login(email,senha);
+  setLoading(false);
+  if(!res.ok){setError(res.msg);return;}
+  onLogin(res.user);
+}
+  async function handleRegister(e){e.preventDefault();setError("");setSuccess("");if(!nome.trim()){setError("Informe seu nome.");return;}const senhaErr=validateSenha(senha);if(senhaErr){setError(senhaErr);return;}if(!isValidEmail(email)){setError("Email inválido.");return;}if(senha!==confirma){setError("Senhas não conferem.");return;}setLoading(true);const res=await DB.register(sanitize(nome.trim()),email,senha,role);setLoading(false);if(!res.ok){setError(res.msg);return;}setSuccess("Conta criada! Faça login.");setTab("login");setNome("");setSenha("");setConfirma("");}
   return(
     <div className="auth-wrap">
       <div className="auth-box">
@@ -2308,7 +2334,7 @@ function ChatComponent({user,contato,showToast}){
     if(!texto.trim()||enviando)return;
     setEnviando(true);
     try{
-      const msg=await DB.enviarMensagem(user.id,contato.id,texto.trim());
+      const msg=await DB.enviarMensagem(user.id,contato.id,sanitize(texto.trim()));
       setMsgs(p=>[...p,msg]);
       setTexto("");
     }catch(e){showToast&&showToast("Erro ao enviar mensagem","warn");}
@@ -2512,14 +2538,15 @@ function CadastrarAluno({user,showToast}){
 
   async function salvar(){
     if(!form.nome.trim()){showToast&&showToast("Informe o nome do aluno","warn");return;}
+    if(form.email&&!isValidEmail(form.email.trim())){showToast&&showToast("Email inválido","warn");return;}
     setSalvando(true);
     try{
       const novo={
         id:Date.now().toString(),
-        nome:form.nome.trim(),sobrenome:form.sobrenome.trim(),
-        email:form.email.trim(),telefone:form.telefone.trim(),
-        nascimento:form.nascimento,localTreino:form.localTreino.trim(),
-        obs:form.obs.trim(),criadoEm:new Date().toISOString(),
+        nome:sanitize(form.nome.trim()),sobrenome:sanitize(form.sobrenome.trim()),
+        email:form.email.trim().toLowerCase(),telefone:form.telefone.trim(),
+        nascimento:form.nascimento,localTreino:sanitize(form.localTreino.trim()),
+        obs:sanitize(form.obs.trim()),criadoEm:new Date().toISOString(),
         treinadorId:user.id,contaCriada:false,
       };
       const novos=[...(alunos||[]),novo];
