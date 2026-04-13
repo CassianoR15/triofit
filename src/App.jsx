@@ -1,5 +1,19 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 
+// Data formatada para horário de Brasília
+function fmtDate(iso){
+  if(!iso)return"";
+  try{
+    return new Date(iso).toLocaleDateString("pt-BR",{timeZone:"America/Sao_Paulo",day:"2-digit",month:"2-digit",year:"numeric"});
+  }catch{return iso.slice(0,10);}
+}
+function fmtTime(iso){
+  if(!iso)return"";
+  try{
+    return new Date(iso).toLocaleTimeString("pt-BR",{timeZone:"America/Sao_Paulo",hour:"2-digit",minute:"2-digit"});
+  }catch{return"";}
+}
+
 // Sanitização de input — previne XSS
 function sanitize(str) {
   if (typeof str !== 'string') return str;
@@ -19,7 +33,7 @@ function validateSenha(senha) {
 }
 import { supabase, DB } from "./lib/supabase.js";
 
-const _v='TRIOFIT_BUILD_1775848981';
+const _v='TRIOFIT_BUILD_1776103541';
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -365,7 +379,6 @@ function gerarCodigo(seed){
   return r.slice(0,6).toUpperCase();
 }
 function addMonths(date,n){const d=new Date(date);d.setMonth(d.getMonth()+n);return d;}
-function fmtDate(d){return new Date(d).toLocaleDateString("pt-BR");}
 
 const TIPO_ICONS={descanso:"😴",academia:"🏋️",corrida:"🏃",natacao:"🏊",luta:"🥊",ciclismo:"🚴",funcional:"⚡",caminhada:"🚶",yoga:"🧘",treino:"🏋️"};
 const DIAS_SEMANA=["Segunda","Terça","Quarta","Quinta","Sexta","Sábado","Domingo"];
@@ -1898,6 +1911,7 @@ function TreinadorDash({user}){
   const alunosList=Array.isArray(alunos)?alunos:[];
   useEffect(()=>{
     if(!alunosList.length)return;
+    let c2=false;
     Promise.all(alunosList.map(a=>
       Promise.all([DB.getData("saude",a.id),DB.getData("plano_treino_aluno",a.id)])
         .then(([s,pl])=>({id:a.id,s:s||{},pl}))
@@ -2227,8 +2241,10 @@ function MeuPerfil({user,treinador,nutri,vinculo,onVinculoChange,showToast}){
   const [emailEnviado,setEmailEnviado]=useState(false);
 
   useEffect(()=>{
+    let c=false;
     // Carrega dados do próprio aluno
     DB.getData("perfil_aluno",user.id).then(d=>{
+      if(c)return;
       if(d) setForm(p=>({...p,...d}));
       else setForm(p=>({...p,nome:user.nome||"",email:user.email||""}));
     });
@@ -2340,6 +2356,7 @@ function ChatComponent({user,contato,showToast}){
   const [msgs,setMsgs]=useState([]);
   const [texto,setTexto]=useState("");
   const [enviando,setEnviando]=useState(false);
+  const [lastSend,setLastSend]=useState(0);
   const endRef=useRef(null);
 
   useEffect(()=>{
@@ -2360,12 +2377,15 @@ function ChatComponent({user,contato,showToast}){
   useEffect(()=>{endRef.current?.scrollIntoView({behavior:"smooth"});},[msgs]);
 
   async function enviar(){
+    const now=Date.now();
     if(!texto.trim()||enviando)return;
+    if(now-lastSend<2000){showToast&&showToast("Aguarde 2 segundos entre mensagens","warn");return;}
     setEnviando(true);
     try{
       const msg=await DB.enviarMensagem(user.id,contato.id,sanitize(texto.trim()));
       setMsgs(p=>[...p,msg]);
       setTexto("");
+      setLastSend(Date.now());
     }catch(e){showToast&&showToast("Erro ao enviar mensagem","warn");}
     setEnviando(false);
   }
@@ -2410,7 +2430,7 @@ function ChatComponent({user,contato,showToast}){
               }}>
                 <div>{m.texto}</div>
                 <div style={{fontSize:"0.68rem",opacity:0.7,marginTop:"2px",textAlign:"right"}}>
-                  {new Date(m.criado_em).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}
+                  {fmtTime(m.criado_em)}
                   {minha&&<span style={{marginLeft:"4px"}}>{m.lida?"✓✓":"✓"}</span>}
                 </div>
               </div>
@@ -2459,7 +2479,9 @@ function ProfChat({user,showToast}){
   const [alunos,setAlunos]=useState([]);
   const [alunoSel,setAlunoSel]=useState(null);
   useEffect(()=>{
-    DB.getAlunosDe(user.id).then(d=>setAlunos(d||[]));
+    let c=false;
+    DB.getAlunosDe(user.id).then(d=>{if(!c)setAlunos(d||[]);}).catch(()=>{});
+    return()=>{c=true;};
   },[user.id]);
   return(
     <div className="page" style={{padding:0}}>
@@ -2530,6 +2552,14 @@ function AlunoApp({user,onLogout}){
     }).catch(()=>{});
     return()=>{cancelled=true;};
   },[user?.id]);
+  // Badge de mensagens não lidas
+  useEffect(()=>{
+    if(!user?.id)return;
+    const check=()=>DB.getMensagensNaoLidas(user.id).then(d=>setMsgsBadge(d.length)).catch(()=>{});
+    check();
+    const iv=setInterval(check,30000);
+    return()=>clearInterval(iv);
+  },[user?.id]);
   // Função para atualizar vínculo após vincular/desvincular
   const refreshVinculo=useCallback(async()=>{
     const v=await DB.getVinculoAluno(user.id).catch(()=>null);
@@ -2547,7 +2577,7 @@ function AlunoApp({user,onLogout}){
     } else {setNutriApp(null);try{localStorage.removeItem("tfn_"+user.id);}catch{}}
   },[user?.id]);
   const pages={dashboard:<AlunoDash user={user} setPage={setPage} vinculo={vinculoApp} treinador={treinadorApp} nutri={nutriApp}/>,perfil:<MeuPerfil user={user} treinador={treinadorApp} nutri={nutriApp} vinculo={vinculoApp} onVinculoChange={refreshVinculo} showToast={show}/>,chat:<AlunoChat user={user} treinador={treinadorApp} nutri={nutriApp} showToast={show}/>,saude:<AlunoSaude user={user} showToast={show}/>,treinos:<AlunoTreinos user={user} showToast={show}/>,alimentacao:<AlunoAlimentacao user={user} showToast={show}/>,hidratacao:<AlunoHidratacao user={user} showToast={show}/>,competicoes:<AlunoCompeticoes user={user} showToast={show}/>,avaliacao:<AlunoAvaliacao user={user} showToast={show}/>,vinculo:<AlunoVinculo user={user} showToast={show} onVinculoChange={refreshVinculo}/>};
-  return(<>{ToastEl}<Shell user={user} onLogout={onLogout} nav={NAV_ALUNO} active={page} setActive={setPage} accent="">{pages[page]}</Shell></>);
+  return(<>{ToastEl}<Shell user={user} onLogout={onLogout} nav={NAV_ALUNO} active={page} setActive={setPage} accent="" alertCount={msgsBadge}>{pages[page]}</Shell></>);
 }
 // ============================================================
 // TREINADOR — CADASTRAR ALUNO
@@ -2560,7 +2590,9 @@ function CadastrarAluno({user,showToast}){
   const [aba,setAba]=useState("form"); // "form" | "lista"
 
   useEffect(()=>{
-    DB.getData("alunos_cadastrados",user.id).then(d=>setAlunos(d||[]));
+    let c=false;
+    DB.getData("alunos_cadastrados",user.id).then(d=>{if(!c)setAlunos(d||[]);}).catch(()=>{});
+    return()=>{c=true;};
   },[user.id]);
 
   function set(k,v){setForm(p=>({...p,[k]:v}));}
@@ -2689,7 +2721,17 @@ function TreinadorApp({user,onLogout}){
   const [page,setPage]=useState("dashboard");
   const [alertCount,setAlertCount]=useState(0);
   useEffect(()=>{
-    DB.getAlunosDe(user.id).then(alunos=>{setAlertCount(0);});
+    let c=false;
+    DB.getAlunosDe(user.id).then(as=>{
+      if(!c){
+        setAlunos(as||[]);
+        setAlertCount(0);
+        if((as||[]).length===0&&!localStorage.getItem('tfOnboard_'+user.id)){
+          setShowOnboard(true);
+        }
+      }
+    }).catch(()=>{});
+    return()=>{c=true;};
     // Checar mensagens não lidas
     const checkMsgs=()=>DB.getMensagensNaoLidas(user.id).then(d=>setAlertCount(d.length)).catch(()=>{});
     checkMsgs();
@@ -2741,8 +2783,9 @@ export default function TrioFit(){
   const [loading,setLoading]=useState(true);
 
   useEffect(()=>{
+    let c=false;
     // Verifica sessão existente
-    DB.getSession().then(u=>{setUser(u);setLoading(false);});
+    DB.getSession().then(u=>{if(!c){setUser(u);setLoading(false);}}).catch(()=>{});
     // Escuta mudanças de auth
     const {data:{subscription}}=supabase.auth.onAuthStateChange(async(event,session)=>{
       // Ignora SIGNED_OUT causado por token_refresh_failed (browser voltou do background)
