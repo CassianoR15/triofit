@@ -19,7 +19,7 @@ function validateSenha(senha) {
 }
 import { supabase, DB } from "./lib/supabase.js";
 
-const _v='TRIOFIT_BUILD_1775848214';
+const _v='TRIOFIT_BUILD_1775848981';
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -477,6 +477,20 @@ function AuthScreen({onLogin}){
             <button className="btn btn-primary btn-full" type="submit" disabled={loading} style={{marginTop:"0.25rem"}}>
               {loading?<><span className="spinner"/> Entrando...</>:"Entrar"}
             </button>
+            <div style={{textAlign:"center",marginTop:"0.75rem"}}>
+              <button type="button" className="btn btn-ghost btn-sm" style={{fontSize:"0.8rem",color:"var(--text2)"}}
+                onClick={async()=>{
+                  if(!email.trim()){setError("Digite seu email primeiro.");return;}
+                  if(!isValidEmail(email)){setError("Email inválido.");return;}
+                  setLoading(true);
+                  const {error:e}=await supabase.auth.resetPasswordForEmail(email,{redirectTo:window.location.origin});
+                  setLoading(false);
+                  if(e){setError("Erro: "+e.message);}
+                  else{setSuccess("Email de recuperação enviado! Verifique sua caixa de entrada.");}
+                }}>
+                Esqueci minha senha
+              </button>
+            </div>
           </form>
         ):(
           <form onSubmit={handleRegister}>
@@ -489,7 +503,22 @@ function AuthScreen({onLogin}){
             </div>
             <div className="form-group"><label className="form-label">Nome completo</label><input className="form-input" type="text" placeholder="Seu nome" value={nome} onChange={e=>setNome(e.target.value)} required/></div>
             <div className="form-group"><label className="form-label">Email</label><input className="form-input" type="email" placeholder="seu@email.com" value={email} onChange={e=>setEmail(e.target.value)} required/></div>
-            <div className="form-group"><label className="form-label">Senha</label><input className="form-input" type="password" placeholder="Mínimo 6 caracteres" value={senha} onChange={e=>setSenha(e.target.value)} required/></div>
+            <div className="form-group"><label className="form-label">Senha</label><input className="form-input" type="password" placeholder="Mínimo 8 caracteres" value={senha} onChange={e=>setSenha(e.target.value)} required/>
+              {senha.length>0&&(
+                <div style={{marginTop:"4px",display:"flex",gap:"4px",alignItems:"center"}}>
+                  {[1,2,3].map(n=>(
+                    <div key={n} style={{height:"3px",flex:1,borderRadius:"2px",background:
+                      senha.length>=8&&/\d/.test(senha)?n<=3?"var(--green)":"var(--border)":
+                      senha.length>=6?n<=2?"var(--orange)":"var(--border)":
+                      n<=1?"var(--red)":"var(--border)"
+                    }}/>
+                  ))}
+                  <span style={{fontSize:"10px",color:"var(--text3)",marginLeft:"4px",whiteSpace:"nowrap"}}>
+                    {senha.length>=8&&/\d/.test(senha)?"Forte":senha.length>=6?"Média":"Fraca"}
+                  </span>
+                </div>
+              )}
+            </div>
             <div className="form-group"><label className="form-label">Confirmar senha</label><input className="form-input" type="password" placeholder="Repita a senha" value={confirma} onChange={e=>setConfirma(e.target.value)} required/></div>
             <button className="btn btn-primary btn-full" type="submit" disabled={loading}>{loading?<><span className="spinner"/> Criando...</>:"Criar conta grátis"}</button>
           </form>
