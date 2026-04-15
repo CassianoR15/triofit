@@ -33,7 +33,7 @@ function validateSenha(senha) {
 }
 import { supabase, DB } from "./lib/supabase.js";
 
-const _v='TRIOFIT_BUILD_1776103541';
+const _v='TRIOFIT_BUILD_1776282674';
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -2527,6 +2527,7 @@ function AlunoApp({user,onLogout}){
   const [nutriApp,setNutriApp]=useState(()=>{
     try{const c=localStorage.getItem("tfn_"+user.id);return c?JSON.parse(c):null;}catch{return null;}
   });
+  const [msgsBadge,setMsgsBadge]=useState(0);
   useEffect(()=>{
     if(!user?.id)return;
     let cancelled=false;
