@@ -33,7 +33,7 @@ function validateSenha(senha) {
 }
 import { supabase, DB } from "./lib/supabase.js";
 
-const _v='TRIOFIT_BUILD_1776282674';
+const _v='TRIOFIT_BUILD_1776304568';
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -2827,13 +2827,17 @@ export default function TrioFit(){
   },[]);
 
   async function handleLogout(){
-    try { await supabase.auth.signOut({ scope: 'global' }); } catch{}
+    try {
+      await supabase.auth.signOut({ scope: 'local' });
+    } catch{}
     try {
       Object.keys(localStorage)
         .filter(k=>k.startsWith('sb-')||k.startsWith('tfv_')||k.startsWith('tft_')||k.startsWith('tfn_'))
         .forEach(k=>localStorage.removeItem(k));
+      sessionStorage.clear();
     } catch{}
-    window.location.href = '/';
+    setUser(null);
+    setTimeout(()=>{ window.location.reload(); }, 100);
   }
 
   if(loading){
