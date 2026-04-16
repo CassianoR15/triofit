@@ -33,7 +33,7 @@ function validateSenha(senha) {
 }
 import { supabase, DB } from "./lib/supabase.js";
 
-const _v='TRIOFIT_BUILD_1776304568';
+const _v='TRIOFIT_BUILD_1776373258';
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -2116,6 +2116,7 @@ function NutriDash({user}){
       <div className="grid-4">
         <div className="stat-tile"><div className="stat-label">Pacientes</div><div className="stat-value blue">{pacientesList.length}</div></div>
         <div className="stat-tile"><div className="stat-label">Planos ativos</div><div className="stat-value green">{Object.values(planoMapN||{}).filter(Boolean).length}</div></div>
+        <div className="stat-tile"><div className="stat-label">Sem plano</div><div className="stat-value orange">{pacientesList.length-Object.values(planoMapN||{}).filter(Boolean).length}</div></div>
         <div className="stat-tile"><div className="stat-label">Código</div><div style={{marginTop:"0.35rem",fontFamily:"var(--font-mono)",fontSize:"1.1rem",color:"var(--green)",letterSpacing:"0.1em"}}>{user.codigo||"------"}</div></div>
         <div className="stat-tile"><div className="stat-label">Alertas</div><div className="stat-value orange">{Object.values(saudeMapN).filter(s=>s.doente||s.mens).length}</div></div>
       </div>
@@ -2165,11 +2166,13 @@ function NutriAcompanhamento({user}){
         DB.getData("plano_alim_aluno",p.id),
         DB.getData("alim_check_hoje",p.id),
         DB.getData("agua_hoje",p.id),
-        DB.getData("meta_agua",p.id)
-      ]).then(([s,pl,ch,ag,mt])=>({id:p.id,s:s||{},pl,ch:ch||{},ag:ag||0,mt:mt||3000}))
+        DB.getData("meta_agua",p.id),
+        DB.getData("avaliacao",p.id),
+        DB.getData("avaliacao_hist",p.id)
+      ]).then(([s,pl,ch,ag,mt,av,avh])=>({id:p.id,s:s||{},pl,ch:ch||{},ag:ag||0,mt:mt||3000,av:av||{},avh:avh||[]}))
     )).then(results=>{
-      const sm={},pm={},cm={},am={},mm={};
-      results.forEach(({id,s,pl,ch,ag,mt})=>{sm[id]=s;pm[id]=pl;cm[id]=ch;am[id]=ag;mm[id]=mt;});
+      const sm={},pm={},cm={},am={},mm={},avm={},avhm={};
+      results.forEach(({id,s,pl,ch,ag,mt})=>{sm[id]=s;pm[id]=pl;cm[id]=ch;am[id]=ag;mm[id]=mt;avm[id]=av;avhm[id]=avh;});
       setSaudeMapNA(sm);setPlanoMapNA(pm);setCheckMapNA(cm);setAguaMapNA(am);setMetaMapNA(mm);
     });
   },[pacientes?.length]);
@@ -2224,7 +2227,7 @@ const NAV_TREINADOR=[
 ];
 const NAV_NUTRI=[
   {section:"VISÃO GERAL",items:[{id:"dashboard",icon:"🏠",label:"Dashboard"}]},
-  {section:"PACIENTES",items:[{id:"acompanhamento",icon:"👁️",label:"Acompanhamento"},{id:"prescrever",icon:"🥗",label:"Plano Alimentar"}]},
+  {section:"PACIENTES",items:[{id:"acompanhamento",icon:"👁️",label:"Acompanhamento"},{id:"prescrever",icon:"🥗",label:"Plano Alimentar"},{id:"chat",icon:"💬",label:"Chat"}]},
 ];
 
 // ============================================================
@@ -2745,8 +2748,16 @@ function TreinadorApp({user,onLogout}){
 function NutriApp({user,onLogout}){
   const {show,ToastEl}=useToast();
   const [page,setPage]=useState("dashboard");
-  const pages={dashboard:<NutriDash user={user}/>,prescrever:<NutriPrescrever user={user} showToast={show}/>,acompanhamento:<NutriAcompanhamento user={user}/>};
-  return(<>{ToastEl}<Shell user={user} onLogout={onLogout} nav={NAV_NUTRI} active={page} setActive={setPage} accent="blue">{pages[page]}</Shell></>);
+  const [msgsBadgeN,setMsgsBadgeN]=useState(0);
+  useEffect(()=>{
+    if(!user?.id)return;
+    const check=()=>DB.getMensagensNaoLidas(user.id).then(d=>setMsgsBadgeN(d.length)).catch(()=>{});
+    check();
+    const iv=setInterval(check,30000);
+    return()=>clearInterval(iv);
+  },[user?.id]);
+  const pages={dashboard:<NutriDash user={user}/>,prescrever:<NutriPrescrever user={user} showToast={show}/>,acompanhamento:<NutriAcompanhamento user={user}/>,chat:<ProfChat user={user} showToast={show}/>};
+  return(<>{ToastEl}<Shell user={user} onLogout={onLogout} nav={NAV_NUTRI} active={page} setActive={setPage} accent="blue" alertCount={msgsBadgeN}>{pages[page]||pages.dashboard}</Shell></>);
 }
 
 // ============================================================
