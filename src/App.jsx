@@ -33,7 +33,7 @@ function validateSenha(senha) {
 }
 import { supabase, DB } from "./lib/supabase.js";
 
-const _v='TRIOFIT_BUILD_1776373258';
+const _v='TRIOFIT_BUILD_1776447241';
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -381,6 +381,17 @@ function gerarCodigo(seed){
 function addMonths(date,n){const d=new Date(date);d.setMonth(d.getMonth()+n);return d;}
 
 const TIPO_ICONS={descanso:"😴",academia:"🏋️",corrida:"🏃",natacao:"🏊",luta:"🥊",ciclismo:"🚴",funcional:"⚡",caminhada:"🚶",yoga:"🧘",treino:"🏋️"};
+const OBJETIVOS=[
+  {id:"emagrecimento",label:"Emagrecimento",icon:"🔥",color:"var(--orange)"},
+  {id:"ganho_massa",label:"Ganho de Massa",icon:"💪",color:"var(--green)"},
+  {id:"preparacao",label:"Preparação",icon:"⚡",color:"#60a5fa"},
+  {id:"competicao",label:"Competição",icon:"🏆",color:"var(--red)"},
+  {id:"manutencao",label:"Manutenção",icon:"⚖️",color:"#a78bfa"},
+  {id:"saude",label:"Saúde Geral",icon:"❤️",color:"#22d3ee"},
+  {id:"reabilitacao",label:"Reabilitação",icon:"🩺",color:"#facc15"},
+];
+function getObjetivo(id){return OBJETIVOS.find(o=>o.id===id)||OBJETIVOS[0];}
+
 const DIAS_SEMANA=["Segunda","Terça","Quarta","Quinta","Sexta","Sábado","Domingo"];
 const MODALIDADES=[{v:"musculacao",l:"💪 Musculação"},{v:"corrida",l:"🏃 Corrida"},{v:"natacao",l:"🏊 Natação"},{v:"luta",l:"🥊 Luta / Artes Marciais"},{v:"ciclismo",l:"🚴 Ciclismo"},{v:"caminhada",l:"🚶 Caminhada"},{v:"funcional",l:"⚡ Funcional"}];
 const MUSCLES=["Ombro D","Ombro E","Bíceps D","Bíceps E","Tríceps D","Tríceps E","Peitoral","Costas","Lombar","Abdômen","Glúteo","Quadríceps D","Quadríceps E","Panturrilha D","Panturrilha E","Isquio"];
@@ -1266,6 +1277,7 @@ function AlunoSaude({user,showToast}){
 function AlunoAvaliacao({user,showToast}){
   const [f,setF]=useState({});
   const [hist,setHist]=useState([]);
+  const [histIdx,setHistIdx]=useState(null); // índice selecionado para comparar
   useEffect(()=>{
     let c=false;
     DB.getData("avaliacao",user.id).then(d=>{if(!c&&d)setF(d);}).catch(()=>{});
@@ -1315,7 +1327,45 @@ function AlunoAvaliacao({user,showToast}){
       </div>
       {hist.length>1&&(
         <div className="card">
-          <div className="card-title">📈 EVOLUÇÃO</div>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"0.75rem"}}>
+            <div className="card-title" style={{marginBottom:0}}>📈 EVOLUÇÃO</div>
+            {hist.length>1&&(
+              <select className="form-input" style={{width:"auto",fontSize:"0.8rem",padding:"0.25rem 0.5rem"}}
+                value={histIdx??""} onChange={e=>setHistIdx(e.target.value===''?null:parseInt(e.target.value))}>
+                <option value="">Comparar com...</option>
+                {hist.map((h,i)=>(<option key={i} value={i}>{new Date(h.data).toLocaleDateString("pt-BR")} — {h.peso}kg</option>))}
+              </select>
+            )}
+          </div>
+          {histIdx!==null&&hist[histIdx]&&(()=>{
+            const ant=hist[histIdx];const atual=f;
+            const campos=[["Peso","peso","kg"],["% Gordura","gordura","%"],["Massa magra","massa","kg"],["Cintura","cintura","cm"],["Quadril","quadril","cm"]];
+            return(
+              <div style={{background:"var(--bg)",borderRadius:"8px",padding:"0.75rem",marginBottom:"0.75rem"}}>
+                <div style={{fontSize:"0.8rem",fontWeight:600,marginBottom:"0.5rem",color:"var(--text2)"}}>
+                  Comparando com {new Date(ant.data).toLocaleDateString("pt-BR")}
+                </div>
+                <div style={{display:"flex",flexDirection:"column",gap:"6px"}}>
+                  {campos.map(([label,key,unit])=>{
+                    if(!ant[key]&&!atual[key])return null;
+                    const diff=parseFloat(atual[key]||0)-parseFloat(ant[key]||0);
+                    const isGood=(key==='gordura'||key==='cintura')?diff<0:diff>0;
+                    return(
+                      <div key={key} style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                        <span style={{fontSize:"0.82rem",color:"var(--text2)"}}>{label}</span>
+                        <div style={{display:"flex",gap:"0.5rem",alignItems:"center"}}>
+                          <span style={{fontSize:"0.82rem"}}>{ant[key]||"—"}{unit} → {atual[key]||"—"}{unit}</span>
+                          {ant[key]&&atual[key]&&<span style={{fontSize:"0.78rem",fontWeight:600,color:isGood?"var(--green)":diff===0?"var(--text2)":"var(--red)"}}>
+                            {diff>0?"+":""}{diff.toFixed(1)}{unit}
+                          </span>}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
           {hist.some(h=>h.peso)&&(()=>{
             const pts=hist.filter(h=>h.peso);
             const pesos=pts.map(h=>parseFloat(h.peso));
@@ -1420,7 +1470,12 @@ function AlunoDash({user,setPage,vinculo:vinculoProp,treinador:treinadorProp,nut
   const treinoHoje=planoTreino?.dias?.[diaHoje];
   return(
     <div className="page">
-      <div className="page-title green">{getGreeting()}, {firstName(user.nome)} 👋</div>
+      <div className="page-title" style={{color:getObjetivo(user.objetivo).color}}>
+        {getObjetivo(user.objetivo).icon} {getGreeting()}, {firstName(user.nome)}!
+      </div>
+      {user.objetivo&&<div className="page-sub" style={{color:getObjetivo(user.objetivo).color,opacity:0.8}}>
+        Foco: {getObjetivo(user.objetivo).label}
+      </div>}
       <div className="page-sub">{getDateStr()}</div>
       {!treinador&&!nutri&&<div className="alert alert-warn">⚠️ Sem equipe vinculada. Vá em <b>Minha Equipe</b> e insira o código do seu treinador e nutricionista!</div>}
       <div className="grid-4">
@@ -1480,6 +1535,8 @@ function AlunoDash({user,setPage,vinculo:vinculoProp,treinador:treinadorProp,nut
 // ============================================================
 function TreinadorPrescrever({user,showToast}){
   const {confirm,Modal:ConfirmModalEl}=useConfirm();
+  const [modoPlano,setModoPlano]=useState("novo"); // "novo","editar","visualizar"
+  const [planoAtual,setPlanoAtual]=useState(null);
   const [alunos,]=useAsyncData(()=>DB.getAlunosDe(user.id),[user.id],[]);
   const [alunoSel,setAlunoSel]=useState(null);
   const [nomePlano,setNomePlano]=useState("Treino A/B/C");
@@ -1654,6 +1711,15 @@ function TreinadorPrescrever({user,showToast}){
             </div>
           </div>
 
+          <div style={{display:"flex",gap:"0.5rem",marginBottom:"0.75rem",flexWrap:"wrap"}}>
+            <button className="btn btn-sm btn-primary" onClick={salvar}>📤 Enviar novo plano</button>
+            <button className="btn btn-sm btn-ghost" onClick={async()=>{
+              const ok=await confirm("Deletar o plano atual de "+alunoSel.nome.split(" ")[0]+"? Não pode ser desfeito.");
+              if(!ok)return;
+              await DB.setData("plano_treino_aluno",alunoSel.id,null);
+              showToast&&showToast("Plano deletado!","warn");
+            }}>🗑️ Deletar plano</button>
+          </div>
           <button className="btn btn-orange btn-full" onClick={salvar}>📤 Enviar plano para {alunoSel.nome.split(" ")[0]}</button>
         </>
       )}
@@ -2227,7 +2293,7 @@ const NAV_TREINADOR=[
 ];
 const NAV_NUTRI=[
   {section:"VISÃO GERAL",items:[{id:"dashboard",icon:"🏠",label:"Dashboard"}]},
-  {section:"PACIENTES",items:[{id:"acompanhamento",icon:"👁️",label:"Acompanhamento"},{id:"prescrever",icon:"🥗",label:"Plano Alimentar"},{id:"chat",icon:"💬",label:"Chat"}]},
+  {section:"PACIENTES",items:[{id:"cadastrar",icon:"➕",label:"Cadastrar Paciente"},{id:"acompanhamento",icon:"👁️",label:"Acompanhamento"},{id:"prescrever",icon:"🥗",label:"Plano Alimentar"},{id:"chat",icon:"💬",label:"Chat"}]},
 ];
 
 // ============================================================
@@ -2265,6 +2331,10 @@ function MeuPerfil({user,treinador,nutri,vinculo,onVinculoChange,showToast}){
   async function salvar(){
     setSalvando(true);
     await DB.setData("perfil_aluno",user.id,form);
+    // Atualiza objetivo na tabela profiles
+    if(form.objetivo!==undefined){
+      await supabase.from("profiles").update({objetivo:form.objetivo}).eq("id",user.id).catch(()=>{});
+    }
     setSalvando(false);
     setEditando(false);
     showToast&&showToast("✅ Perfil atualizado!");
@@ -2312,7 +2382,14 @@ function MeuPerfil({user,treinador,nutri,vinculo,onVinculoChange,showToast}){
               </div>
             ))}
             {form.obs&&<div style={{marginTop:"0.5rem",padding:"0.6rem",background:"var(--card2)",borderRadius:"var(--radius)",fontSize:"0.82rem",color:"var(--text2)"}}>📝 {form.obs}</div>}
-            {treinador&&(
+            {form.objetivo&&(()=>{const obj=getObjetivo(form.objetivo);return(
+              <div style={{marginTop:"0.5rem",display:"inline-flex",alignItems:"center",gap:"0.5rem",
+                padding:"0.4rem 0.85rem",borderRadius:"20px",border:"2px solid "+obj.color,
+                background:obj.color+"22",color:obj.color,fontSize:"0.85rem",fontWeight:500}}>
+                {obj.icon} {obj.label}
+              </div>
+            );})()}
+                        {treinador&&(
               <div style={{marginTop:"0.75rem",padding:"0.6rem 0.75rem",background:"rgba(46,213,115,0.08)",borderRadius:"var(--radius)",fontSize:"0.82rem",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                 <span>🏋️ Treinador: <b>{treinador.nome}</b></span>
                 <button className="btn btn-ghost btn-sm" style={{fontSize:"0.7rem",color:"var(--red)",padding:"2px 8px"}} onClick={desvincularTreinador}>Remover</button>
@@ -2341,7 +2418,22 @@ function MeuPerfil({user,treinador,nutri,vinculo,onVinculoChange,showToast}){
               <div className="form-group"><label className="form-label">Local de treino</label><input className="form-input" value={form.localTreino} onChange={e=>set("localTreino",e.target.value)}/></div>
             </div>
             <div className="form-group"><label className="form-label">Observações</label><textarea className="form-textarea" rows={3} value={form.obs} onChange={e=>set("obs",e.target.value)}/></div>
-            <div style={{display:"flex",gap:"0.5rem"}}>
+            <div className="form-group">
+              <label className="form-label">🎯 Objetivo</label>
+              <div style={{display:"flex",flexWrap:"wrap",gap:"0.4rem",marginTop:"0.25rem"}}>
+                {OBJETIVOS.map(o=>(
+                  <button key={o.id} type="button" onClick={()=>set("objetivo",o.id)}
+                    style={{padding:"0.3rem 0.6rem",borderRadius:"20px",border:"2px solid",
+                      borderColor:form.objetivo===o.id?o.color:"var(--border)",
+                      background:form.objetivo===o.id?o.color+"22":"transparent",
+                      color:form.objetivo===o.id?o.color:"var(--text2)",
+                      fontSize:"0.75rem",cursor:"pointer"}}>
+                    {o.icon} {o.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+                        <div style={{display:"flex",gap:"0.5rem"}}>
               <button className="btn btn-ghost btn-sm" onClick={()=>setEditando(false)}>Cancelar</button>
               <button className="btn btn-primary btn-sm" onClick={salvar} disabled={salvando}>{salvando?"Salvando...":"✅ Salvar"}</button>
             </div>
@@ -2756,7 +2848,7 @@ function NutriApp({user,onLogout}){
     const iv=setInterval(check,30000);
     return()=>clearInterval(iv);
   },[user?.id]);
-  const pages={dashboard:<NutriDash user={user}/>,prescrever:<NutriPrescrever user={user} showToast={show}/>,acompanhamento:<NutriAcompanhamento user={user}/>,chat:<ProfChat user={user} showToast={show}/>};
+  const pages={dashboard:<NutriDash user={user}/>,cadastrar:<CadastrarAluno user={user} showToast={show}/>,prescrever:<NutriPrescrever user={user} showToast={show}/>,acompanhamento:<NutriAcompanhamento user={user}/>,chat:<ProfChat user={user} showToast={show}/>};
   return(<>{ToastEl}<Shell user={user} onLogout={onLogout} nav={NAV_NUTRI} active={page} setActive={setPage} accent="blue" alertCount={msgsBadgeN}>{pages[page]||pages.dashboard}</Shell></>);
 }
 

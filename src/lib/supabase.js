@@ -71,7 +71,7 @@ export const DB = {
     // Busca perfil (nome, role, codigo)
     const { data: profile } = await supabase
       .from('profiles')
-      .select('nome, role, codigo')
+      .select('nome, role, codigo, objetivo')
       .eq('id', supaUser.id)
       .maybeSingle();
 
@@ -81,6 +81,7 @@ export const DB = {
       nome: profile?.nome || supaUser.user_metadata?.nome || supaUser.email,
       role: profile?.role || supaUser.user_metadata?.role || 'aluno',
       codigo: profile?.codigo || '',
+      objetivo: profile?.objetivo || null,
     };
   },
 
