@@ -33,7 +33,7 @@ function validateSenha(senha) {
 }
 import { supabase, DB } from "./lib/supabase.js";
 
-const _v='TRIOFIT_BUILD_1776450600';
+const _v='TRIOFIT_BUILD_1776450995';
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -1788,6 +1788,15 @@ function DiarioAluno({aluno,onBack}){
   const [agua]=useAlunoData(aluno.id,"agua_hoje",0);
   const [metaAgua]=useAlunoData(aluno.id,"meta_agua",3000);
   const [aval]=useAlunoData(aluno.id,"avaliacao",{});
+  const [avalHist]=useAlunoData(aluno.id,"avaliacao_hist",[]);
+  const [objAluno,setObjAluno]=useState(aluno.objetivo||null);
+  useEffect(()=>{
+    if(!aluno.id)return;
+    let c=false;
+    supabase.from("profiles").select("objetivo").eq("id",aluno.id).maybeSingle()
+      .then(({data})=>{if(!c&&data?.objetivo)setObjAluno(data.objetivo);}).catch(()=>{});
+    return()=>{c=true;};
+  },[aluno.id]);
   const [comps]=useAlunoData(aluno.id,"competicoes",[]);
   const [planoTreino]=useAlunoData(aluno.id,"plano_treino_aluno",null);
   const refeicoes=(planoAlim?.refeicoes)||[];
@@ -1805,7 +1814,39 @@ function DiarioAluno({aluno,onBack}){
 
       {/* DADOS PESSOAIS */}
       <div className="card">
-        <div className="card-title">👤 PERFIL DO ALUNO</div>
+        <div style={{display:"flex",alignItems:"center",gap:"0.75rem",marginBottom:"0.75rem",flexWrap:"wrap"}}>
+          <div className="card-title" style={{marginBottom:0}}>👤 PERFIL DO ALUNO</div>
+          {objAluno&&(()=>{const obj=getObjetivo(objAluno);return(
+            <span style={{fontSize:"0.75rem",padding:"3px 10px",borderRadius:"20px",
+              border:"2px solid "+obj.color,color:obj.color,background:obj.color+"18",fontWeight:600}}>
+              {obj.icon} {obj.label}
+            </span>
+          );})()}
+        </div>
+        {Array.isArray(avalHist)&&avalHist.length>1&&(()=>{
+          const pts=avalHist.filter(h=>h.peso);
+          if(pts.length<2)return null;
+          const pesos=pts.map(h=>parseFloat(h.peso));
+          const diff=(pesos[pesos.length-1]-pesos[0]).toFixed(1);
+          const w=280,hh=60;
+          const xp=(i)=>10+(i/(pts.length-1||1))*(w-20);
+          const yp=(v)=>hh-6-((v-Math.min(...pesos)+2)/(Math.max(...pesos)-Math.min(...pesos)+4||1))*(hh-12);
+          const path=pts.map((p,i)=>`${i===0?"M":"L"}${xp(i).toFixed(1)},${yp(parseFloat(p.peso)).toFixed(1)}`).join(" ");
+          return(
+            <div style={{marginBottom:"0.75rem",padding:"0.75rem",background:"var(--bg)",borderRadius:"8px"}}>
+              <div style={{display:"flex",gap:"0.75rem",marginBottom:"0.5rem",flexWrap:"wrap"}}>
+                <div style={{flex:1}}><div style={{fontSize:"0.75rem",color:"var(--text2)"}}>Variação total</div>
+                  <div style={{fontWeight:600,color:parseFloat(diff)<0?"var(--green)":"var(--orange)"}}>{parseFloat(diff)>0?"+":""}{diff}kg</div></div>
+                <div style={{flex:1}}><div style={{fontSize:"0.75rem",color:"var(--text2)"}}>Registros</div>
+                  <div style={{fontWeight:600}}>{pts.length}</div></div>
+              </div>
+              <svg viewBox={`0 0 ${w} ${hh}`} style={{width:"100%",height:"60px"}}>
+                <path d={path} fill="none" stroke="var(--green)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                {pts.map((p,i)=>(<g key={i}><circle cx={xp(i)} cy={yp(parseFloat(p.peso))} r="2.5" fill="var(--green)"/>{(i===0||i===pts.length-1)&&<text x={xp(i)} y={yp(parseFloat(p.peso))-5} textAnchor="middle" fontSize="8" fill="var(--text2)">{p.peso}kg</text>}</g>))}
+              </svg>
+            </div>
+          );
+        })()}
         <div className="grid-3">
           <div className="diario-section"><div className="diario-label">Peso</div><div className="diario-val" style={{fontFamily:"var(--font-display)",fontSize:"1.5rem",color:"var(--green)"}}>{aval.peso||"—"}<span style={{fontSize:"0.8rem",color:"var(--text2)"}}>{aval.peso?" kg":""}</span></div></div>
           <div className="diario-section"><div className="diario-label">% Gordura</div><div className="diario-val" style={{fontFamily:"var(--font-display)",fontSize:"1.5rem",color:"var(--orange)"}}>{aval.gordura||"—"}<span style={{fontSize:"0.8rem",color:"var(--text2)"}}>{aval.gordura?"%":""}</span></div></div>
