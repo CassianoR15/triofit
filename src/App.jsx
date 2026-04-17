@@ -33,7 +33,7 @@ function validateSenha(senha) {
 }
 import { supabase, DB } from "./lib/supabase.js";
 
-const _v='TRIOFIT_BUILD_1776452409';
+const _v='TRIOFIT_BUILD_1776452906';
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -2314,7 +2314,7 @@ const NAV_TREINADOR=[
 ];
 const NAV_NUTRI=[
   {section:"VISÃO GERAL",items:[{id:"dashboard",icon:"🏠",label:"Dashboard"}]},
-  {section:"PACIENTES",items:[{id:"acompanhamento",icon:"👁️",label:"Acompanhamento"},{id:"prescrever",icon:"🥗",label:"Plano Alimentar"}]},
+  {section:"PACIENTES",items:[{id:"cadastrar",icon:"➕",label:"Cadastrar Paciente"},{id:"acompanhamento",icon:"👁️",label:"Acompanhamento"},{id:"prescrever",icon:"🥗",label:"Plano Alimentar"},{id:"chat",icon:"💬",label:"Chat"}]},
 ];
 
 // ============================================================
@@ -2863,8 +2863,22 @@ function TreinadorApp({user,onLogout}){
 function NutriApp({user,onLogout}){
   const {show,ToastEl}=useToast();
   const [page,setPage]=useState("dashboard");
-  const pages={dashboard:<NutriDash user={user}/>,prescrever:<NutriPrescrever user={user} showToast={show}/>,acompanhamento:<NutriAcompanhamento user={user}/>};
-  return(<>{ToastEl}<Shell user={user} onLogout={onLogout} nav={NAV_NUTRI} active={page} setActive={setPage} accent="blue">{pages[page]}</Shell></>);
+  const [msgsBadgeN,setMsgsBadgeN]=useState(0);
+  useEffect(()=>{
+    if(!user?.id)return;
+    const check=()=>DB.getMensagensNaoLidas(user.id).then(d=>setMsgsBadgeN(d.length)).catch(()=>{});
+    check();
+    const iv=setInterval(check,30000);
+    return()=>clearInterval(iv);
+  },[user?.id]);
+  const pages={
+    dashboard:<NutriDash user={user}/>,
+    cadastrar:<CadastrarAluno user={user} showToast={show}/>,
+    acompanhamento:<NutriAcompanhamento user={user}/>,
+    prescrever:<NutriPrescrever user={user} showToast={show}/>,
+    chat:<ProfChat user={user} showToast={show}/>
+  };
+  return(<>{ToastEl}<Shell user={user} onLogout={onLogout} nav={NAV_NUTRI} active={page} setActive={setPage} accent="blue" alertCount={msgsBadgeN}>{pages[page]||pages.dashboard}</Shell></>);
 }
 
 // ============================================================
