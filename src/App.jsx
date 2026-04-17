@@ -33,7 +33,7 @@ function validateSenha(senha) {
 }
 import { supabase, DB } from "./lib/supabase.js";
 
-const _v='TRIOFIT_BUILD_1776453347';
+const _v='TRIOFIT_BUILD_1776453548';
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -1385,6 +1385,8 @@ function AlunoAvaliacao({user,showToast}){
 }
 
 function AlunoCompeticoes({user,showToast}){
+  const {confirm,Modal:ConfirmCompModal}=useConfirm();
+  const [editComp,setEditComp]=useState(null);
   const [comps,setComps]=useState([]);
   useEffect(()=>{let c=false;DB.getData("competicoes",user.id).then(d=>{if(!c&&d)setComps(d);}).catch(()=>{});return()=>{c=true;};},[user.id]);
   const [f,setF]=useState({nome:"",modalidade:"Corrida",data:"",local:"",objetivo:"Completar"});
