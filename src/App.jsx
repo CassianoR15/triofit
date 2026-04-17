@@ -33,7 +33,7 @@ function validateSenha(senha) {
 }
 import { supabase, DB } from "./lib/supabase.js";
 
-const _v='TRIOFIT_BUILD_1776453707';
+const _v='TRIOFIT_BUILD_1776454492';
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -1283,6 +1283,10 @@ function AlunoAvaliacao({user,showToast}){
     return()=>{c=true;};
   },[user.id]);
   async function set(k,v){setF(p=>({...p,[k]:v}));}
+  useEffect(()=>{
+    if(editComp){setF(p=>({...p,...editComp}));}
+    else{setF({nome:"",modalidade:"Corrida",data:"",local:"",objetivo:"Completar",obs:""});}
+  },[editComp]);
   async function salvar(){
     await DB.setData("avaliacao",user.id,f);
     const hist=(await DB.getData("avaliacao_hist",user.id))||[];
@@ -1388,9 +1392,14 @@ function AlunoCompeticoes({user,showToast}){
   const {confirm,Modal:ConfirmCompModal}=useConfirm();
   const [editComp,setEditComp]=useState(null);
   const [comps,setComps]=useState([]);
+  const [aba,setAba]=useState("lista");
   useEffect(()=>{let c=false;DB.getData("competicoes",user.id).then(d=>{if(!c&&d)setComps(d);}).catch(()=>{});return()=>{c=true;};},[user.id]);
   const [f,setF]=useState({nome:"",modalidade:"Corrida",data:"",local:"",objetivo:"Completar"});
   async function set(k,v){setF(p=>({...p,[k]:v}));}
+  useEffect(()=>{
+    if(editComp){setF(p=>({...p,...editComp}));}
+    else{setF({nome:"",modalidade:"Corrida",data:"",local:"",objetivo:"Completar",obs:""});}
+  },[editComp]);
   async function add(){
     if(!f.nome||!f.data){return;}
     let novo;
@@ -1461,8 +1470,12 @@ function AlunoCompeticoes({user,showToast}){
             );
           })}
         </div>}
-      <div className="card">
-        <div className="card-title">➕ CADASTRAR COMPETIÇÃO</div>
+      <div style={{display:"flex",gap:"8px",marginBottom:"0.5rem"}}>
+        <button className={`btn btn-sm ${aba==="lista"?"btn-primary":"btn-ghost"}`} onClick={()=>{setEditComp(null);setAba("lista");}}>📅 Lista</button>
+        <button className={`btn btn-sm ${aba==="form"?"btn-primary":"btn-ghost"}`} onClick={()=>{setEditComp(null);setAba("form");}}>➕ Nova competição</button>
+      </div>
+      {aba==="form"&&<div className="card">
+        <div className="card-title">{editComp?"✏️ EDITAR COMPETIÇÃO":"➕ NOVA COMPETIÇÃO"}</div>
         <div className="grid-2">
           <div className="form-group"><label className="form-label">Nome do evento</label><input className="form-input" placeholder="Ex: Ironman Florianópolis" value={f.nome} onChange={e=>set("nome",e.target.value)}/></div>
           <div className="form-group"><label className="form-label">Modalidade</label><select className="form-select" value={f.modalidade} onChange={e=>set("modalidade",e.target.value)}>{["Corrida","Natação","Triathlon / Ironman","Luta","Fisiculturismo","Ciclismo","Caminhada"].map(m=><option key={m}>{m}</option>)}</select></div>
@@ -1470,8 +1483,8 @@ function AlunoCompeticoes({user,showToast}){
           <div className="form-group"><label className="form-label">Local</label><input className="form-input" placeholder="Cidade / Local" value={f.local} onChange={e=>set("local",e.target.value)}/></div>
         </div>
         <div className="form-group"><label className="form-label">Objetivo</label><select className="form-select" value={f.objetivo} onChange={e=>set("objetivo",e.target.value)}>{["Completar","Bater meu recorde","Subir no pódio","Subir no palco","Definição de peso"].map(o=><option key={o}>{o}</option>)}</select></div>
-        <button className="btn btn-primary" onClick={add}>+ Cadastrar evento</button>
-      </div>
+        <button className="btn btn-primary" onClick={add}>{editComp?"💾 Salvar alterações":"+ Cadastrar evento"}</button>
+      </div>}
     </div>
     </>
   );
