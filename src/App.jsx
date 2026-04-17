@@ -33,7 +33,7 @@ function validateSenha(senha) {
 }
 import { supabase, DB } from "./lib/supabase.js";
 
-const _v='TRIOFIT_BUILD_1776451391';
+const _v='TRIOFIT_BUILD_1776451605';
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -2338,6 +2338,9 @@ function MeuPerfil({user,treinador,nutri,vinculo,onVinculoChange,showToast}){
       if(d) setForm(p=>({...p,...d}));
       else setForm(p=>({...p,nome:user.nome||"",email:user.email||""}));
     });
+    // Carrega objetivo do profiles
+    supabase.from("profiles").select("objetivo").eq("id",user.id).maybeSingle()
+      .then(({data})=>{if(!c&&data?.objetivo)setForm(p=>({...p,objetivo:data.objetivo}));}).catch(()=>{});
     // Complementa com dados do cadastro do treinador se existir
     if(treinador?.id){
       DB.getData("alunos_cadastrados",treinador.id).then(lista=>{
