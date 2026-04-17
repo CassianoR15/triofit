@@ -33,7 +33,7 @@ function validateSenha(senha) {
 }
 import { supabase, DB } from "./lib/supabase.js";
 
-const _v='TRIOFIT_BUILD_1776450384';
+const _v='TRIOFIT_BUILD_1776450600';
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -381,6 +381,16 @@ function gerarCodigo(seed){
 function addMonths(date,n){const d=new Date(date);d.setMonth(d.getMonth()+n);return d;}
 
 const TIPO_ICONS={descanso:"😴",academia:"🏋️",corrida:"🏃",natacao:"🏊",luta:"🥊",ciclismo:"🚴",funcional:"⚡",caminhada:"🚶",yoga:"🧘",treino:"🏋️"};
+const OBJETIVOS=[
+  {id:"emagrecimento",label:"Emagrecimento",icon:"🔥",color:"var(--orange)"},
+  {id:"ganho_massa",label:"Ganho de Massa",icon:"💪",color:"var(--green)"},
+  {id:"preparacao",label:"Preparação",icon:"⚡",color:"#60a5fa"},
+  {id:"competicao",label:"Competição",icon:"🏆",color:"#ef4444"},
+  {id:"manutencao",label:"Manutenção",icon:"⚖️",color:"#a78bfa"},
+  {id:"saude",label:"Saúde Geral",icon:"❤️",color:"#22d3ee"},
+  {id:"reabilitacao",label:"Reabilitação",icon:"🩺",color:"#facc15"},
+];
+function getObjetivo(id){return OBJETIVOS.find(o=>o.id===id)||{id:"",label:"",icon:"💪",color:"var(--green)"};}
 const DIAS_SEMANA=["Segunda","Terça","Quarta","Quinta","Sexta","Sábado","Domingo"];
 const MODALIDADES=[{v:"musculacao",l:"💪 Musculação"},{v:"corrida",l:"🏃 Corrida"},{v:"natacao",l:"🏊 Natação"},{v:"luta",l:"🥊 Luta / Artes Marciais"},{v:"ciclismo",l:"🚴 Ciclismo"},{v:"caminhada",l:"🚶 Caminhada"},{v:"funcional",l:"⚡ Funcional"}];
 const MUSCLES=["Ombro D","Ombro E","Bíceps D","Bíceps E","Tríceps D","Tríceps E","Peitoral","Costas","Lombar","Abdômen","Glúteo","Quadríceps D","Quadríceps E","Panturrilha D","Panturrilha E","Isquio"];
@@ -1716,6 +1726,12 @@ function ResumoSemanalAluno({aluno,onVerCompleto}){
         </div>
         <div style={{display:"flex",gap:"0.4rem",flexWrap:"wrap",alignItems:"center"}}>
           {saude.doente&&<span className="tag tag-red">🤒 {diasDoente}d</span>}
+          {objAluno&&(()=>{const obj=getObjetivo(objAluno);return(
+            <span style={{fontSize:"0.7rem",padding:"2px 8px",borderRadius:"20px",
+              border:"1.5px solid "+obj.color,color:obj.color,background:obj.color+"18",fontWeight:500,whiteSpace:"nowrap"}}>
+              {obj.icon} {obj.label}
+            </span>
+          );})()}
           {saude.dores&&saude.dores.length>0&&<span className="tag tag-orange">🔴 {saude.dores.length} dor{saude.dores.length>1?"es":""}</span>}
           {saude.mens&&<span className="tag tag-orange">🔴 Ciclo</span>}
         </div>
@@ -2342,6 +2358,13 @@ function MeuPerfil({user,treinador,nutri,vinculo,onVinculoChange,showToast}){
               </div>
             ))}
             {form.obs&&<div style={{marginTop:"0.5rem",padding:"0.6rem",background:"var(--card2)",borderRadius:"var(--radius)",fontSize:"0.82rem",color:"var(--text2)"}}>📝 {form.obs}</div>}
+            {form.objetivo&&(()=>{const obj=getObjetivo(form.objetivo);return(
+              <div style={{marginTop:"0.5rem",display:"inline-flex",alignItems:"center",gap:"0.5rem",
+                padding:"0.35rem 0.8rem",borderRadius:"20px",border:"2px solid "+obj.color,
+                background:obj.color+"18",color:obj.color,fontSize:"0.82rem",fontWeight:500}}>
+                {obj.icon} {obj.label}
+              </div>
+            );})()}
             {treinador&&(
               <div style={{marginTop:"0.75rem",padding:"0.6rem 0.75rem",background:"rgba(46,213,115,0.08)",borderRadius:"var(--radius)",fontSize:"0.82rem",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                 <span>🏋️ Treinador: <b>{treinador.nome}</b></span>
@@ -2371,6 +2394,21 @@ function MeuPerfil({user,treinador,nutri,vinculo,onVinculoChange,showToast}){
               <div className="form-group"><label className="form-label">Local de treino</label><input className="form-input" value={form.localTreino} onChange={e=>set("localTreino",e.target.value)}/></div>
             </div>
             <div className="form-group"><label className="form-label">Observações</label><textarea className="form-textarea" rows={3} value={form.obs} onChange={e=>set("obs",e.target.value)}/></div>
+            <div className="form-group">
+              <label className="form-label">🎯 Objetivo</label>
+              <div style={{display:"flex",flexWrap:"wrap",gap:"0.4rem",marginTop:"0.25rem"}}>
+                {OBJETIVOS.map(o=>(
+                  <button key={o.id} type="button" onClick={()=>set("objetivo",o.id)}
+                    style={{padding:"0.3rem 0.6rem",borderRadius:"20px",border:"2px solid",
+                      borderColor:form.objetivo===o.id?o.color:"var(--border)",
+                      background:form.objetivo===o.id?o.color+"22":"transparent",
+                      color:form.objetivo===o.id?o.color:"var(--text2)",
+                      fontSize:"0.75rem",cursor:"pointer"}}>
+                    {o.icon} {o.label}
+                  </button>
+                ))}
+              </div>
+            </div>
             <div style={{display:"flex",gap:"0.5rem"}}>
               <button className="btn btn-ghost btn-sm" onClick={()=>setEditando(false)}>Cancelar</button>
               <button className="btn btn-primary btn-sm" onClick={salvar} disabled={salvando}>{salvando?"Salvando...":"✅ Salvar"}</button>
