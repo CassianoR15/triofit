@@ -33,7 +33,7 @@ function validateSenha(senha) {
 }
 import { supabase, DB } from "./lib/supabase.js";
 
-const _v='TRIOFIT_BUILD_1776451787';
+const _v='TRIOFIT_BUILD_1776452214';
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -2353,16 +2353,16 @@ function MeuPerfil({user,treinador,nutri,vinculo,onVinculoChange,showToast}){
   function set(k,v){setForm(p=>({...p,[k]:v}));}
 
   async function salvar(){
+  async function salvar(){
     setSalvando(true);
     await DB.setData("perfil_aluno",user.id,form);
+    // Atualiza objetivo no profiles para treinador/nutri verem
+    try{await supabase.from("profiles").update({objetivo:form.objetivo||null}).eq("id",user.id);}catch{}
     setSalvando(false);
     setEditando(false);
+    if(form.objetivo!==undefined)user.objetivo=form.objetivo;
     showToast&&showToast("✅ Perfil atualizado!");
   }
-
-  async function desvincularTreinador(){
-    const okT=await confirm("Remover vínculo com "+treinador?.nome+"?");if(!okT)return;
-    await DB.setVinculoAluno(user.id,null,vinculo?.nutriId||null);
     onVinculoChange&&await onVinculoChange();
     showToast&&showToast("Treinador desvinculado.","warn");
   }
