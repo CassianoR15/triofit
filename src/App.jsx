@@ -33,7 +33,7 @@ function validateSenha(senha) {
 }
 import { supabase, DB } from "./lib/supabase.js";
 
-const _v='TRIOFIT_BUILD_1776454864';
+const _v='TRIOFIT_BUILD_1776455147';
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -1283,10 +1283,6 @@ function AlunoAvaliacao({user,showToast}){
     return()=>{c=true;};
   },[user.id]);
   async function set(k,v){setF(p=>({...p,[k]:v}));}
-  useEffect(()=>{
-    if(editComp){setF(p=>({...p,...editComp}));}
-    else{setF({nome:"",modalidade:"Corrida",data:"",local:"",objetivo:"Completar",obs:""});}
-  },[editComp]);
   async function salvar(){
     await DB.setData("avaliacao",user.id,f);
     const hist=(await DB.getData("avaliacao_hist",user.id))||[];
