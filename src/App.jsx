@@ -33,7 +33,7 @@ function validateSenha(senha) {
 }
 import { supabase, DB } from "./lib/supabase.js";
 
-const _v='TRIOFIT_BUILD_1776453548';
+const _v='TRIOFIT_BUILD_1776453707';
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -1417,7 +1417,50 @@ function AlunoCompeticoes({user,showToast}){
         <div className="page-title green">COMPETIÇÕES</div>
         <div className="page-sub">Visível para treinador e nutricionista</div>
       </div>
-      {(comps||[]).length>0&&<div className="card"><div className="card-title">📅 MEUS EVENTOS</div>{(comps||[]).map((c,i)=>{const d=new Date(c.data);return(<div key={i} className="comp-card" style={{background:"var(--bg2)"}}><div className="comp-date"><div className="comp-date-day">{d.getDate()}</div><div className="comp-date-month">{d.toLocaleDateString("pt-BR",{month:"short"})}</div></div><div style={{flex:1}}><div style={{fontWeight:600}}>{c.nome}</div><div style={{fontSize:"0.8rem",color:"var(--text2)"}}>{c.modalidade} • {c.local}</div></div><span className="tag tag-orange">{c.objetivo.toUpperCase()}</span></div>);})}</div>}
+      {(comps||[]).length>0&&<div className="card"><div className="card-title">📅 MEUS EVENTOS</div>
+          {(comps||[]).map((c,i)=>{
+            const d=new Date(c.data);
+            const diff=Math.ceil((d-new Date())/(1000*60*60*24));
+            const passou=diff<0;
+            const faltaLabel=passou?`Passou há ${Math.abs(diff)}d`:diff===0?"HOJE!":diff===1?"Amanhã!":`${diff} dias`;
+            const faltaColor=passou?"var(--text3)":diff<=7?"var(--red)":diff<=30?"var(--orange)":"var(--green)";
+            return(
+              <div key={i} className="comp-card" style={{background:"var(--bg2)"}}>
+                <div className="comp-date">
+                  <div className="comp-date-day">{d.getDate()}</div>
+                  <div className="comp-date-month">{d.toLocaleDateString("pt-BR",{month:"short"})}</div>
+                </div>
+                <div style={{flex:1}}>
+                  <div style={{fontWeight:600}}>{c.nome}</div>
+                  <div style={{fontSize:"0.8rem",color:"var(--text2)"}}>{c.modalidade} • {c.local}</div>
+                  <div style={{marginTop:"4px",display:"flex",alignItems:"center",gap:"6px"}}>
+                    <span style={{fontSize:"0.75rem",fontWeight:600,color:faltaColor}}>⏱️ {faltaLabel}</span>
+                    {!passou&&<div style={{flex:1,height:"4px",borderRadius:"2px",background:"var(--border)"}}>
+                      <div style={{height:"100%",borderRadius:"2px",background:faltaColor,width:Math.max(2,Math.min(100,(1-diff/90)*100))+"%"}}/>
+                    </div>}
+                  </div>
+                </div>
+                <div style={{display:"flex",flexDirection:"column",gap:"4px",alignItems:"flex-end"}}>
+                  <span className="tag tag-orange">{c.objetivo.toUpperCase()}</span>
+                  <div style={{display:"flex",gap:"4px"}}>
+                    <button className="btn btn-ghost btn-sm" style={{fontSize:"0.7rem",padding:"2px 6px"}}
+                      onClick={e=>{e.stopPropagation();setEditComp({...c,idx:i});setAba("form");}}>✏️</button>
+                    <button className="btn btn-ghost btn-sm" style={{fontSize:"0.7rem",padding:"2px 6px",color:"var(--red)"}}
+                      onClick={async e=>{
+                        e.stopPropagation();
+                        const ok=await confirm("Deletar "+c.nome+"?");
+                        if(!ok)return;
+                        const novo=(comps||[]).filter((_,j)=>j!==i);
+                        await DB.setData("competicoes",user.id,novo);
+                        setComps(novo);
+                        showToast&&showToast("Competição removida","warn");
+                      }}>🗑️</button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>}
       <div className="card">
         <div className="card-title">➕ CADASTRAR COMPETIÇÃO</div>
         <div className="grid-2">
