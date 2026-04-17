@@ -33,7 +33,7 @@ function validateSenha(senha) {
 }
 import { supabase, DB } from "./lib/supabase.js";
 
-const _v='TRIOFIT_BUILD_1776447241';
+const _v='TRIOFIT_BUILD_1776447892';
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -2141,6 +2141,19 @@ function NutriPrescrever({user,showToast}){
             <button className="btn btn-ghost" onClick={addRef}>+ Adicionar refeição</button>
           </div>
 
+          <div style={{display:"flex",gap:"0.5rem",marginBottom:"0.75rem",flexWrap:"wrap"}}>
+            <button className="btn btn-sm btn-ghost" onClick={async()=>{
+              const ok=await confirmNutri("Deletar a dieta atual de "+alunoSel.nome.split(" ")[0]+"? Não pode ser desfeito.");
+              if(!ok)return;
+              await DB.setData("plano_alim_aluno",alunoSel.id,null);
+              showToast&&showToast("Dieta deletada!","warn");
+            }}>🗑️ Deletar dieta</button>
+            <button className="btn btn-sm btn-ghost" onClick={()=>{
+              setRefeicoes([{nome:"Café da manhã",horario:"07:00",alimentos:[],kcal:""},{nome:"Almoço",horario:"12:00",alimentos:[],kcal:""},{nome:"Jantar",horario:"19:00",alimentos:[],kcal:""}]);
+              showToast&&showToast("Novo plano em branco criado","info");
+            }}>📄 Novo plano</button>
+          </div>
+          {ConfirmNutriModal}
           <button className="btn btn-blue btn-full" onClick={salvar}>📤 Enviar plano para {alunoSel.nome.split(" ")[0]}</button>
         </>
       )}
