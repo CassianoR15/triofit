@@ -33,7 +33,7 @@ function validateSenha(senha) {
 }
 import { supabase, DB } from "./lib/supabase.js";
 
-const _v='TRIOFIT_BUILD_1776452906';
+const _v='TRIOFIT_BUILD_1776453347';
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -1391,13 +1391,25 @@ function AlunoCompeticoes({user,showToast}){
   async function set(k,v){setF(p=>({...p,[k]:v}));}
   async function add(){
     if(!f.nome||!f.data){return;}
-    const novo=[...comps,{...f,id:Date.now()}];
-    setComps(novo);await DB.setData("competicoes",user.id,novo);
+    let novo;
+    if(editComp!==null&&editComp.idx!==undefined){
+      // Editar existente
+      novo=comps.map((c,i)=>i===editComp.idx?{...c,...f}:c);
+      showToast&&showToast("Competição atualizada! ✅");
+    } else {
+      // Adicionar nova
+      novo=[...comps,{...f,id:Date.now()}];
+      showToast&&showToast("Competição cadastrada! 🏆");
+    }
+    setComps(novo);
+    await DB.setData("competicoes",user.id,novo);
     setF({nome:"",modalidade:"Corrida",data:"",local:"",objetivo:"Completar"});
-    showToast&&showToast("Competição cadastrada! 🏆");
+    setEditComp(null);
+    setAba("lista");
   }
   async function remover(id){const n=comps.filter(c=>c.id!==id);setComps(n);await DB.setData("competicoes",user.id,n);}
   return(
+    <>{ConfirmCompModal}
     <div className="page">
       <div className="page-header">
         <div className="page-title green">COMPETIÇÕES</div>
@@ -1416,6 +1428,7 @@ function AlunoCompeticoes({user,showToast}){
         <button className="btn btn-primary" onClick={add}>+ Cadastrar evento</button>
       </div>
     </div>
+    </>
   );
 }
 
