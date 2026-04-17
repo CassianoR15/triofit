@@ -33,7 +33,7 @@ function validateSenha(senha) {
 }
 import { supabase, DB } from "./lib/supabase.js";
 
-const _v='TRIOFIT_BUILD_1776447892';
+const _v='TRIOFIT_BUILD_1776449118';
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -2346,11 +2346,13 @@ function MeuPerfil({user,treinador,nutri,vinculo,onVinculoChange,showToast}){
     await DB.setData("perfil_aluno",user.id,form);
     // Atualiza objetivo na tabela profiles
     if(form.objetivo!==undefined){
-      await supabase.from("profiles").update({objetivo:form.objetivo}).eq("id",user.id).catch(()=>{});
+      try{ await supabase.from("profiles").update({objetivo:form.objetivo}).eq("id",user.id); }catch{}
     }
     setSalvando(false);
     setEditando(false);
-    showToast&&showToast("✅ Perfil atualizado!");
+    // Atualiza objeto user em memória para refletir imediatamente
+    if(form.objetivo!==undefined){ user.objetivo=form.objetivo; }
+    showToast&&showToast("✅ Perfil atualizado! Recarregue para ver todas as mudanças.");
   }
 
   async function desvincularTreinador(){
