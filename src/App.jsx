@@ -33,7 +33,7 @@ function validateSenha(senha) {
 }
 import { supabase, DB } from "./lib/supabase.js";
 
-const _v='TRIOFIT_BUILD_1776450995';
+const _v='TRIOFIT_BUILD_1776451391';
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
