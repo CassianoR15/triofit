@@ -33,7 +33,7 @@ function validateSenha(senha) {
 }
 import { supabase, DB } from "./lib/supabase.js";
 
-const _v='TRIOFIT_BUILD_1776454492';
+const _v='TRIOFIT_BUILD_1776454864';
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -1426,7 +1426,7 @@ function AlunoCompeticoes({user,showToast}){
         <div className="page-title green">COMPETIÇÕES</div>
         <div className="page-sub">Visível para treinador e nutricionista</div>
       </div>
-      {(comps||[]).length>0&&<div className="card"><div className="card-title">📅 MEUS EVENTOS</div>
+      {aba==="lista"&&(comps||[]).length>0&&<div className="card"><div className="card-title">📅 MEUS EVENTOS</div>
           {(comps||[]).map((c,i)=>{
             const d=new Date(c.data);
             const diff=Math.ceil((d-new Date())/(1000*60*60*24));
@@ -1484,6 +1484,7 @@ function AlunoCompeticoes({user,showToast}){
         </div>
         <div className="form-group"><label className="form-label">Objetivo</label><select className="form-select" value={f.objetivo} onChange={e=>set("objetivo",e.target.value)}>{["Completar","Bater meu recorde","Subir no pódio","Subir no palco","Definição de peso"].map(o=><option key={o}>{o}</option>)}</select></div>
         <button className="btn btn-primary" onClick={add}>{editComp?"💾 Salvar alterações":"+ Cadastrar evento"}</button>
+        {editComp&&<button className="btn btn-ghost btn-sm" style={{marginTop:"0.5rem"}} onClick={()=>{setEditComp(null);setAba("lista");}}>Cancelar edição</button>}
       </div>}
     </div>
     </>
