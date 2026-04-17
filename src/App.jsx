@@ -33,7 +33,7 @@ function validateSenha(senha) {
 }
 import { supabase, DB } from "./lib/supabase.js";
 
-const _v='TRIOFIT_BUILD_1776449118';
+const _v='TRIOFIT_BUILD_1776449886';
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -1293,6 +1293,13 @@ function AlunoAvaliacao({user,showToast}){
       await DB.setData("avaliacao_hist",user.id,[...hist.slice(-11),entry]);
     }
     showToast&&showToast("Avaliação física salva! ✅");
+    // Notificar treinador e nutri
+    try{
+      const vinculo=await DB.getVinculoAluno(user.id);
+      const msg=`📊 ${user.nome} atualizou a avaliação física${f.peso?" — Peso: "+f.peso+"kg":""}`;
+      if(vinculo?.treinadorId)await DB.criarNotificacao(vinculo.treinadorId,"avaliacao","Nova avaliação",msg);
+      if(vinculo?.nutriId)await DB.criarNotificacao(vinculo.nutriId,"avaliacao","Nova avaliação",msg);
+    }catch{}
   }
   const imc=calcIMC(f.peso,f.altura);
   return(
@@ -1739,6 +1746,13 @@ function ResumoSemanalAluno({aluno,onVerCompleto}){
   const [meta]=useAlunoData(aluno.id,"meta_agua",3000);
   const [planoTreino]=useAlunoData(aluno.id,"plano_treino_aluno",null);
   const [av]=useAlunoData(aluno.id,"treino_avaliacao",{});
+  const [avalFisica]=useAlunoData(aluno.id,"avaliacao",{});
+  const [avalHist]=useAlunoData(aluno.id,"avaliacao_hist",[]);
+  const [objAluno,setObjAluno]=useState(aluno.objetivo||null);
+  useEffect(()=>{
+    if(aluno.id)supabase.from("profiles").select("objetivo").eq("id",aluno.id).maybeSingle()
+      .then(({data})=>{if(data?.objetivo)setObjAluno(data.objetivo);}).catch(()=>{});
+  },[aluno.id]);
   const diasDoente=saude.doente_desde?diffDays(saude.doente_desde):0;
 
   // Contar dias de treino feitos (baseado no check)
@@ -2168,6 +2182,9 @@ function NutriDash({user}){
   const [pacientes,]=useAsyncData(()=>DB.getAlunosDe(user.id),[user.id],[]);
   const [pacVer,setPacVer]=useState(null);
   const [saudeMapN,setSaudeMapN]=useState({});
+  const [avalMapT,setAvalMapT]=useState({});
+  const [avalHistMapT,setAvalHistMapT]=useState({});
+  const [objMapT,setObjMapT]=useState({});
   const [planoMapN,setPlanoMapN]=useState({});
   const [checkMapN,setCheckMapN]=useState({});
   const pacientesList=Array.isArray(pacientes)?pacientes:[];
@@ -2177,12 +2194,15 @@ function NutriDash({user}){
       Promise.all([
         DB.getData("saude",p.id),
         DB.getData("plano_alim_aluno",p.id),
-        DB.getData("alim_check_hoje",p.id)
-      ]).then(([s,pl,ch])=>({id:p.id,s:s||{},pl,ch:ch||{}}))
+        DB.getData("alim_check_hoje",p.id),
+        DB.getData("avaliacao",p.id),
+        DB.getData("avaliacao_hist",p.id),
+        supabase.from("profiles").select("objetivo").eq("id",p.id).maybeSingle().then(({data})=>data?.objetivo||null)
+      ]).then(([s,pl,ch,av,avh,obj])=>({id:p.id,s:s||{},pl,ch:ch||{},av:av||{},avh:avh||[],obj}))
     )).then(results=>{
-      const sm={},pm={},cm={};
-      results.forEach(({id,s,pl,ch})=>{sm[id]=s;pm[id]=pl;cm[id]=ch;});
-      setSaudeMapN(sm);setPlanoMapN(pm);setCheckMapN(cm);
+      const sm={},pm={},cm={},avm={},avhm={},objm={};
+      results.forEach(({id,s,pl,ch,av,avh,obj})=>{sm[id]=s;pm[id]=pl;cm[id]=ch;avm[id]=av;avhm[id]=avh;objm[id]=obj;});
+      setSaudeMapN(sm);setAvalMapT(avm);setAvalHistMapT(avhm);setObjMapT(objm);setPlanoMapN(pm);setCheckMapN(cm);
     });
   },[pacientes?.length]);
   if(pacVer)return<DiarioAluno aluno={pacVer} onBack={()=>setPacVer(null)}/>;
