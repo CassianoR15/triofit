@@ -33,7 +33,7 @@ function validateSenha(senha) {
 }
 import { supabase, DB } from "./lib/supabase.js";
 
-const _v='TRIOFIT_BUILD_1776455147';
+const _v='TRIOFIT_BUILD_1776692742';
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -547,7 +547,11 @@ function AuthScreen({onLogin}){
           </form>
         )}
         <div className="auth-switch">{tab==="login"?<>Não tem conta? <span onClick={()=>{setTab("register");setError("");}}>Cadastre-se grátis</span></>:<>Já tem conta? <span onClick={()=>{setTab("login");setError("");}}>Entrar</span></>}</div>
-        <div className="demo-box"><b>🔑 Contas demo:</b><br/>aluno@demo.com • 123456<br/>treinador@demo.com • 123456<br/>nutri@demo.com • 123456</div>
+        <div className="demo-box" style={{textAlign:"center"}}>
+          <b>🧪 Quer testar o TrioFit?</b><br/>
+          <span style={{fontSize:"0.85rem",color:"var(--text2)"}}>Entre em contato pelo Instagram</span><br/>
+          <a href="https://instagram.com/triofit.app" target="_blank" style={{color:"var(--green)",fontWeight:600,fontSize:"0.9rem"}}>@triofit.app</a>
+        </div>
       </div>
     </div>
   );
@@ -1599,13 +1603,15 @@ function TreinadorPrescrever({user,showToast}){
 
   async function salvar(){
     if(!alunoSel){showToast&&showToast("Selecione um aluno primeiro","warn");return;}
-    const planoExistente=await DB.getData("plano_treino_aluno",alunoSel.id);
-    if(planoExistente){const ok=await confirm(`Substituir o treino de ${alunoSel.nome.split(" ")[0]}? O plano atual será perdido.`);if(!ok)return;}
     const fimDate=addMonths(new Date(inicio),duracao);
     const plano={nome:nomePlano,modalidade,duracao,inicio,fim:fimDate.toISOString(),dias,criadoEm:new Date().toISOString()};
-    await DB.setData("plano_treino_aluno",alunoSel.id,plano);
-    showToast&&showToast(`✅ Treino prescrito para ${alunoSel.nome.split(" ")[0]}! O aluno já pode ver no app.`);
-    
+    try{
+      await DB.setData("plano_treino_aluno",alunoSel.id,plano);
+      showToast&&showToast(`✅ Treino prescrito para ${alunoSel.nome.split(" ")[0]}!`);
+      try{await DB.criarNotificacao(alunoSel.id,"treino","Novo treino disponível",`${user.nome} prescreveu um novo plano para você! 💪`);}catch{}
+    }catch(e){
+      showToast&&showToast("Erro: "+e.message,"warn");
+    }
   }
 
   const diaAtual=dias[diaEdit]||{exercicios:[]};
@@ -1741,6 +1747,14 @@ function TreinadorPrescrever({user,showToast}){
             </div>
           </div>
 
+          <div style={{display:"flex",gap:"0.5rem",marginBottom:"0.5rem",flexWrap:"wrap"}}>
+            <button className="btn btn-sm btn-ghost" onClick={async()=>{
+              const ok=await confirm("Deletar o plano atual de "+alunoSel.nome.split(" ")[0]+"?");
+              if(!ok)return;
+              await DB.setData("plano_treino_aluno",alunoSel.id,null);
+              showToast&&showToast("Plano deletado!","warn");
+            }}>🗑️ Deletar plano</button>
+          </div>
           <button className="btn btn-orange btn-full" onClick={salvar}>📤 Enviar plano para {alunoSel.nome.split(" ")[0]}</button>
         </>
       )}
