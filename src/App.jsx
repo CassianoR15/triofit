@@ -33,7 +33,7 @@ function validateSenha(senha) {
 }
 import { supabase, DB } from "./lib/supabase.js";
 
-const _v='TRIOFIT_BUILD_1776692742';
+const _v='TRIOFIT_BUILD_1776693134';
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -547,10 +547,28 @@ function AuthScreen({onLogin}){
           </form>
         )}
         <div className="auth-switch">{tab==="login"?<>Não tem conta? <span onClick={()=>{setTab("register");setError("");}}>Cadastre-se grátis</span></>:<>Já tem conta? <span onClick={()=>{setTab("login");setError("");}}>Entrar</span></>}</div>
-        <div className="demo-box" style={{textAlign:"center"}}>
-          <b>🧪 Quer testar o TrioFit?</b><br/>
-          <span style={{fontSize:"0.85rem",color:"var(--text2)"}}>Entre em contato pelo Instagram</span><br/>
-          <a href="https://instagram.com/triofit.app" target="_blank" style={{color:"var(--green)",fontWeight:600,fontSize:"0.9rem"}}>@triofit.app</a>
+        <div className="demo-box">
+          <div style={{fontWeight:600,color:"var(--text2)",marginBottom:"0.6rem"}}>🔑 Acesso rápido para teste</div>
+          <div style={{display:"flex",flexDirection:"column",gap:"0.4rem"}}>
+            {[
+              {label:"👤 Aluno",email:"aluno@demo.com",senha:"123456",color:"var(--green)"},
+              {label:"🏋️ Treinador",email:"treinador@demo.com",senha:"123456",color:"var(--orange)"},
+              {label:"🥗 Nutricionista",email:"nutri@demo.com",senha:"123456",color:"var(--blue)"}
+            ].map(d=>(
+              <button key={d.email} onClick={()=>{setEmail(d.email);setSenha(d.senha);}}
+                style={{display:"flex",justifyContent:"space-between",alignItems:"center",
+                  padding:"0.4rem 0.7rem",borderRadius:"8px",border:"1px solid "+d.color+"44",
+                  background:d.color+"11",cursor:"pointer",width:"100%"}}>
+                <span style={{fontWeight:600,color:d.color,fontSize:"0.82rem"}}>{d.label}</span>
+                <span style={{fontFamily:"var(--font-mono)",fontSize:"0.75rem",color:"var(--text3)"}}>
+                  {d.email}
+                </span>
+              </button>
+            ))}
+          </div>
+          <div style={{marginTop:"0.5rem",fontSize:"0.72rem",color:"var(--text3)",textAlign:"center"}}>
+            Clique para preencher • senha: <b style={{fontFamily:"var(--font-mono)"}}>123456</b>
+          </div>
         </div>
       </div>
     </div>
