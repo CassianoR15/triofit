@@ -33,7 +33,7 @@ function validateSenha(senha) {
 }
 import { supabase, DB } from "./lib/supabase.js";
 
-const _v='TRIOFIT_BUILD_1776693134';
+const _v='TRIOFIT_BUILD_1777311521';
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -1517,9 +1517,17 @@ function AlunoDash({user,setPage,vinculo:vinculoProp,treinador:treinadorProp,nut
   const [treinador,,]=useAsyncData(()=>vinculo?.treinadorId?DB.getUserById(vinculo.treinadorId):Promise.resolve(null),[vinculo?.treinadorId],null);
   const [nutri,,]=useAsyncData(()=>vinculo?.nutriId?DB.getUserById(vinculo.nutriId):Promise.resolve(null),[vinculo?.nutriId],null);
   const [agua,,]=useAlunoData(user.id,"agua_hoje",0);
+  const [comps,,]=useAlunoData(user.id,"competicoes",[]);
+  const proximaComp=Array.isArray(comps)?comps.filter(c=>new Date(c.data)>new Date()).sort((a,b)=>new Date(a.data)-new Date(b.data))[0]:null;
   const [meta,,]=useAlunoData(user.id,"meta_agua",3000);
   const [saude,,]=useAlunoData(user.id,"saude",{});
   const [planoTreino,,]=useAlunoData(user.id,"plano_treino_aluno",null);
+  const [treinosHist,,]=useAlunoData(user.id,"treinos_hist",[]);
+  const streak=Array.isArray(treinosHist)?treinosHist.filter(t=>{
+    const d=new Date(t.data);
+    const hoje=new Date();
+    return(hoje-d)<7*24*60*60*1000;
+  }).length:0;
   const [avalDash,,]=useAlunoData(user.id,"avaliacao",{});
   const pct=Math.min(Math.round(((agua||0)/Math.max(meta||3000,1))*100),100);
   const hoje=new Date().getDay();const diaHoje=hoje===0?6:hoje-1;
@@ -1530,6 +1538,7 @@ function AlunoDash({user,setPage,vinculo:vinculoProp,treinador:treinadorProp,nut
         {getObjetivo(user.objetivo||"emagrecimento").icon} {getGreeting()}, {firstName(user.nome)}!
       </div>
       {user.objetivo&&<div className="page-sub" style={{color:getObjetivo(user.objetivo).color,opacity:0.8}}>Foco: {getObjetivo(user.objetivo).label}</div>}
+      {streak>0&&<div style={{fontSize:"0.82rem",color:"var(--orange)",fontWeight:600}}>🔥 {streak} treino{streak>1?"s":""} essa semana</div>}
       <div className="page-sub">{getDateStr()}</div>
       {!treinador&&!nutri&&<div className="alert alert-warn">⚠️ Sem equipe vinculada. Vá em <b>Minha Equipe</b> e insira o código do seu treinador e nutricionista!</div>}
       <div className="grid-4">
@@ -1594,6 +1603,7 @@ function TreinadorPrescrever({user,showToast}){
   const [nomePlano,setNomePlano]=useState("Treino A/B/C");
   const [modalidade,setModalidade]=useState("musculacao");
   const [duracao,setDuracao]=useState(1);
+  const [periodizacao,setPeriodizacao]=useState("linear");
   const [inicio,setInicio]=useState(()=>new Date().toISOString().split("T")[0]);
   const [dias,setDias]=useState(()=>DIAS_SEMANA.map((_,i)=>({nome:`Treino ${String.fromCharCode(65+i)}`,tipo:i<5?"academia":"descanso",obs:"",exercicios:[],distancia:"",ritmo:"",zona:"",duracaoTotal:"",rounds:"",tempoRound:"",foco:"",modalidadeLuta:""})));
   const [diaEdit,setDiaEdit]=useState(0);
@@ -1622,7 +1632,7 @@ function TreinadorPrescrever({user,showToast}){
   async function salvar(){
     if(!alunoSel){showToast&&showToast("Selecione um aluno primeiro","warn");return;}
     const fimDate=addMonths(new Date(inicio),duracao);
-    const plano={nome:nomePlano,modalidade,duracao,inicio,fim:fimDate.toISOString(),dias,criadoEm:new Date().toISOString()};
+    const plano={nome:nomePlano,modalidade,duracao,inicio,fim:fimDate.toISOString(),dias,periodizacao,criadoEm:new Date().toISOString()};
     try{
       await DB.setData("plano_treino_aluno",alunoSel.id,plano);
       showToast&&showToast(`✅ Treino prescrito para ${alunoSel.nome.split(" ")[0]}!`);
@@ -2021,6 +2031,24 @@ function DiarioAluno({aluno,onBack}){
       </div>
 
       {/* HIDRATAÇÃO */}
+      {proximaComp&&(()=>{
+        const diff=Math.ceil((new Date(proximaComp.data)-new Date())/(1000*60*60*24));
+        const color=diff<=7?"var(--red)":diff<=30?"var(--orange)":"var(--green)";
+        return(
+          <div className="card" style={{borderLeft:"3px solid "+color}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+              <div>
+                <div style={{fontWeight:600,fontSize:"0.9rem"}}>🏆 {proximaComp.nome}</div>
+                <div style={{fontSize:"0.78rem",color:"var(--text2)"}}>{proximaComp.modalidade} • {proximaComp.local}</div>
+              </div>
+              <div style={{textAlign:"right"}}>
+                <div style={{fontWeight:700,color,fontSize:"1rem"}}>{diff===0?"HOJE!":diff===1?"Amanhã":diff+"d"}</div>
+                <div style={{fontSize:"0.7rem",color:"var(--text3)"}}>para a prova</div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
       <div className="card">
         <div className="card-title">💧 HIDRATAÇÃO</div>
         <div className="grid-2" style={{marginBottom:"1rem"}}>
