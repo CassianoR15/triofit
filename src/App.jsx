@@ -33,7 +33,7 @@ function validateSenha(senha) {
 }
 import { supabase, DB } from "./lib/supabase.js";
 
-const _v='TRIOFIT_BUILD_1777561112';
+const _v='TRIOFIT_BUILD_1777561278';
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -1662,6 +1662,7 @@ function TreinadorPrescrever({user,showToast}){
   const [alunos,]=useAsyncData(()=>DB.getAlunosDe(user.id),[user.id],[]);
   const [alunoSel,setAlunoSel]=useState(null);
   const [planoDeletado,setPlanoDeletado]=useState(false);
+  const [formKey,setFormKey]=useState(0);
   // Reset planoDeletado quando aluno muda
   useEffect(()=>{setPlanoDeletado(false);},[alunoSel?.id]);
   const [nomePlano,setNomePlano]=useState("Treino A/B/C");
@@ -1726,7 +1727,7 @@ function TreinadorPrescrever({user,showToast}){
       </div>
 
       {alunoSel&&(
-        <>
+        <React.Fragment key={formKey}>
           {/* CONFIGURAÃÃES DO PLANO */}
           <div className="card">
             <div className="card-title">—ï¸ CONFIGURAÃÃES DO PLANO</div>
@@ -1852,13 +1853,11 @@ function TreinadorPrescrever({user,showToast}){
               await DB.setData("plano_treino_aluno",alunoSel.id,null);
               showToast&&showToast("Plano deletado! Monte o novo plano abaixo.","warn");
               // Reset completo: limpa aluno, reseta form, restaura aluno
-              const alunoTemp=alunoSel;
-              setAlunoSel(null);
               setDias(DIAS_SEMANA.map((_,i)=>({nome:`Treino ${String.fromCharCode(65+i)}`,tipo:i<5?"academia":"descanso",obs:"",exercicios:[]})));
               setNomePlano("Treino A/B/C");
+              setDiaEdit(0);
               setPlanoDeletado(true);
-              // Pequeno delay para forçar re-render antes de restaurar
-              setTimeout(()=>setAlunoSel(alunoTemp),100);
+              setFormKey(k=>k+1);
             }}>🗑️ Deletar plano</button>
           </div>
           {planoDeletado&&<div style={{padding:"0.75rem",background:"#ff6b2b18",border:"2px dashed var(--orange)",borderRadius:"8px",marginBottom:"0.75rem",textAlign:"center"}}>
@@ -1866,7 +1865,7 @@ function TreinadorPrescrever({user,showToast}){
             <div style={{fontSize:"0.78rem",color:"var(--text2)",marginTop:"0.25rem"}}>Monte os dias abaixo e clique em Criar novo treino</div>
           </div>}
           <button className="btn btn-orange btn-full" onClick={()=>{setPlanoDeletado(false);salvar();}}>📤 {planoDeletado?"Criar novo treino para":"Enviar plano para"} {alunoSel.nome.split(" ")[0]}</button>
-        </>
+        </React.Fragment>
       )}
     </div>
     </>
