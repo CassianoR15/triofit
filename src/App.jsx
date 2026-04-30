@@ -33,7 +33,7 @@ function validateSenha(senha) {
 }
 import { supabase, DB } from "./lib/supabase.js";
 
-const _v='TRIOFIT_BUILD_1777562367';
+const _v='TRIOFIT_BUILD_1777562551';
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -1657,7 +1657,7 @@ function AlunoDash({user,setPage,vinculo:vinculoProp,treinador:treinadorProp,nut
 // ============================================================
 // TREINADOR — PRESCREVER TREINO
 // ============================================================
-function TreinadorPrescrever({user,showToast}){
+function TreinadorPrescrever({user,showToast,setPage}){
   const {confirm,Modal:ConfirmModalEl}=useConfirm();
   const [alunos,]=useAsyncData(()=>DB.getAlunosDe(user.id),[user.id],[]);
   const [alunoSel,setAlunoSel]=useState(null);
@@ -1869,12 +1869,13 @@ function TreinadorPrescrever({user,showToast}){
               const alunoNomeTemp=alunoSel.nome;
               await DB.setData("plano_treino_aluno",alunoId,null);
               // Limpa seleção para forçar re-render completo
+              // Navega para dashboard e volta — força remount completo do prescrever
+              showToast&&showToast("✅ Plano de "+alunoNomeTemp.split(" ")[0]+" deletado! Monte o novo plano.");
               setAlunoSel(null);
-              setDias(DIAS_SEMANA.map((_,i)=>({nome:`Treino ${String.fromCharCode(65+i)}`,tipo:i<5?"academia":"descanso",obs:"",exercicios:[]})));
-              setNomePlano("Treino A/B/C");
-              setDiaEdit(0);
-              setPlanoDeletado({id:alunoId,nome:alunoNomeTemp});
-              setFormKey(k=>k+1);
+              if(setPage){
+                setPage("dashboard");
+                setTimeout(()=>setPage("prescrever"),500);
+              }
             }}>🗑️ Deletar plano</button>
           </div>}
           {/* banner moved to top */}
@@ -3096,7 +3097,7 @@ function TreinadorApp({user,onLogout}){
     const interval=setInterval(checkMsgs,30000);
     return()=>clearInterval(interval);
   },[user.id]);
-  const pages={dashboard:<TreinadorDash user={user}/>,cadastrar:<CadastrarAluno user={user} showToast={show}/>,prescrever:<TreinadorPrescrever user={user} showToast={show}/>,acompanhamento:<TreinadorAcompanhamento user={user}/>,chat:<ProfChat user={user} showToast={show}/>};
+  const pages={dashboard:<TreinadorDash user={user}/>,cadastrar:<CadastrarAluno user={user} showToast={show}/>,prescrever:<TreinadorPrescrever user={user} showToast={show} setPage={setPage}/>,acompanhamento:<TreinadorAcompanhamento user={user}/>,chat:<ProfChat user={user} showToast={show}/>};
   return(<>{ToastEl}<Shell user={user} onLogout={onLogout} nav={NAV_TREINADOR} active={page} setActive={setPage} accent="orange" alertCount={alertCount}>{pages[page]}</Shell></>);
 }
 function NutriApp({user,onLogout}){
