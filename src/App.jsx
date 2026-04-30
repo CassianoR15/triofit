@@ -33,7 +33,7 @@ function validateSenha(senha) {
 }
 import { supabase, DB } from "./lib/supabase.js";
 
-const _v='TRIOFIT_BUILD_1777561278';
+const _v='TRIOFIT_BUILD_1777561875';
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -1728,7 +1728,10 @@ function TreinadorPrescrever({user,showToast}){
 
       {alunoSel&&(
         <React.Fragment key={formKey}>
-          {/* CONFIGURAÃÃES DO PLANO */}
+          {planoDeletado&&<div style={{padding:"1rem",background:"#22c55e18",border:"2px solid var(--green)",borderRadius:"8px",marginBottom:"0.75rem",textAlign:"center"}}>
+            <div style={{fontWeight:700,color:"var(--green)",fontSize:"1.1rem"}}>✅ Plano deletado com sucesso!</div>
+            <div style={{fontSize:"0.85rem",color:"var(--text2)",marginTop:"0.25rem"}}>Monte o novo plano abaixo e clique em <b>Criar novo treino</b></div>
+          </div>}
           <div className="card">
             <div className="card-title">—ï¸ CONFIGURAÃÃES DO PLANO</div>
             <div className="grid-2">
@@ -1846,7 +1849,7 @@ function TreinadorPrescrever({user,showToast}){
             </div>
           </div>
 
-          <div style={{display:"flex",gap:"0.5rem",marginBottom:"0.5rem",flexWrap:"wrap"}}>
+          {!planoDeletado&&<div style={{display:"flex",gap:"0.5rem",marginBottom:"0.5rem",flexWrap:"wrap"}}>
             <button className="btn btn-sm btn-ghost" onClick={async()=>{
               const ok=await confirm("Deletar o plano atual de "+alunoSel.nome.split(" ")[0]+"?");
               if(!ok)return;
@@ -1859,12 +1862,14 @@ function TreinadorPrescrever({user,showToast}){
               setPlanoDeletado(true);
               setFormKey(k=>k+1);
             }}>🗑️ Deletar plano</button>
-          </div>
-          {planoDeletado&&<div style={{padding:"0.75rem",background:"#ff6b2b18",border:"2px dashed var(--orange)",borderRadius:"8px",marginBottom:"0.75rem",textAlign:"center"}}>
-            <div style={{fontWeight:700,color:"var(--orange)",fontSize:"1rem"}}>✏️ Criando novo plano para {alunoSel.nome.split(" ")[0]}</div>
-            <div style={{fontSize:"0.78rem",color:"var(--text2)",marginTop:"0.25rem"}}>Monte os dias abaixo e clique em Criar novo treino</div>
           </div>}
-          <button className="btn btn-orange btn-full" onClick={()=>{setPlanoDeletado(false);salvar();}}>📤 {planoDeletado?"Criar novo treino para":"Enviar plano para"} {alunoSel.nome.split(" ")[0]}</button>
+          {/* banner moved to top */}
+
+
+
+          <button className="btn btn-orange btn-full" onClick={()=>{setPlanoDeletado(false);salvar();}}>
+            {planoDeletado?"🆕 Criar novo treino para "+alunoSel.nome.split(" ")[0]:"📤 Enviar plano para "+alunoSel.nome.split(" ")[0]}
+          </button>
         </React.Fragment>
       )}
     </div>
