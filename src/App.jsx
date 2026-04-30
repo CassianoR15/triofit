@@ -14,7 +14,7 @@ function fmtTime(iso){
   }catch{return"";}
 }
 
-// Sanitização de input — previne XSS
+// Sanitização de input — previne XSS
 function sanitize(str) {
   if (typeof str !== 'string') return str;
   return str.replace(/[<>'"&]/g, c => ({'<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;','&':'&amp;'}[c]));
@@ -33,7 +33,7 @@ function validateSenha(senha) {
 }
 import { supabase, DB } from "./lib/supabase.js";
 
-const _v='TRIOFIT_BUILD_1777311521';
+const _v='TRIOFIT_BUILD_1777555616';
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -207,12 +207,12 @@ const styles = `
   .spinner { width:20px; height:20px; border:2px solid var(--border); border-top-color:var(--green); border-radius:50%; animation:spin 0.7s linear infinite; display:inline-block; }
   @keyframes spin { to { transform:rotate(360deg); } }
 
-  /* CÓDIGO */
+  /* CÃDIGO */
   .codigo-box { background:var(--bg2); border:2px dashed var(--border); border-radius:var(--radius-lg); padding:1.5rem; text-align:center; margin-bottom:1rem; }
   .codigo-val { font-family:var(--font-mono); font-size:2.2rem; letter-spacing:0.3em; color:var(--green); font-weight:700; margin:0.5rem 0; }
   .codigo-label { font-size:0.75rem; color:var(--text3); letter-spacing:0.15em; text-transform:uppercase; }
 
-  /* SAÚDE STATUS */
+  /* SAÃDE STATUS */
   .saude-status-box { border-radius:var(--radius-lg); padding:1.25rem; margin-bottom:0.75rem; display:flex; align-items:center; gap:1rem; }
   .saude-status-box.doente { background:var(--red-dim); border:1px solid rgba(231,76,60,0.4); }
   .saude-status-box.dor { background:var(--orange-dim); border:1px solid rgba(243,156,18,0.4); }
@@ -221,12 +221,12 @@ const styles = `
   .saude-status-titulo { font-family:var(--font-display); font-size:1.4rem; letter-spacing:0.05em; }
   .saude-status-dias { font-size:0.85rem; margin-top:0.15rem; }
 
-  /* DIÁRIO */
+  /* DIÃRIO */
   .diario-section { background:var(--bg2); border-radius:var(--radius); padding:1rem; margin-bottom:0.75rem; }
   .diario-label { font-size:0.7rem; color:var(--text3); text-transform:uppercase; letter-spacing:0.15em; margin-bottom:0.5rem; }
   .diario-val { font-size:0.9rem; color:var(--text); }
 
-  /* VÍNCULO */
+  /* VÃNCULO */
   .vinc-input-wrap { display:flex; gap:0.75rem; align-items:flex-end; }
   .vinc-resultado { background:var(--green-dim); border:1px solid rgba(46,204,113,0.3); border-radius:var(--radius); padding:0.85rem 1rem; display:flex; align-items:center; gap:0.75rem; margin-top:0.75rem; }
   .vinc-avatar { width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.9rem; font-weight:700; flex-shrink:0; font-family:var(--font-display); background:var(--border); }
@@ -251,7 +251,7 @@ const styles = `
   .ex-nome { font-weight:600; font-size:0.9rem; flex:1; }
   .ex-info { font-size:0.78rem; color:var(--text2); }
 
-  /* REFEIÇÃO CHECKBOX */
+  /* REFEIÃÃO CHECKBOX */
   .refeicao-item { display:flex; align-items:center; gap:1rem; padding:0.85rem; border-radius:var(--radius-lg); margin-bottom:0.5rem; border:1px solid var(--border); transition:all 0.2s; cursor:pointer; }
   .refeicao-item:hover { background:var(--card2); }
   .refeicao-item.comido { background:var(--green-dim); border-color:rgba(46,204,113,0.3); }
@@ -270,7 +270,7 @@ const styles = `
   .aluno-sel-btn.sel-blue { background:rgba(52,152,219,0.15); border-color:var(--blue); color:var(--blue); }
   .aluno-sel-avatar { width:24px; height:24px; border-radius:50%; background:var(--border); display:flex; align-items:center; justify-content:center; font-size:0.65rem; font-weight:700; font-family:var(--font-display); }
 
-  /* PERÍODO */
+  /* PERÃODO */
   .periodo-card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); padding:1rem; margin-bottom:1rem; }
   .periodo-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.3rem 0.75rem; border-radius:999px; font-size:0.78rem; font-weight:700; background:var(--green-dim); color:var(--green); font-family:var(--font-mono); }
 
@@ -336,13 +336,13 @@ const styles = `
 // ============================================================
 function Toast({msg,type,onClose}){
   useEffect(()=>{const t=setTimeout(onClose,3800);return()=>clearTimeout(t);},[]);
-  const icons={success:"✅",warn:"⚠️",error:"❌"};
+  const icons={success:"—",warn:"— ï¸",error:"—"};
   const borders={success:"rgba(46,204,113,0.4)",warn:"rgba(243,156,18,0.4)",error:"rgba(231,76,60,0.4)"};
   return(
     <div style={{position:"fixed",top:"1.25rem",right:"1.25rem",background:"var(--card)",border:`1px solid ${borders[type]||borders.success}`,borderRadius:"var(--radius-lg)",padding:"0.85rem 1.1rem",display:"flex",alignItems:"center",gap:"0.75rem",boxShadow:"0 8px 32px rgba(0,0,0,0.5)",zIndex:9999,fontSize:"0.88rem",maxWidth:"320px",animation:"slideInRight 0.3s cubic-bezier(.34,1.56,.64,1)",backdropFilter:"blur(8px)"}}>
       <span style={{fontSize:"1.1rem"}}>{icons[type]||icons.success}</span>
       <span style={{flex:1,lineHeight:1.4}}>{msg}</span>
-      <span style={{cursor:"pointer",opacity:0.4,fontSize:"1.1rem",flexShrink:0,lineHeight:1}} onClick={onClose}>✕</span>
+      <span style={{cursor:"pointer",opacity:0.4,fontSize:"1.1rem",flexShrink:0,lineHeight:1}} onClick={onClose}>—</span>
     </div>
   );
 }
@@ -380,19 +380,73 @@ function gerarCodigo(seed){
 }
 function addMonths(date,n){const d=new Date(date);d.setMonth(d.getMonth()+n);return d;}
 
-const TIPO_ICONS={descanso:"😴",academia:"🏋️",corrida:"🏃",natacao:"🏊",luta:"🥊",ciclismo:"🚴",funcional:"⚡",caminhada:"🚶",yoga:"🧘",treino:"🏋️"};
+const TIPO_ICONS={descanso:"📅´",academia:"📅ï¸",corrida:"📅",natacao:"📅",luta:"📅¥",ciclismo:"📅´",funcional:"—¡",caminhada:"📅¶",yoga:"📅§",treino:"📅ï¸"};
 const OBJETIVOS=[
-  {id:"emagrecimento",label:"Emagrecimento",icon:"🔥",color:"var(--orange)"},
-  {id:"ganho_massa",label:"Ganho de Massa",icon:"💪",color:"var(--green)"},
-  {id:"preparacao",label:"Preparação",icon:"⚡",color:"#60a5fa"},
-  {id:"competicao",label:"Competição",icon:"🏆",color:"#ef4444"},
-  {id:"manutencao",label:"Manutenção",icon:"⚖️",color:"#a78bfa"},
-  {id:"saude",label:"Saúde Geral",icon:"❤️",color:"#22d3ee"},
-  {id:"reabilitacao",label:"Reabilitação",icon:"🩺",color:"#facc15"},
+  {id:"emagrecimento",label:"Emagrecimento",icon:"📅¥",color:"var(--orange)"},
+  {id:"ganho_massa",label:"Ganho de Massa",icon:"📅ª",color:"var(--green)"},
+  {id:"preparacao",label:"Preparação",icon:"—¡",color:"#60a5fa"},
+  {id:"competicao",label:"Competição",icon:"📅",color:"#ef4444"},
+  {id:"manutencao",label:"Manutenção",icon:"—ï¸",color:"#a78bfa"},
+  {id:"saude",label:"Saúde Geral",icon:"—¤ï¸",color:"#22d3ee"},
+  {id:"reabilitacao",label:"Reabilitação",icon:"📅©º",color:"#facc15"},
 ];
-function getObjetivo(id){return OBJETIVOS.find(o=>o.id===id)||{id:"",label:"",icon:"💪",color:"var(--green)"};}
+const BANCO_EXERCICIOS=[
+  // PEITO
+  {nome:"Supino Reto",grupo:"Peito",video:"https://www.youtube.com/watch?v=rT7DgCr-3pg"},
+  {nome:"Supino Inclinado",grupo:"Peito",video:"https://www.youtube.com/watch?v=DbFgADa2PL8"},
+  {nome:"Supino Declinado",grupo:"Peito",video:"https://www.youtube.com/watch?v=LfyQTpJgKXY"},
+  {nome:"Crucifixo",grupo:"Peito",video:"https://www.youtube.com/watch?v=eozdVDA78K0"},
+  {nome:"Crossover",grupo:"Peito",video:"https://www.youtube.com/watch?v=taI4XduLpTk"},
+  {nome:"Flexão de Braços",grupo:"Peito",video:"https://www.youtube.com/watch?v=IODxDxX7oi4"},
+  {nome:"Peck Deck",grupo:"Peito",video:"https://www.youtube.com/watch?v=Z57CtFmRMxA"},
+  // COSTAS
+  {nome:"Puxada Frontal",grupo:"Costas",video:"https://www.youtube.com/watch?v=CAwf7n6Luuc"},
+  {nome:"Remada Curvada",grupo:"Costas",video:"https://www.youtube.com/watch?v=kBWAon7ItDw"},
+  {nome:"Remada Unilateral",grupo:"Costas",video:"https://www.youtube.com/watch?v=pYcpY20QaE8"},
+  {nome:"Levantamento Terra",grupo:"Costas",video:"https://www.youtube.com/watch?v=op9kVnSso6Q"},
+  {nome:"Pull Up / Barra Fixa",grupo:"Costas",video:"https://www.youtube.com/watch?v=eGo4IYlbE5g"},
+  {nome:"Serrote",grupo:"Costas",video:"https://www.youtube.com/watch?v=pYcpY20QaE8"},
+  // OMBRO
+  {nome:"Desenvolvimento com Halter",grupo:"Ombro",video:"https://www.youtube.com/watch?v=HzIiNhHhhtA"},
+  {nome:"Desenvolvimento Arnold",grupo:"Ombro",video:"https://www.youtube.com/watch?v=6Z15_WdXmVw"},
+  {nome:"Elevação Lateral",grupo:"Ombro",video:"https://www.youtube.com/watch?v=3VcKaXpzqRo"},
+  {nome:"Elevação Frontal",grupo:"Ombro",video:"https://www.youtube.com/watch?v=hRJ6tR5-if0"},
+  {nome:"Encolhimento de Ombros",grupo:"Ombro",video:"https://www.youtube.com/watch?v=cJRVVxmytaM"},
+  // BÃCEPS
+  {nome:"Rosca Direta",grupo:"Bíceps",video:"https://www.youtube.com/watch?v=ykJmrZ5v0Oo"},
+  {nome:"Rosca Alternada",grupo:"Bíceps",video:"https://www.youtube.com/watch?v=sAq_ocpRh_I"},
+  {nome:"Rosca Martelo",grupo:"Bíceps",video:"https://www.youtube.com/watch?v=zC3nLlEvin4"},
+  {nome:"Rosca Scott",grupo:"Bíceps",video:"https://www.youtube.com/watch?v=fIWP-FRFNU0"},
+  {nome:"Rosca Concentrada",grupo:"Bíceps",video:"https://www.youtube.com/watch?v=Jvj2wV0vOYU"},
+  // TRÃCEPS
+  {nome:"Tríceps Pulley",grupo:"Tríceps",video:"https://www.youtube.com/watch?v=2-LAMcpzODU"},
+  {nome:"Tríceps Testa",grupo:"Tríceps",video:"https://www.youtube.com/watch?v=d_KZxkY_0cM"},
+  {nome:"Tríceps Coice",grupo:"Tríceps",video:"https://www.youtube.com/watch?v=YbX7Wd8jQ-Q"},
+  {nome:"Mergulho",grupo:"Tríceps",video:"https://www.youtube.com/watch?v=0326dy_-CzM"},
+  // PERNAS
+  {nome:"Agachamento",grupo:"Pernas",video:"https://www.youtube.com/watch?v=aclHkVaku9U"},
+  {nome:"Leg Press",grupo:"Pernas",video:"https://www.youtube.com/watch?v=IZxyjW7MPJQ"},
+  {nome:"Extensora",grupo:"Pernas",video:"https://www.youtube.com/watch?v=YyvSfVjQeL0"},
+  {nome:"Flexora",grupo:"Pernas",video:"https://www.youtube.com/watch?v=1Tq3QdYUuHs"},
+  {nome:"Stiff",grupo:"Pernas",video:"https://www.youtube.com/watch?v=1uDiW5--rAE"},
+  {nome:"Afundo / Lunges",grupo:"Pernas",video:"https://www.youtube.com/watch?v=QOVaHwm-Q6U"},
+  {nome:"Cadeira Adutora",grupo:"Pernas",video:"https://www.youtube.com/watch?v=KAoJsGFiSZQ"},
+  {nome:"Elevação Pélvica",grupo:"Pernas",video:"https://www.youtube.com/watch?v=8bbE64NuDTU"},
+  {nome:"Panturrilha em Pé",grupo:"Pernas",video:"https://www.youtube.com/watch?v=-M4-G8p1fCI"},
+  // ABDÃMEN
+  {nome:"Abdominal Crunch",grupo:"Abdômen",video:"https://www.youtube.com/watch?v=Xyd_fa5zoEU"},
+  {nome:"Prancha",grupo:"Abdômen",video:"https://www.youtube.com/watch?v=pSHjTRCQxIw"},
+  {nome:"Abdominal Infra",grupo:"Abdômen",video:"https://www.youtube.com/watch?v=l4kQd9eWclE"},
+  {nome:"Oblíquo",grupo:"Abdômen",video:"https://www.youtube.com/watch?v=pSHjTRCQxIw"},
+  // CARDIO / FUNCIONAL
+  {nome:"Burpee",grupo:"Funcional",video:"https://www.youtube.com/watch?v=dZgVxmf6jkA"},
+  {nome:"Jumping Jack",grupo:"Funcional",video:"https://www.youtube.com/watch?v=iSSAk4XCsRA"},
+  {nome:"Mountain Climber",grupo:"Funcional",video:"https://www.youtube.com/watch?v=nmwgirgXLYM"},
+  {nome:"Polichinelo",grupo:"Funcional",video:"https://www.youtube.com/watch?v=iSSAk4XCsRA"},
+];
+function getObjetivo(id){return OBJETIVOS.find(o=>o.id===id)||{id:"",label:"",icon:"📅ª",color:"var(--green)"};}
 const DIAS_SEMANA=["Segunda","Terça","Quarta","Quinta","Sexta","Sábado","Domingo"];
-const MODALIDADES=[{v:"musculacao",l:"💪 Musculação"},{v:"corrida",l:"🏃 Corrida"},{v:"natacao",l:"🏊 Natação"},{v:"luta",l:"🥊 Luta / Artes Marciais"},{v:"ciclismo",l:"🚴 Ciclismo"},{v:"caminhada",l:"🚶 Caminhada"},{v:"funcional",l:"⚡ Funcional"}];
+const MODALIDADES=[{v:"musculacao",l:"📅ª Musculação"},{v:"corrida",l:"📅 Corrida"},{v:"natacao",l:"📅 Natação"},{v:"luta",l:"📅¥ Luta / Artes Marciais"},{v:"ciclismo",l:"📅´ Ciclismo"},{v:"caminhada",l:"📅¶ Caminhada"},{v:"funcional",l:"—¡ Funcional"}];
 const MUSCLES=["Ombro D","Ombro E","Bíceps D","Bíceps E","Tríceps D","Tríceps E","Peitoral","Costas","Lombar","Abdômen","Glúteo","Quadríceps D","Quadríceps E","Panturrilha D","Panturrilha E","Isquio"];
 
 // ============================================================
@@ -477,13 +531,13 @@ function AuthScreen({onLogin}){
     <div className="auth-wrap">
       <div className="auth-box">
         <div className="auth-logo">TrioFit</div>
-        <div className="auth-subtitle">Aluno • Treinador • Nutricionista</div>
+        <div className="auth-subtitle">Aluno —¢ Treinador —¢ Nutricionista</div>
         <div className="auth-tabs">
           <div className={`auth-tab ${tab==="login"?"active":""}`} onClick={()=>{setTab("login");setError("");setSuccess("");}}>Entrar</div>
           <div className={`auth-tab ${tab==="register"?"active":""}`} onClick={async()=>{setTab("register");setError("");setSuccess("");await supabase.auth.signOut();}}>Criar conta</div>
         </div>
-        {error&&<div className="auth-error">⚠️ {error}</div>}
-        {success&&<div className="auth-success">✅ {success}</div>}
+        {error&&<div className="auth-error">— ï¸ {error}</div>}
+        {success&&<div className="auth-success">— {success}</div>}
         {tab==="login"?(
           <form onSubmit={handleLogin}>
             <div className="form-group">
@@ -493,8 +547,8 @@ function AuthScreen({onLogin}){
             <div className="form-group">
               <label className="form-label">Senha</label>
               <div style={{position:"relative"}}>
-                <input className="form-input" type={showSenha?"text":"password"} placeholder="••••••••" value={senha} onChange={e=>setSenha(e.target.value)} required style={{paddingRight:"3rem"}} autoComplete="current-password"/>
-                <button type="button" onClick={()=>setShowSenha(p=>!p)} style={{position:"absolute",right:"0.75rem",top:"50%",transform:"translateY(-50%)",background:"none",border:"none",color:"var(--text3)",fontSize:"1rem",cursor:"pointer",lineHeight:1,padding:"0.25rem"}}>{showSenha?"🙈":"👁️"}</button>
+                <input className="form-input" type={showSenha?"text":"password"} placeholder="—¢—¢—¢—¢—¢—¢—¢—¢" value={senha} onChange={e=>setSenha(e.target.value)} required style={{paddingRight:"3rem"}} autoComplete="current-password"/>
+                <button type="button" onClick={()=>setShowSenha(p=>!p)} style={{position:"absolute",right:"0.75rem",top:"50%",transform:"translateY(-50%)",background:"none",border:"none",color:"var(--text3)",fontSize:"1rem",cursor:"pointer",lineHeight:1,padding:"0.25rem"}}>{showSenha?"📅":"📅ï¸"}</button>
               </div>
             </div>
             <button className="btn btn-primary btn-full" type="submit" disabled={loading} style={{marginTop:"0.25rem"}}>
@@ -519,7 +573,7 @@ function AuthScreen({onLogin}){
           <form onSubmit={handleRegister}>
             <div className="form-group"><label className="form-label">Você é...</label>
               <div className="role-selector">
-                {[["aluno","🏃","Aluno"],["treinador","🏋️","Treinador"],["nutri","🥗","Nutricionista"]].map(([v,icon,lbl])=>(
+                {[["aluno","📅","Aluno"],["treinador","📅ï¸","Treinador"],["nutri","📅¥","Nutricionista"]].map(([v,icon,lbl])=>(
                   <div key={v} className={`role-opt ${role===v?`sel-${v}`:""}`} onClick={()=>setRole(v)}><div className="role-opt-icon">{icon}</div><div>{lbl}</div></div>
                 ))}
               </div>
@@ -548,12 +602,12 @@ function AuthScreen({onLogin}){
         )}
         <div className="auth-switch">{tab==="login"?<>Não tem conta? <span onClick={()=>{setTab("register");setError("");}}>Cadastre-se grátis</span></>:<>Já tem conta? <span onClick={()=>{setTab("login");setError("");}}>Entrar</span></>}</div>
         <div className="demo-box">
-          <div style={{fontWeight:600,color:"var(--text2)",marginBottom:"0.6rem"}}>🔑 Acesso rápido para teste</div>
+          <div style={{fontWeight:600,color:"var(--text2)",marginBottom:"0.6rem"}}>📅 Acesso rápido para teste</div>
           <div style={{display:"flex",flexDirection:"column",gap:"0.4rem"}}>
             {[
-              {label:"👤 Aluno",email:"aluno@demo.com",senha:"123456",color:"var(--green)"},
-              {label:"🏋️ Treinador",email:"treinador@demo.com",senha:"123456",color:"var(--orange)"},
-              {label:"🥗 Nutricionista",email:"nutri@demo.com",senha:"123456",color:"var(--blue)"}
+              {label:"📅¤ Aluno",email:"aluno@demo.com",senha:"123456",color:"var(--green)"},
+              {label:"📅ï¸ Treinador",email:"treinador@demo.com",senha:"123456",color:"var(--orange)"},
+              {label:"📅¥ Nutricionista",email:"nutri@demo.com",senha:"123456",color:"var(--blue)"}
             ].map(d=>(
               <button key={d.email} onClick={()=>{setEmail(d.email);setSenha(d.senha);}}
                 style={{display:"flex",justifyContent:"space-between",alignItems:"center",
@@ -567,7 +621,7 @@ function AuthScreen({onLogin}){
             ))}
           </div>
           <div style={{marginTop:"0.5rem",fontSize:"0.72rem",color:"var(--text3)",textAlign:"center"}}>
-            Clique para preencher • senha: <b style={{fontFamily:"var(--font-mono)"}}>123456</b>
+            Clique para preencher —¢ senha: <b style={{fontFamily:"var(--font-mono)"}}>123456</b>
           </div>
         </div>
       </div>
@@ -588,7 +642,7 @@ function Shell({user,onLogout,nav,active,setActive,accent,children}){
 
   return(
     <div className="shell">
-      {/* SIDEBAR — desktop */}
+      {/* SIDEBAR — desktop */}
       <div className="sidebar">
         <div style={{fontFamily:"var(--font-display)",fontSize:"2rem",letterSpacing:"0.05em",background:"linear-gradient(135deg,var(--green),var(--orange))",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",padding:"0 0.5rem",marginBottom:"0.1rem"}}>TrioFit</div>
         <div style={{margin:"0.75rem 0 1.5rem",padding:"0.75rem",background:"var(--card2)",borderRadius:"var(--radius)",border:"1px solid var(--border)",display:"flex",alignItems:"center",gap:"0.65rem"}}>
@@ -608,13 +662,13 @@ function Shell({user,onLogout,nav,active,setActive,accent,children}){
             ))}
           </div>
         ))}
-        <div className="sidebar-footer"><button className="logout-btn" onClick={onLogout} type="button">🚪 Sair da conta</button></div>
+        <div className="sidebar-footer"><button className="logout-btn" onClick={onLogout} type="button">📅ª Sair da conta</button></div>
       </div>
 
       {/* MAIN */}
       <div className="main">{children}</div>
 
-      {/* BOTTOM NAV — mobile */}
+      {/* BOTTOM NAV — mobile */}
       <nav className="mobile-nav">
         <div className="mobile-nav-items">
           {mobileItems.map(it=>(
@@ -633,14 +687,14 @@ function Shell({user,onLogout,nav,active,setActive,accent,children}){
                 const cur=overflow.findIndex(i=>i.id===active);
                 setActive(overflow[(cur+1)%overflow.length].id);
               }}>
-              <span className="mobile-nav-icon">☰</span>
+              <span className="mobile-nav-icon">—°</span>
               <span className="mobile-nav-label">Mais</span>
               {allItems.slice(4).some(i=>i.id===active)&&<div className="mobile-nav-dot"/>}
             </button>
           )}
           {/* Logout */}
           <button className="mobile-nav-item" onClick={onLogout} style={{color:"var(--text3)"}}>
-            <span className="mobile-nav-icon">🚪</span>
+            <span className="mobile-nav-icon">📅ª</span>
             <span className="mobile-nav-label">Sair</span>
           </button>
         </div>
@@ -659,9 +713,9 @@ function CodigoProfissional({user}){
   function copiar(){navigator.clipboard&&navigator.clipboard.writeText(codigo);setCopiado(true);setTimeout(()=>setCopiado(false),2000);}
   return(
     <div className="codigo-box">
-      <div className="codigo-label">Seu código — passe para seus {user.role==="treinador"?"alunos":"pacientes"}</div>
+      <div className="codigo-label">Seu código — passe para seus {user.role==="treinador"?"alunos":"pacientes"}</div>
       <div className="codigo-val">{codigo}</div>
-      <button className="btn btn-green-out btn-sm" onClick={copiar}>{copiado?"✅ Copiado!":"📋 Copiar código"}</button>
+      <button className="btn btn-green-out btn-sm" onClick={copiar}>{copiado?"— Copiado!":"📅 Copiar código"}</button>
     </div>
   );
 }
@@ -692,7 +746,7 @@ function VinculoPorCodigo({label,tipo,atual,onVincular}){
         <div style={{display:"flex",alignItems:"center",gap:"0.75rem",padding:"0.85rem",background:"var(--card2)",borderRadius:"var(--radius)",marginBottom:"1rem",border:"1px solid var(--border)"}}>
           <div className="vinc-avatar" style={{background:tipo==="treinador"?"var(--orange-dim)":"rgba(52,152,219,0.15)",color:cor}}>{initials(atual.nome)}</div>
           <div style={{flex:1}}><div style={{fontWeight:600}}>{atual.nome}</div><div style={{fontSize:"0.78rem",color:"var(--text2)"}}>Código: {gerarCodigo(atual.id)}</div></div>
-          <span className="tag" style={{background:tipo==="treinador"?"var(--orange-dim)":"rgba(52,152,219,0.1)",color:cor}}>✓ Vinculado</span>
+          <span className="tag" style={{background:tipo==="treinador"?"var(--orange-dim)":"rgba(52,152,219,0.1)",color:cor}}>— Vinculado</span>
         </div>
       )}
       <div className="form-group">
@@ -701,13 +755,13 @@ function VinculoPorCodigo({label,tipo,atual,onVincular}){
           <input className="form-input" placeholder="Ex: AB3X7K" value={codigo} onChange={e=>setCodigo(e.target.value.toUpperCase())} maxLength={6} style={{fontFamily:"var(--font-mono)",fontSize:"1.1rem",letterSpacing:"0.2em"}}/>
           <button className="btn btn-ghost" onClick={buscar} disabled={buscando}>{buscando?<span className="spinner"/>:"Buscar"}</button>
         </div>
-        {erro&&<div style={{color:"var(--red)",fontSize:"0.82rem",marginTop:"0.4rem"}}>⚠️ {erro}</div>}
+        {erro&&<div style={{color:"var(--red)",fontSize:"0.82rem",marginTop:"0.4rem"}}>— ï¸ {erro}</div>}
       </div>
       {encontrado&&(
         <div className="vinc-resultado">
           <div className="vinc-avatar" style={{background:tipo==="treinador"?"var(--orange-dim)":"rgba(52,152,219,0.15)",color:cor}}>{initials(encontrado.nome)}</div>
           <div style={{flex:1}}><div style={{fontWeight:600}}>{encontrado.nome}</div><div style={{fontSize:"0.8rem",color:"var(--text2)"}}>{label} encontrado!</div></div>
-          <button className="btn btn-primary btn-sm" onClick={confirmar}>Vincular ✓</button>
+          <button className="btn btn-primary btn-sm" onClick={confirmar}>Vincular —</button>
         </div>
       )}
     </div>
@@ -720,27 +774,27 @@ function SaudeStatusCard({status,onRecuperado,onDorRecuperado,soLeitura}){
     <div>
       {status.doente&&(
         <div className="saude-status-box doente">
-          <div className="saude-status-icon">🤒</div>
+          <div className="saude-status-icon">📅¤</div>
           <div style={{flex:1}}>
             <div className="saude-status-titulo" style={{color:"var(--red)"}}>{diasDoente} {pluralDia(diasDoente)} doente/gripado</div>
             {status.sintomas&&<div className="saude-status-dias" style={{color:"var(--red)"}}>{status.sintomas}</div>}
-            {!soLeitura&&<button className="btn btn-sm" style={{marginTop:"0.75rem",background:"var(--red)",color:"#fff"}} onClick={onRecuperado}>✅ Estou recuperado!</button>}
+            {!soLeitura&&<button className="btn btn-sm" style={{marginTop:"0.75rem",background:"var(--red)",color:"#fff"}} onClick={onRecuperado}>— Estou recuperado!</button>}
           </div>
         </div>
       )}
       {(status?.dores||[]).map((d,i)=>(
         <div key={i} className="saude-status-box dor">
-          <div className="saude-status-icon">🔴</div>
+          <div className="saude-status-icon">📅´</div>
           <div style={{flex:1}}>
-            <div className="saude-status-titulo" style={{color:"var(--orange)"}}>Dor — {d.musculo}</div>
-            <div className="saude-status-dias" style={{color:"var(--orange)"}}>{diffDays(d.desde)} {pluralDia(diffDays(d.desde))} com dor{d.intensidade?` • ${d.intensidade}/10`:""}</div>
-            {!soLeitura&&<button className="btn btn-sm" style={{marginTop:"0.75rem",background:"var(--orange)",color:"#0a0f0d"}} onClick={()=>onDorRecuperado(i)}>✅ Recuperado</button>}
+            <div className="saude-status-titulo" style={{color:"var(--orange)"}}>Dor — {d.musculo}</div>
+            <div className="saude-status-dias" style={{color:"var(--orange)"}}>{diffDays(d.desde)} {pluralDia(diffDays(d.desde))} com dor{d.intensidade?` —¢ ${d.intensidade}/10`:""}</div>
+            {!soLeitura&&<button className="btn btn-sm" style={{marginTop:"0.75rem",background:"var(--orange)",color:"#0a0f0d"}} onClick={()=>onDorRecuperado(i)}>— Recuperado</button>}
           </div>
         </div>
       ))}
       {!status.doente&&(!status.dores||status.dores.length===0)&&(
         <div className="saude-status-box bem">
-          <div className="saude-status-icon">💪</div>
+          <div className="saude-status-icon">📅ª</div>
           <div style={{flex:1}}><div className="saude-status-titulo" style={{color:"var(--green)"}}>Saudável</div><div className="saude-status-dias" style={{color:"var(--green)"}}>Nenhuma ocorrência registrada</div></div>
         </div>
       )}
@@ -748,7 +802,7 @@ function SaudeStatusCard({status,onRecuperado,onDorRecuperado,soLeitura}){
   );
 }
 
-// Seletor de aluno para prof — seleção única, clique no mesmo deseleciona
+// Seletor de aluno para prof — seleção única, clique no mesmo deseleciona
 function AlunoSelector({alunos,selecionado,onSelect,accentClass}){
   if(alunos.length===0)return null;
   return(
@@ -779,12 +833,12 @@ function PeriodoBadge({plano}){
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:"0.5rem"}}>
         <div>
           <div style={{fontSize:"0.75rem",color:"var(--text3)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:"0.3rem"}}>Vigência do plano</div>
-          <div style={{fontWeight:600,fontSize:"0.9rem"}}>{fmtDate(plano.inicio)} → {fmtDate(plano.fim)}</div>
-          <div style={{fontSize:"0.8rem",color:"var(--text2)",marginTop:"0.15rem"}}>{plano.duracao} {plano.duracao===1?"mês":"meses"} • {plano.nome}</div>
+          <div style={{fontWeight:600,fontSize:"0.9rem"}}>{fmtDate(plano.inicio)} — {fmtDate(plano.fim)}</div>
+          <div style={{fontSize:"0.8rem",color:"var(--text2)",marginTop:"0.15rem"}}>{plano.duracao} {plano.duracao===1?"mês":"meses"} —¢ {plano.nome}</div>
         </div>
         <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:"0.3rem"}}>
           <span className="periodo-badge" style={{background:ativo?"var(--green-dim)":"var(--red-dim)",color:ativo?"var(--green)":"var(--red)"}}>
-            {ativo?`✓ Ativo — ${diasRestantes}d restantes`:"⚠️ Expirado"}
+            {ativo?`— Ativo — ${diasRestantes}d restantes`:"— ï¸ Expirado"}
           </span>
         </div>
       </div>
@@ -793,7 +847,7 @@ function PeriodoBadge({plano}){
 }
 
 // ============================================================
-// ALUNO — MINHA EQUIPE
+// ALUNO — MINHA EQUIPE
 // ============================================================
 function AlunoVinculo({user,showToast,onVinculoChange}){
   const [vinculo,setVinculo]=useState({});
@@ -810,23 +864,23 @@ function AlunoVinculo({user,showToast,onVinculoChange}){
     }).catch(()=>{});
     return()=>{cancelled=true;};
   },[user.id]);
-  async function vincT(u){const n={...vinculo,treinadorId:u.id};await DB.setVinculoAluno(user.id,n.treinadorId,n.nutriId);setVinculo(n);setTreinador(u);onVinculoChange&&onVinculoChange();showToast&&showToast(`✅ Treinador ${u.nome.split(" ")[0]} vinculado!`);}
-  async function vincN(u){const n={...vinculo,nutriId:u.id};await DB.setVinculoAluno(user.id,n.treinadorId,n.nutriId);setVinculo(n);setNutri(u);onVinculoChange&&onVinculoChange();showToast&&showToast(`✅ Nutricionista ${u.nome.split(" ")[0]} vinculada!`);}
+  async function vincT(u){const n={...vinculo,treinadorId:u.id};await DB.setVinculoAluno(user.id,n.treinadorId,n.nutriId);setVinculo(n);setTreinador(u);onVinculoChange&&onVinculoChange();showToast&&showToast(`— Treinador ${u.nome.split(" ")[0]} vinculado!`);}
+  async function vincN(u){const n={...vinculo,nutriId:u.id};await DB.setVinculoAluno(user.id,n.treinadorId,n.nutriId);setVinculo(n);setNutri(u);onVinculoChange&&onVinculoChange();showToast&&showToast(`— Nutricionista ${u.nome.split(" ")[0]} vinculada!`);}
   async function desT(){const n={...vinculo,treinadorId:null};await DB.setVinculoAluno(user.id,null,n.nutriId);setVinculo(n);setTreinador(null);onVinculoChange&&onVinculoChange();showToast&&showToast("Treinador desvinculado.","warn");}
   async function desN(){const n={...vinculo,nutriId:null};await DB.setVinculoAluno(user.id,n.treinadorId,null);setVinculo(n);setNutri(null);onVinculoChange&&onVinculoChange();showToast&&showToast("Nutricionista desvinculada.","warn");}
   return(
     <div className="page">
       <div className="page-title green">MINHA EQUIPE</div>
       <div className="page-sub">Use o código de 6 letras do seu profissional para se conectar</div>
-      <div className="alert alert-info">🔐 Peça o código para seu treinador e nutricionista. Só quem tem o código pode se vincular — suas informações ficam protegidas.</div>
-      <div className="card"><div className="card-title">🏋️ TREINADOR</div><VinculoPorCodigo label="Treinador" tipo="treinador" atual={treinador} onVincular={vincT}/>{treinador&&<button className="btn btn-ghost btn-sm" style={{marginTop:"0.5rem",color:"var(--red)"}} onClick={desT}>Desvincular</button>}</div>
-      <div className="card"><div className="card-title">🥗 NUTRICIONISTA</div><VinculoPorCodigo label="Nutricionista" tipo="nutri" atual={nutri} onVincular={vincN}/>{nutri&&<button className="btn btn-ghost btn-sm" style={{marginTop:"0.5rem",color:"var(--red)"}} onClick={desN}>Desvincular</button>}</div>
+      <div className="alert alert-info">📅 Peça o código para seu treinador e nutricionista. Só quem tem o código pode se vincular — suas informações ficam protegidas.</div>
+      <div className="card"><div className="card-title">📅ï¸ TREINADOR</div><VinculoPorCodigo label="Treinador" tipo="treinador" atual={treinador} onVincular={vincT}/>{treinador&&<button className="btn btn-ghost btn-sm" style={{marginTop:"0.5rem",color:"var(--red)"}} onClick={desT}>Desvincular</button>}</div>
+      <div className="card"><div className="card-title">📅¥ NUTRICIONISTA</div><VinculoPorCodigo label="Nutricionista" tipo="nutri" atual={nutri} onVincular={vincN}/>{nutri&&<button className="btn btn-ghost btn-sm" style={{marginTop:"0.5rem",color:"var(--red)"}} onClick={desN}>Desvincular</button>}</div>
     </div>
   );
 }
 
 // ============================================================
-// ALUNO — SEMANA DE TREINOS
+// ALUNO — SEMANA DE TREINOS
 // ============================================================
 function AlunoTreinos({user,showToast}){
   const [planoTreino,setPlanoTreino]=useState(undefined);
@@ -884,7 +938,7 @@ function AlunoTreinos({user,showToast}){
     if(!rating){showToast&&showToast("Selecione uma nota de 1-5 estrelas","warn");return;}
     try{
       await DB.setData("treino_avaliacao",user.id,{rating,feedback,data:new Date().toISOString()});
-      showToast&&showToast("Avaliação salva! Treinador notificado ✅");
+      showToast&&showToast("Avaliação salva! Treinador notificado —");
     }catch(e){showToast&&showToast("Erro ao salvar avaliação.","warn");}
   }
 
@@ -907,7 +961,7 @@ function AlunoTreinos({user,showToast}){
         await DB.setData("treino_avaliacao",user.id,{rating,feedback,data:new Date().toISOString()});
       }
       setConfirmandoFinalizar(false);
-      showToast&&showToast("🏆 Treino finalizado! Ótimo trabalho!");
+      showToast&&showToast("📅 Treino finalizado! Ãtimo trabalho!");
     }catch(e){showToast&&showToast("Erro ao finalizar. Tente novamente.","warn");}
   }
 
@@ -919,7 +973,7 @@ function AlunoTreinos({user,showToast}){
       <div className="page">
         <div className="page-header"><div className="page-title green">TREINOS</div><div className="page-sub">Semana completa de treinos</div></div>
         <div className="empty-state">
-          <div className="empty-icon">🏋️</div>
+          <div className="empty-icon">📅ï¸</div>
           <div className="empty-title">Aguardando plano</div>
           <div className="empty-desc">Seu treinador ainda não enviou um plano de treino.<br/>Assim que ele enviar, aparecerá aqui.</div>
         </div>
@@ -934,7 +988,7 @@ function AlunoTreinos({user,showToast}){
   return(
     <div className="page">
       <div className="page-title green">TREINOS</div>
-      <div className="page-sub">Semana completa — clique no dia para ver os exercícios</div>
+      <div className="page-sub">Semana completa — clique no dia para ver os exercícios</div>
 
       <PeriodoBadge plano={planoTreino}/>
 
@@ -970,7 +1024,7 @@ function AlunoTreinos({user,showToast}){
               }}>
               <span style={{fontSize:"11px",fontWeight:600}}>{nomeDia}</span>
               <span style={{fontSize:"10px",opacity:0.8}}>{diaStr}</span>
-              {completo&&<span style={{fontSize:"9px"}}>✓</span>}
+              {completo&&<span style={{fontSize:"9px"}}>—</span>}
               {ehHoje&&diaAtivo!==i&&<span style={{fontSize:"9px",color:"var(--green)"}}>hoje</span>}
             </button>
           );
@@ -980,9 +1034,9 @@ function AlunoTreinos({user,showToast}){
       {/* TREINO DO DIA */}
       {diaInfo.tipo==="descanso"?(
         <div className="treino-card" style={{textAlign:"center",padding:"2.5rem"}}>
-          <div style={{fontSize:"3rem",marginBottom:"0.75rem"}}>😴</div>
+          <div style={{fontSize:"3rem",marginBottom:"0.75rem"}}>📅´</div>
           <div style={{fontFamily:"var(--font-display)",fontSize:"1.8rem",color:"var(--orange)",letterSpacing:"0.05em"}}>DIA DE DESCANSO</div>
-          <div style={{color:"var(--text2)",fontSize:"0.9rem",marginTop:"0.5rem"}}>{DIAS_SEMANA[diaAtivo]} — recuperação é parte do treino!</div>
+          <div style={{color:"var(--text2)",fontSize:"0.9rem",marginTop:"0.5rem"}}>{DIAS_SEMANA[diaAtivo]} — recuperação é parte do treino!</div>
         </div>
       ):(
         <div className="treino-card">
@@ -990,21 +1044,21 @@ function AlunoTreinos({user,showToast}){
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:"0.5rem"}}>
               <div>
                 <div className="treino-nome">{diaInfo.nome||`Treino ${diaAtivo+1}`}</div>
-                <div className="treino-periodo">{DIAS_SEMANA[diaAtivo]} • {modLabel}</div>
+                <div className="treino-periodo">{DIAS_SEMANA[diaAtivo]} —¢ {modLabel}</div>
               </div>
               {diaAtivo===diaHoje&&(
                 <div style={{position:"relative"}}>
                   {diaOriginal!==null
-                    ?<button className="btn btn-ghost btn-sm" style={{fontSize:"0.75rem",color:"var(--text2)"}} onClick={()=>{setDiaAtivo(diaHoje);setDiaOriginal(null);showToast&&showToast("Voltou ao treino de hoje");}}>↩ Voltar ao hoje</button>
-                    :<button className="btn btn-ghost btn-sm" style={{fontSize:"0.75rem"}} onClick={()=>setMostrarTroca(p=>!p)}>🔄 Trocar treino</button>
+                    ?<button className="btn btn-ghost btn-sm" style={{fontSize:"0.75rem",color:"var(--text2)"}} onClick={()=>{setDiaAtivo(diaHoje);setDiaOriginal(null);showToast&&showToast("Voltou ao treino de hoje");}}>—© Voltar ao hoje</button>
+                    :<button className="btn btn-ghost btn-sm" style={{fontSize:"0.75rem"}} onClick={()=>setMostrarTroca(p=>!p)}>📅 Trocar treino</button>
                   }
                   {mostrarTroca&&(
                     <div style={{position:"absolute",right:0,top:"100%",zIndex:10,background:"var(--card)",border:"1px solid var(--border)",borderRadius:"var(--radius)",padding:"0.5rem",minWidth:"170px",boxShadow:"0 4px 12px rgba(0,0,0,0.2)"}}>
                       <div style={{fontSize:"0.75rem",color:"var(--text2)",marginBottom:"0.4rem",fontWeight:600}}>Fazer treino de outro dia hoje:</div>
                       {(dias||[]).map((d2,i2)=>i2!==diaHoje&&d2.tipo!=="descanso"?(
                         <button key={i2} className="btn btn-ghost btn-sm" style={{display:"block",width:"100%",textAlign:"left",fontSize:"0.8rem",padding:"0.3rem 0.5rem"}}
-                          onClick={()=>{setDiaOriginal(diaHoje);setDiaAtivo(i2);setMostrarTroca(false);showToast&&showToast(`Fazendo ${d2.nome} hoje 💪`);}}>
-                          {['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'][i2]} — {d2.nome}
+                          onClick={()=>{setDiaOriginal(diaHoje);setDiaAtivo(i2);setMostrarTroca(false);showToast&&showToast(`Fazendo ${d2.nome} hoje 📅ª`);}}>
+                          {['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'][i2]} — {d2.nome}
                         </button>
                       ):null)}
                     </div>
@@ -1022,7 +1076,7 @@ function AlunoTreinos({user,showToast}){
             )}
           </div>
 
-          {diaInfo.obs&&<div style={{background:"rgba(52,152,219,0.1)",border:"1px solid rgba(52,152,219,0.2)",borderRadius:"var(--radius)",padding:"0.75rem",fontSize:"0.85rem",color:"var(--blue)",marginBottom:"1rem"}}>📌 {diaInfo.obs}</div>}
+          {diaInfo.obs&&<div style={{background:"rgba(52,152,219,0.1)",border:"1px solid rgba(52,152,219,0.2)",borderRadius:"var(--radius)",padding:"0.75rem",fontSize:"0.85rem",color:"var(--blue)",marginBottom:"1rem"}}>📅 {diaInfo.obs}</div>}
 
           {diaInfo.exercicios&&(diaInfo.exercicios||[]).length>0?(
             <>
@@ -1032,10 +1086,16 @@ function AlunoTreinos({user,showToast}){
               </div>
               {(diaInfo.exercicios||[]).map((ex,j)=>(
                 <div key={j} className={`ex-item ${checked[`${diaAtivo}_${j}`]?"done-ex":""}`} onClick={()=>toggleEx(diaAtivo,j)}>
-                  <div className={`check-box ${checked[`${diaAtivo}_${j}`]?"checked":""}`}>{checked[`${diaAtivo}_${j}`]&&"✓"}</div>
+                  <div className={`check-box ${checked[`${diaAtivo}_${j}`]?"checked":""}`}>{checked[`${diaAtivo}_${j}`]&&"—"}</div>
                   <div style={{flex:1}}>
                     <div className="ex-nome" style={{textDecoration:checked[`${diaAtivo}_${j}`]?"line-through":"none"}}>{ex.nome}</div>
-                    <div className="ex-info">{ex.series&&`${ex.series} séries`}{ex.reps&&` × ${ex.reps}`}{ex.carga&&` • ${ex.carga}`}{ex.duracao&&` • ${ex.duracao}`}</div>
+                    {ex.video&&<a href={ex.video} target="_blank" rel="noreferrer"
+                      style={{display:"inline-flex",alignItems:"center",gap:"3px",fontSize:"0.7rem",
+                        padding:"1px 7px",borderRadius:"4px",background:"#ff000018",color:"#ff4444",
+                        border:"1px solid #ff444433",textDecoration:"none",fontWeight:600,marginBottom:"2px"}}>
+                      —▶ Ver execução
+                    </a>}
+                    <div className="ex-info">{ex.series&&`${ex.series} séries`}{ex.reps&&` Ã ${ex.reps}`}{ex.carga&&` —¢ ${ex.carga}`}{ex.duracao&&` —¢ ${ex.duracao}`}</div>
                   </div>
                 </div>
               ))}
@@ -1048,23 +1108,23 @@ function AlunoTreinos({user,showToast}){
       {diaInfo.tipo!=="descanso"&&diaAtivo===diaHoje&&(
         treinoDeHojeFinalizado?(
           <div className="card" style={{textAlign:"center",padding:"1.5rem"}}>
-            <div style={{fontSize:"3rem",marginBottom:"0.5rem"}}>🏆</div>
+            <div style={{fontSize:"3rem",marginBottom:"0.5rem"}}>📅</div>
             <div style={{fontFamily:"var(--font-display)",fontSize:"1.2rem",color:"var(--green)",marginBottom:"0.3rem"}}>Treino finalizado!</div>
-            <div style={{fontSize:"0.85rem",color:"var(--text2)",marginBottom:"1rem"}}>Ótimo trabalho! O treinador já pode acompanhar sua evolução.</div>
+            <div style={{fontSize:"0.85rem",color:"var(--text2)",marginBottom:"1rem"}}>Ãtimo trabalho! O treinador já pode acompanhar sua evolução.</div>
             <button className="btn btn-ghost btn-sm" onClick={async()=>{
               const chaveExtra=dataHojeStr+"_dia"+diaHoje+"_extra"+Date.now();
               const novo={...(treinosFinalizados||{}),[chaveExtra]:{dia:diaHoje,extra:true,data:new Date().toISOString()}};
               await saveChecked({});
               await saveTreinosFinalizados(novo);
-              showToast&&showToast("Iniciando novo treino 💪");
+              showToast&&showToast("Iniciando novo treino 📅ª");
             }}>+ Novo treino agora</button>
           </div>
         ):(
           <div className="card">
-            <div className="card-title">⭐ FINALIZAR TREINO</div>
+            <div className="card-title">—­ FINALIZAR TREINO</div>
             <div className="form-group">
               <label className="form-label">Avalie o treino (opcional)</label>
-              <div className="stars">{[1,2,3,4,5].map(s=><div key={s} style={{fontSize:"2rem",cursor:"pointer",color:s<=rating?"var(--orange)":"var(--border)"}} onClick={()=>setRating(s)}>★</div>)}</div>
+              <div className="stars">{[1,2,3,4,5].map(s=><div key={s} style={{fontSize:"2rem",cursor:"pointer",color:s<=rating?"var(--orange)":"var(--border)"}} onClick={()=>setRating(s)}>—</div>)}</div>
             </div>
             <div className="form-group"><label className="form-label">Feedback para o treinador (opcional)</label><textarea className="form-textarea" rows={2} placeholder="Como foi? Alguma dificuldade?" value={feedback} onChange={e=>setFeedback(e.target.value)}/></div>
             {!confirmandoFinalizar?(
@@ -1073,10 +1133,10 @@ function AlunoTreinos({user,showToast}){
                 const total=(diaInfo?.exercicios||[]).length;
                 if(total>0&&feitos<total){setConfirmandoFinalizar(true);}
                 else{finalizarTreino(diaAtivo,diaInfo,checked);}
-              }}>🏁 Finalizar treino</button>
+              }}>📅 Finalizar treino</button>
             ):(
               <div style={{background:"var(--card2)",borderRadius:"var(--radius)",padding:"1rem",marginTop:"0.5rem"}}>
-                <div style={{fontWeight:600,marginBottom:"0.3rem"}}>⚠️ {(diaInfo?.exercicios||[]).filter((_,j)=>checked[`${diaAtivo}_${j}`]).length} de {(diaInfo?.exercicios||[]).length} exercícios concluídos</div>
+                <div style={{fontWeight:600,marginBottom:"0.3rem"}}>— ï¸ {(diaInfo?.exercicios||[]).filter((_,j)=>checked[`${diaAtivo}_${j}`]).length} de {(diaInfo?.exercicios||[]).length} exercícios concluídos</div>
                 <div style={{fontSize:"0.85rem",color:"var(--text2)",marginBottom:"0.75rem"}}>Deseja finalizar mesmo assim?</div>
                 <div style={{display:"flex",gap:"0.5rem"}}>
                   <button className="btn btn-ghost btn-sm" onClick={()=>setConfirmandoFinalizar(false)}>Continuar</button>
@@ -1092,7 +1152,7 @@ function AlunoTreinos({user,showToast}){
 }
 
 // ============================================================
-// ALUNO — ALIMENTAÇÃO (checkbox)
+// ALUNO — ALIMENTAÃÃO (checkbox)
 // ============================================================
 function AlunoAlimentacao({user,showToast}){
   const [planoAlim,setPlanoAlim]=useState(undefined);
@@ -1139,7 +1199,7 @@ function AlunoAlimentacao({user,showToast}){
   return(
     <div className="page">
       <div className="page-header">
-        <div className="page-title green">ALIMENTAÇÃO</div>
+        <div className="page-title green">ALIMENTAÃÃO</div>
         <div className="page-sub">Marque o que você já comeu hoje</div>
       </div>
 
@@ -1162,10 +1222,10 @@ function AlunoAlimentacao({user,showToast}){
       </div>
 
       <div className="card">
-        <div className="card-title">🥗 REFEIÇÕES DO DIA — marque o que comeu</div>
+        <div className="card-title">📅¥ REFEIÃÃES DO DIA — marque o que comeu</div>
         {(refeicoes||[]).map((r,i)=>(
           <div key={i} className={`refeicao-item ${comido[i]?"comido":""}`} onClick={()=>toggleRefeicao(i)}>
-            <div className={`check-box ${comido[i]?"checked":""}`} style={{width:"24px",height:"24px",borderRadius:"8px"}}>{comido[i]&&"✓"}</div>
+            <div className={`check-box ${comido[i]?"checked":""}`} style={{width:"24px",height:"24px",borderRadius:"8px"}}>{comido[i]&&"—"}</div>
             <div className="refeicao-hora">{r.h}</div>
             <div className="refeicao-info">
               <div className="refeicao-nome" style={{textDecoration:comido[i]?"line-through":"none"}}>{r.r}</div>
@@ -1177,16 +1237,16 @@ function AlunoAlimentacao({user,showToast}){
       </div>
 
       <div className="card">
-        <div className="card-title">📝 OBSERVAÇÕES PARA A NUTRICIONISTA</div>
+        <div className="card-title">📅 OBSERVAÃÃES PARA A NUTRICIONISTA</div>
         <textarea className="form-textarea" placeholder="Substituições, dificuldades, como se sentiu..." value={obs} onChange={e=>setObs(e.target.value)}/>
-        <button className="btn btn-primary" style={{marginTop:"0.75rem"}} onClick={salvarObs}>💾 Salvar observação</button>
+        <button className="btn btn-primary" style={{marginTop:"0.75rem"}} onClick={salvarObs}>📅¾ Salvar observação</button>
       </div>
     </div>
   );
 }
 
 // ============================================================
-// ALUNO — HIDRATAÇÃO
+// ALUNO — HIDRATAÃÃO
 // ============================================================
 function AlunoHidratacao({user,showToast}){
   const [ml, , saveMl] = useAlunoData(user.id, "agua_hoje", 0);
@@ -1196,7 +1256,7 @@ function AlunoHidratacao({user,showToast}){
   async function add(q){
     const n=Math.min((ml||0)+q,9999);
     await saveMl(n);
-    if(n>=(meta||3000)&&(ml||0)<(meta||3000))showToast&&showToast("🎉 Meta de hidratação atingida!");
+    if(n>=(meta||3000)&&(ml||0)<(meta||3000))showToast&&showToast("📅 Meta de hidratação atingida!");
   }
   async function salvarMeta(){
     const n=Math.max(Number(novaMeta)||3000,500);
@@ -1208,21 +1268,21 @@ function AlunoHidratacao({user,showToast}){
   return(
     <div className="page">
       <div className="page-header">
-        <div className="page-title green">HIDRATAÇÃO</div>
+        <div className="page-title green">HIDRATAÃÃO</div>
         <div className="page-sub">{getDateStr()}</div>
       </div>
       <div className="card" style={{textAlign:"center"}}>
         <div style={{fontSize:"5rem",fontFamily:"var(--font-display)",color:"var(--blue)",lineHeight:1}}>{(ml/1000).toFixed(1)}</div>
         <div style={{fontSize:"1.2rem",color:"var(--text2)",marginBottom:"1.5rem"}}>litros de {(meta/1000).toFixed(1)}L</div>
         <div className="prog-track" style={{height:"14px",marginBottom:"1.5rem"}}><div className="prog-fill blue" style={{width:`${pct}%`}}/></div>
-        <div style={{color:pct>=100?"var(--green)":"var(--text2)",fontWeight:600,marginBottom:"1rem"}}>{pct>=100?"🎉 Meta atingida!":`Faltam ${((meta-ml)/1000).toFixed(1)}L`}</div>
+        <div style={{color:pct>=100?"var(--green)":"var(--text2)",fontWeight:600,marginBottom:"1rem"}}>{pct>=100?"📅 Meta atingida!":`Faltam ${((meta-ml)/1000).toFixed(1)}L`}</div>
         <div className="quick-btns" style={{justifyContent:"center"}}>
-          {[150,200,300,500,750,1000].map(q=><div key={q} className="quick-btn" onClick={()=>add(q)}><div className="quick-btn-icon">💧</div>+{q>=1000?"1L":`${q}ml`}</div>)}
+          {[150,200,300,500,750,1000].map(q=><div key={q} className="quick-btn" onClick={()=>add(q)}><div className="quick-btn-icon">📅§</div>+{q>=1000?"1L":`${q}ml`}</div>)}
         </div>
         {ml>0&&<button className="btn btn-ghost" style={{marginTop:"1rem"}} onClick={()=>{setMl(0);DB.setData("agua_hoje",user.id,0);}}>Zerar</button>}
       </div>
       <div className="card">
-        <div className="card-title">⚙️ META DIÁRIA</div>
+        <div className="card-title">—ï¸ META DIÃRIA</div>
         <div style={{display:"flex",gap:"0.75rem"}}>
           <input className="form-input" type="number" value={novaMeta} onChange={e=>setNovaMeta(e.target.value)}/>
           <button className="btn btn-blue" onClick={salvarMeta}>Salvar</button>
@@ -1233,7 +1293,7 @@ function AlunoHidratacao({user,showToast}){
 }
 
 // ============================================================
-// ALUNO — SAÚDE
+// ALUNO — SAÃDE
 // ============================================================
 function AlunoSaude({user,showToast}){
   const [sData,sReady]=useAsyncData(()=>DB.getData("saude",user.id),[user.id]);
@@ -1247,53 +1307,53 @@ function AlunoSaude({user,showToast}){
   const [obs,setObs]=useState("");
   const [dores,setDores]=useState([]);
   const [musculoSel,setMusculoSel]=useState([]);
-  async function salvar(ov={}){await DB.setData("saude",user.id,{doente,sintomas,doente_desde:doenteDe,mens,meds,obs,dores,...ov});showToast&&showToast("✅ Saúde atualizada!");}
+  async function salvar(ov={}){await DB.setData("saude",user.id,{doente,sintomas,doente_desde:doenteDe,mens,meds,obs,dores,...ov});showToast&&showToast("— Saúde atualizada!");}
   function marcarDoente(){const agora=new Date().toISOString();setDoente(true);setDoenteDe(agora);salvar({doente:true,doente_desde:agora});}
-  function marcarRecuperado(){setDoente(false);setDoenteDe(null);setSintomas("");salvar({doente:false,doente_desde:null,sintomas:""});showToast&&showToast("Ótimo! Recuperação registrada! 💪");}
+  function marcarRecuperado(){setDoente(false);setDoenteDe(null);setSintomas("");salvar({doente:false,doente_desde:null,sintomas:""});showToast&&showToast("Ãtimo! Recuperação registrada! 📅ª");}
   function adicionarDor(){if(!musculoSel.length)return;const agora=new Date().toISOString();const novas=[...dores,...musculoSel.filter(m=>!dores.find(d=>d.musculo===m)).map(m=>({musculo:m,desde:agora,intensidade:5}))];setDores(novas);setMusculoSel([]);salvar({dores:novas});}
   function removerDor(idx){const novas=dores.filter((_,i)=>i!==idx);setDores(novas);salvar({dores:novas});}
   return(
     <div className="page">
-      <div className="page-title green">SAÚDE</div>
+      <div className="page-title green">SAÃDE</div>
       <div className="page-sub">Treinador e nutricionista verão estas informações</div>
       <div className="card">
-        <div className="card-title">📊 STATUS ATUAL</div>
+        <div className="card-title">📅 STATUS ATUAL</div>
         <SaudeStatusCard status={{doente,doente_desde:doenteDe,sintomas,dores}} onRecuperado={marcarRecuperado} onDorRecuperado={removerDor} soLeitura={false}/>
       </div>
       <div className="card">
-        <div className="card-title">🤒 REGISTRAR DOENÇA</div>
+        <div className="card-title">📅¤ REGISTRAR DOENÃA</div>
         {!doente?(
           <><div className="form-group"><label className="form-label">Sintomas</label><input className="form-input" placeholder="Ex: Gripe, febre..." value={sintomas} onChange={e=>setSintomas(e.target.value)}/></div>
-          <button className="btn btn-ghost" onClick={marcarDoente} style={{color:"var(--red)",borderColor:"rgba(231,76,60,0.4)"}}>🤒 Estou doente</button></>
+          <button className="btn btn-ghost" onClick={marcarDoente} style={{color:"var(--red)",borderColor:"rgba(231,76,60,0.4)"}}>📅¤ Estou doente</button></>
         ):<div style={{color:"var(--text2)",fontSize:"0.85rem"}}>{diffDays(doenteDe)} {pluralDia(diffDays(doenteDe))} de doença. Clique "Estou recuperado!" no status acima.</div>}
       </div>
       <div className="card">
-        <div className="card-title">🔴 REGISTRAR DOR MUSCULAR</div>
+        <div className="card-title">📅´ REGISTRAR DOR MUSCULAR</div>
         {(dores||[]).length>0&&<div style={{marginBottom:"1rem"}}>{(dores||[]).map((d,i)=>(
           <div key={i} style={{display:"flex",alignItems:"center",gap:"0.75rem",padding:"0.65rem",background:"var(--red-dim)",borderRadius:"var(--radius)",marginBottom:"0.5rem",border:"1px solid rgba(231,76,60,0.3)"}}>
-            <span style={{color:"var(--red)",fontWeight:600,fontSize:"0.9rem",flex:1}}>{d.musculo} — {diffDays(d.desde)} {pluralDia(diffDays(d.desde))}</span>
-            <button className="btn btn-sm" style={{background:"var(--green)",color:"#0a0f0d",padding:"0.3rem 0.75rem",fontSize:"0.75rem"}} onClick={()=>removerDor(i)}>✅ Recuperado</button>
+            <span style={{color:"var(--red)",fontWeight:600,fontSize:"0.9rem",flex:1}}>{d.musculo} — {diffDays(d.desde)} {pluralDia(diffDays(d.desde))}</span>
+            <button className="btn btn-sm" style={{background:"var(--green)",color:"#0a0f0d",padding:"0.3rem 0.75rem",fontSize:"0.75rem"}} onClick={()=>removerDor(i)}>— Recuperado</button>
           </div>
         ))}</div>}
         <div style={{fontSize:"0.85rem",color:"var(--text2)",marginBottom:"0.75rem"}}>Selecione os músculos com dor:</div>
         <div className="pain-grid" style={{marginBottom:"1rem"}}>
           {MUSCLES.map(m=><div key={m} className={`muscle-btn ${musculoSel.includes(m)?"selected":""}`} onClick={()=>setMusculoSel(p=>p.includes(m)?p.filter(x=>x!==m):[...p,m])}>{m}</div>)}
         </div>
-        {musculoSel.length>0&&<button className="btn btn-ghost" style={{color:"var(--red)",borderColor:"rgba(231,76,60,0.4)"}} onClick={adicionarDor}>🔴 Registrar dor em: {musculoSel.join(", ")}</button>}
+        {musculoSel.length>0&&<button className="btn btn-ghost" style={{color:"var(--red)",borderColor:"rgba(231,76,60,0.4)"}} onClick={adicionarDor}>📅´ Registrar dor em: {musculoSel.join(", ")}</button>}
       </div>
       <div className="card">
-        <div className="card-title">🔢 OUTRAS INFORMAÇÕES</div>
-        <div className="check-item" onClick={()=>{setMens(!mens);salvar({mens:!mens});}}><div className={`check-box ${mens?"checked":""}`}>{mens&&"✓"}</div><span>Semana menstrual</span></div>
-        <div className="form-group" style={{marginTop:"0.75rem"}}><label className="form-label">💊 Medicamentos</label><textarea className="form-textarea" placeholder="Ex: Vitamina D 2000UI, Creatina 5g..." value={meds} onChange={e=>setMeds(e.target.value)}/></div>
-        <div className="form-group"><label className="form-label">📝 Observações</label><textarea className="form-textarea" placeholder="Qualquer informação para sua equipe..." value={obs} onChange={e=>setObs(e.target.value)}/></div>
-        <button className="btn btn-primary" onClick={()=>salvar()}>💾 Salvar</button>
+        <div className="card-title">📅¢ OUTRAS INFORMAÃÃES</div>
+        <div className="check-item" onClick={()=>{setMens(!mens);salvar({mens:!mens});}}><div className={`check-box ${mens?"checked":""}`}>{mens&&"—"}</div><span>Semana menstrual</span></div>
+        <div className="form-group" style={{marginTop:"0.75rem"}}><label className="form-label">📅 Medicamentos</label><textarea className="form-textarea" placeholder="Ex: Vitamina D 2000UI, Creatina 5g..." value={meds} onChange={e=>setMeds(e.target.value)}/></div>
+        <div className="form-group"><label className="form-label">📅 Observações</label><textarea className="form-textarea" placeholder="Qualquer informação para sua equipe..." value={obs} onChange={e=>setObs(e.target.value)}/></div>
+        <button className="btn btn-primary" onClick={()=>salvar()}>📅¾ Salvar</button>
       </div>
     </div>
   );
 }
 
 // ============================================================
-// ALUNO — AVALIAÇÃO E COMPETIÇÕES
+// ALUNO — AVALIAÃÃO E COMPETIÃÃES
 // ============================================================
 function AlunoAvaliacao({user,showToast}){
   const [f,setF]=useState({});
@@ -1312,10 +1372,10 @@ function AlunoAvaliacao({user,showToast}){
       const entry={peso:f.peso,gordura:f.gordura,data:new Date().toISOString()};
       await DB.setData("avaliacao_hist",user.id,[...hist.slice(-11),entry]);
     }
-    showToast&&showToast("Avaliação física salva! ✅");
+    showToast&&showToast("Avaliação física salva! —");
     try{
       const vinculo=await DB.getVinculoAluno(user.id);
-      const msg=`📊 ${user.nome} atualizou a avaliação física${f.peso?" — Peso: "+f.peso+"kg":""}`;
+      const msg=`📅 ${user.nome} atualizou a avaliação física${f.peso?" — Peso: "+f.peso+"kg":""}`;
       if(vinculo?.treinadorId)await DB.criarNotificacao(vinculo.treinadorId,"avaliacao","Nova avaliação",msg);
       if(vinculo?.nutriId)await DB.criarNotificacao(vinculo.nutriId,"avaliacao","Nova avaliação",msg);
     }catch{}
@@ -1324,20 +1384,20 @@ function AlunoAvaliacao({user,showToast}){
   return(
     <div className="page">
       <div className="page-header">
-        <div className="page-title green">AVALIAÇÃO FÍSICA</div>
+        <div className="page-title green">AVALIAÃÃO FÃSICA</div>
         <div className="page-sub">Visível para treinador e nutricionista</div>
       </div>
       {imc&&(
         <div className="card">
-          <div className="card-title">📊 IMC Calculado</div>
+          <div className="card-title">📅 IMC Calculado</div>
           <div className="grid-2" style={{marginBottom:0}}>
             <div className="stat-tile"><div className="stat-label">IMC</div><div className="stat-value green">{imc.val}</div><div className="stat-sub">{imc.cat}</div></div>
-            <div className="stat-tile"><div className="stat-label">Peso / Altura</div><div style={{marginTop:"0.4rem",fontWeight:700}}>{f.peso||"—"}kg / {f.altura||"—"}cm</div></div>
+            <div className="stat-tile"><div className="stat-label">Peso / Altura</div><div style={{marginTop:"0.4rem",fontWeight:700}}>{f.peso||"—"}kg / {f.altura||"—"}cm</div></div>
           </div>
         </div>
       )}
       <div className="card">
-        <div className="card-title">📏 MEDIDAS CORPORAIS</div>
+        <div className="card-title">📅 MEDIDAS CORPORAIS</div>
         <div className="grid-2">
           {[["peso","Peso","kg"],["altura","Altura","cm"],["gordura","% Gordura","%"],["massa","Massa Magra","kg"],["cintura","Cintura","cm"],["quadril","Quadril","cm"],["braco_d","Braço D","cm"],["braco_e","Braço E","cm"],["perna_d","Perna D","cm"],["perna_e","Perna E","cm"]].map(([k,l,u])=>(
             <div key={k} className="form-group"><label className="form-label">{l}</label>
@@ -1349,11 +1409,11 @@ function AlunoAvaliacao({user,showToast}){
           ))}
         </div>
         <div className="form-group"><label className="form-label">Observações</label><textarea className="form-textarea" value={f.obs||""} onChange={e=>set("obs",e.target.value)} placeholder="Notas gerais..."/></div>
-        <button className="btn btn-primary" onClick={salvar}>💾 Salvar avaliação</button>
+        <button className="btn btn-primary" onClick={salvar}>📅¾ Salvar avaliação</button>
       </div>
       {hist.length>1&&(
         <div className="card">
-          <div className="card-title">📈 EVOLUÇÃO</div>
+          <div className="card-title">📅 EVOLUÃÃO</div>
           {hist.some(h=>h.peso)&&(()=>{
             const pts=hist.filter(h=>h.peso);
             const pesos=pts.map(h=>parseFloat(h.peso));
@@ -1378,7 +1438,7 @@ function AlunoAvaliacao({user,showToast}){
                   <path d={pathP} fill="none" stroke="var(--green)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                   {pts.map((p,i)=>(<g key={i}><circle cx={xp(i)} cy={yp(parseFloat(p.peso))} r="3" fill="var(--green)"/>{(i===0||i===pts.length-1)&&<text x={xp(i)} y={yp(parseFloat(p.peso))-7} textAnchor="middle" fontSize="9" fill="var(--text2)">{p.peso}kg</text>}</g>))}
                 </svg>
-                <div style={{fontSize:"0.72rem",color:"var(--text2)",textAlign:"center",marginTop:"2px"}}>{new Date(pts[0].data).toLocaleDateString("pt-BR")} → {new Date(pts[pts.length-1].data).toLocaleDateString("pt-BR")}</div>
+                <div style={{fontSize:"0.72rem",color:"var(--text2)",textAlign:"center",marginTop:"2px"}}>{new Date(pts[0].data).toLocaleDateString("pt-BR")} — {new Date(pts[pts.length-1].data).toLocaleDateString("pt-BR")}</div>
               </div>
             );
           })()}
@@ -1424,11 +1484,11 @@ function AlunoCompeticoes({user,showToast}){
     if(editComp!==null&&editComp.idx!==undefined){
       // Editar existente
       novo=comps.map((c,i)=>i===editComp.idx?{...c,...f}:c);
-      showToast&&showToast("Competição atualizada! ✅");
+      showToast&&showToast("Competição atualizada! —");
     } else {
       // Adicionar nova
       novo=[...comps,{...f,id:Date.now()}];
-      showToast&&showToast("Competição cadastrada! 🏆");
+      showToast&&showToast("Competição cadastrada! 📅");
     }
     setComps(novo);
     await DB.setData("competicoes",user.id,novo);
@@ -1441,10 +1501,10 @@ function AlunoCompeticoes({user,showToast}){
     <>{ConfirmCompModal}
     <div className="page">
       <div className="page-header">
-        <div className="page-title green">COMPETIÇÕES</div>
+        <div className="page-title green">COMPETIÃÃES</div>
         <div className="page-sub">Visível para treinador e nutricionista</div>
       </div>
-      {aba==="lista"&&(comps||[]).length>0&&<div className="card"><div className="card-title">📅 MEUS EVENTOS</div>
+      {aba==="lista"&&(comps||[]).length>0&&<div className="card"><div className="card-title">📅 MEUS EVENTOS</div>
           {(comps||[]).map((c,i)=>{
             const d=new Date(c.data);
             const diff=Math.ceil((d-new Date())/(1000*60*60*24));
@@ -1459,9 +1519,9 @@ function AlunoCompeticoes({user,showToast}){
                 </div>
                 <div style={{flex:1}}>
                   <div style={{fontWeight:600}}>{c.nome}</div>
-                  <div style={{fontSize:"0.8rem",color:"var(--text2)"}}>{c.modalidade} • {c.local}</div>
+                  <div style={{fontSize:"0.8rem",color:"var(--text2)"}}>{c.modalidade} —¢ {c.local}</div>
                   <div style={{marginTop:"4px",display:"flex",alignItems:"center",gap:"6px"}}>
-                    <span style={{fontSize:"0.75rem",fontWeight:600,color:faltaColor}}>⏱️ {faltaLabel}</span>
+                    <span style={{fontSize:"0.75rem",fontWeight:600,color:faltaColor}}>—±ï¸ {faltaLabel}</span>
                     {!passou&&<div style={{flex:1,height:"4px",borderRadius:"2px",background:"var(--border)"}}>
                       <div style={{height:"100%",borderRadius:"2px",background:faltaColor,width:Math.max(2,Math.min(100,(1-diff/90)*100))+"%"}}/>
                     </div>}
@@ -1471,7 +1531,7 @@ function AlunoCompeticoes({user,showToast}){
                   <span className="tag tag-orange">{c.objetivo.toUpperCase()}</span>
                   <div style={{display:"flex",gap:"4px"}}>
                     <button className="btn btn-ghost btn-sm" style={{fontSize:"0.7rem",padding:"2px 6px"}}
-                      onClick={e=>{e.stopPropagation();setEditComp({...c,idx:i});setAba("form");}}>✏️</button>
+                      onClick={e=>{e.stopPropagation();setEditComp({...c,idx:i});setAba("form");}}>—ï¸</button>
                     <button className="btn btn-ghost btn-sm" style={{fontSize:"0.7rem",padding:"2px 6px",color:"var(--red)"}}
                       onClick={async e=>{
                         e.stopPropagation();
@@ -1481,7 +1541,7 @@ function AlunoCompeticoes({user,showToast}){
                         await DB.setData("competicoes",user.id,novo);
                         setComps(novo);
                         showToast&&showToast("Competição removida","warn");
-                      }}>🗑️</button>
+                      }}>📅ï¸</button>
                   </div>
                 </div>
               </div>
@@ -1489,11 +1549,11 @@ function AlunoCompeticoes({user,showToast}){
           })}
         </div>}
       <div style={{display:"flex",gap:"8px",marginBottom:"0.5rem"}}>
-        <button className={`btn btn-sm ${aba==="lista"?"btn-primary":"btn-ghost"}`} onClick={()=>{setEditComp(null);setAba("lista");}}>📅 Lista</button>
-        <button className={`btn btn-sm ${aba==="form"?"btn-primary":"btn-ghost"}`} onClick={()=>{setEditComp(null);setAba("form");}}>➕ Nova competição</button>
+        <button className={`btn btn-sm ${aba==="lista"?"btn-primary":"btn-ghost"}`} onClick={()=>{setEditComp(null);setAba("lista");}}>📅 Lista</button>
+        <button className={`btn btn-sm ${aba==="form"?"btn-primary":"btn-ghost"}`} onClick={()=>{setEditComp(null);setAba("form");}}>— Nova competição</button>
       </div>
       {aba==="form"&&<div className="card">
-        <div className="card-title">{editComp?"✏️ EDITAR COMPETIÇÃO":"➕ NOVA COMPETIÇÃO"}</div>
+        <div className="card-title">{editComp?"—ï¸ EDITAR COMPETIÃÃO":"— NOVA COMPETIÃÃO"}</div>
         <div className="grid-2">
           <div className="form-group"><label className="form-label">Nome do evento</label><input className="form-input" placeholder="Ex: Ironman Florianópolis" value={f.nome} onChange={e=>set("nome",e.target.value)}/></div>
           <div className="form-group"><label className="form-label">Modalidade</label><select className="form-select" value={f.modalidade} onChange={e=>set("modalidade",e.target.value)}>{["Corrida","Natação","Triathlon / Ironman","Luta","Fisiculturismo","Ciclismo","Caminhada"].map(m=><option key={m}>{m}</option>)}</select></div>
@@ -1501,7 +1561,7 @@ function AlunoCompeticoes({user,showToast}){
           <div className="form-group"><label className="form-label">Local</label><input className="form-input" placeholder="Cidade / Local" value={f.local} onChange={e=>set("local",e.target.value)}/></div>
         </div>
         <div className="form-group"><label className="form-label">Objetivo</label><select className="form-select" value={f.objetivo} onChange={e=>set("objetivo",e.target.value)}>{["Completar","Bater meu recorde","Subir no pódio","Subir no palco","Definição de peso"].map(o=><option key={o}>{o}</option>)}</select></div>
-        <button className="btn btn-primary" onClick={add}>{editComp?"💾 Salvar alterações":"+ Cadastrar evento"}</button>
+        <button className="btn btn-primary" onClick={add}>{editComp?"📅¾ Salvar alterações":"+ Cadastrar evento"}</button>
         {editComp&&<button className="btn btn-ghost btn-sm" style={{marginTop:"0.5rem"}} onClick={()=>{setEditComp(null);setAba("lista");}}>Cancelar edição</button>}
       </div>}
     </div>
@@ -1510,7 +1570,7 @@ function AlunoCompeticoes({user,showToast}){
 }
 
 // ============================================================
-// ALUNO — DASHBOARD
+// ALUNO — DASHBOARD
 // ============================================================
 function AlunoDash({user,setPage,vinculo:vinculoProp,treinador:treinadorProp,nutri:nutriProp}){
   const [vinculo,,]=useAsyncData(()=>DB.getVinculoAluno(user.id),[user.id],{});
@@ -1538,53 +1598,54 @@ function AlunoDash({user,setPage,vinculo:vinculoProp,treinador:treinadorProp,nut
         {getObjetivo(user.objetivo||"emagrecimento").icon} {getGreeting()}, {firstName(user.nome)}!
       </div>
       {user.objetivo&&<div className="page-sub" style={{color:getObjetivo(user.objetivo).color,opacity:0.8}}>Foco: {getObjetivo(user.objetivo).label}</div>}
-      {streak>0&&<div style={{fontSize:"0.82rem",color:"var(--orange)",fontWeight:600}}>🔥 {streak} treino{streak>1?"s":""} essa semana</div>}
+      {streak>0&&<div style={{fontSize:"0.82rem",color:"var(--orange)",fontWeight:600}}>📅¥ {streak} treino{streak>1?"s":""} essa semana</div>}
       <div className="page-sub">{getDateStr()}</div>
-      {!treinador&&!nutri&&<div className="alert alert-warn">⚠️ Sem equipe vinculada. Vá em <b>Minha Equipe</b> e insira o código do seu treinador e nutricionista!</div>}
+      {!treinador&&!nutri&&<div className="alert alert-warn">— ï¸ Sem equipe vinculada. Vá em <b>Minha Equipe</b> e insira o código do seu treinador e nutricionista!</div>}
       <div className="grid-4">
         <div className="stat-tile" style={{cursor:"pointer"}} onClick={()=>setPage&&setPage("vinculo")}>
           <div className="stat-label">Treinador</div>
-          <div style={{marginTop:"0.4rem",fontWeight:700,fontSize:"0.92rem",color:"var(--orange)"}}>{treinador?treinador.nome.split(" ")[0]:"Vincular →"}</div>
+          <div style={{marginTop:"0.4rem",fontWeight:700,fontSize:"0.92rem",color:"var(--orange)"}}>{treinador?treinador.nome.split(" ")[0]:"Vincular —"}</div>
         </div>
         <div className="stat-tile" style={{cursor:"pointer"}} onClick={()=>setPage&&setPage("vinculo")}>
           <div className="stat-label">Nutricionista</div>
-          <div style={{marginTop:"0.4rem",fontWeight:700,fontSize:"0.92rem",color:"var(--blue)"}}>{nutri?nutri.nome.split(" ")[0]:"Vincular →"}</div>
+          <div style={{marginTop:"0.4rem",fontWeight:700,fontSize:"0.92rem",color:"var(--blue)"}}>{nutri?nutri.nome.split(" ")[0]:"Vincular —"}</div>
         </div>
         <div className="stat-tile" style={{cursor:"pointer"}} onClick={()=>setPage&&setPage("hidratacao")}>
-          <div className="stat-label">Água hoje</div>
+          <div className="stat-label">Ãgua hoje</div>
           <div className="stat-value blue">{(agua/1000).toFixed(1)}<span className="stat-unit">L</span></div>
           <div className="stat-sub">{Math.min(Math.round((agua/meta)*100),100)}% da meta</div>
         </div>
         <div className="stat-tile" style={{cursor:"pointer"}} onClick={()=>setPage&&setPage("avaliacao")}>
           <div className="stat-label">Peso / IMC</div>
-          {(()=>{const imc=calcIMC(avalDash.peso,avalDash.altura);return(<><div className="stat-value green">{avalDash.peso||"—"}<span className="stat-unit">{avalDash.peso?" kg":""}</span></div>{imc&&<div className="stat-sub">IMC {imc.val} — {imc.cat}</div>}</>);})()}
+          {(()=>{const imc=calcIMC(avalDash.peso,avalDash.altura);return(<><div className="stat-value green">{avalDash.peso||"—"}<span className="stat-unit">{avalDash.peso?" kg":""}</span></div>{imc&&<div className="stat-sub">IMC {imc.val} — {imc.cat}</div>}</>);})()}
         </div>
-      </div>
+      
+          {!avalDash.peso&&<button className="btn btn-ghost btn-sm btn-full" style={{marginTop:"0.25rem",fontSize:"0.75rem"}} onClick={()=>setPage&&setPage("avaliacao")}>📊 Preencher avaliação →</button>}</div>
       <div className="card">
-        <div className="card-title">❤️ STATUS DE SAÚDE</div>
+        <div className="card-title">—¤ï¸ STATUS DE SAÃDE</div>
         <SaudeStatusCard status={saude} soLeitura={true}/>
       </div>
       {treinoHoje&&(
         <div className="card card-clickable" onClick={()=>setPage&&setPage("treinos")}>
-          <div className="card-title">🏋️ Treino de hoje — {DIAS_SEMANA[diaHoje]}</div>
+          <div className="card-title">📅ï¸ Treino de hoje — {DIAS_SEMANA[diaHoje]}</div>
           {treinoHoje.tipo==="descanso"?(
             <div style={{textAlign:"center",padding:"1rem 0"}}>
-              <div style={{fontSize:"2.5rem",marginBottom:"0.35rem"}}>😴</div>
+              <div style={{fontSize:"2.5rem",marginBottom:"0.35rem"}}>📅´</div>
               <div style={{fontFamily:"var(--font-display)",fontSize:"1.5rem",color:"var(--orange)"}}>DIA DE DESCANSO</div>
               <div style={{fontSize:"0.8rem",color:"var(--text2)",marginTop:"0.25rem"}}>Recuperação é parte do treino!</div>
             </div>
           ):(
             <>
               <div style={{fontWeight:700,fontSize:"0.95rem",marginBottom:"0.65rem"}}>{treinoHoje.nome}</div>
-              {treinoHoje.distancia&&<div style={{fontSize:"0.82rem",color:"var(--blue)",marginBottom:"0.5rem",background:"var(--blue-dim)",padding:"0.45rem 0.75rem",borderRadius:"var(--radius)",display:"inline-block"}}>📏 {treinoHoje.distancia}{treinoHoje.ritmo&&` • ${treinoHoje.ritmo}`}{treinoHoje.zona&&` • ${treinoHoje.zona}`}</div>}
-              {treinoHoje.rounds&&<div style={{fontSize:"0.82rem",color:"var(--red)",marginBottom:"0.5rem",background:"var(--red-dim)",padding:"0.45rem 0.75rem",borderRadius:"var(--radius)",display:"inline-block"}}>🥊 {treinoHoje.rounds}{treinoHoje.tempoRound&&` • ${treinoHoje.tempoRound}`}</div>}
+              {treinoHoje.distancia&&<div style={{fontSize:"0.82rem",color:"var(--blue)",marginBottom:"0.5rem",background:"var(--blue-dim)",padding:"0.45rem 0.75rem",borderRadius:"var(--radius)",display:"inline-block"}}>📅 {treinoHoje.distancia}{treinoHoje.ritmo&&` —¢ ${treinoHoje.ritmo}`}{treinoHoje.zona&&` —¢ ${treinoHoje.zona}`}</div>}
+              {treinoHoje.rounds&&<div style={{fontSize:"0.82rem",color:"var(--red)",marginBottom:"0.5rem",background:"var(--red-dim)",padding:"0.45rem 0.75rem",borderRadius:"var(--radius)",display:"inline-block"}}>📅¥ {treinoHoje.rounds}{treinoHoje.tempoRound&&` —¢ ${treinoHoje.tempoRound}`}</div>}
               {treinoHoje.exercicios?.slice(0,4).map((ex,i)=>(
                 <div key={i} style={{display:"flex",justifyContent:"space-between",padding:"0.45rem 0",borderBottom:"1px solid var(--border)",fontSize:"0.85rem"}}>
                   <span style={{fontWeight:600}}>{ex.nome}</span>
-                  <span style={{color:"var(--text2)"}}>{ex.series&&`${ex.series}x`} {ex.reps} {ex.carga&&`• ${ex.carga}`}</span>
+                  <span style={{color:"var(--text2)"}}>{ex.series&&`${ex.series}x`} {ex.reps} {ex.carga&&`—¢ ${ex.carga}`}</span>
                 </div>
               ))}
-              {treinoHoje.exercicios?.length>4&&<div style={{fontSize:"0.75rem",color:"var(--text3)",marginTop:"0.5rem",textAlign:"center"}}>+{treinoHoje.exercicios.length-4} exercícios — toque para ver →</div>}
+              {treinoHoje.exercicios?.length>4&&<div style={{fontSize:"0.75rem",color:"var(--text3)",marginTop:"0.5rem",textAlign:"center"}}>+{treinoHoje.exercicios.length-4} exercícios — toque para ver —</div>}
             </>
           )}
         </div>
@@ -1594,12 +1655,13 @@ function AlunoDash({user,setPage,vinculo:vinculoProp,treinador:treinadorProp,nut
 }
 
 // ============================================================
-// TREINADOR — PRESCREVER TREINO
+// TREINADOR — PRESCREVER TREINO
 // ============================================================
 function TreinadorPrescrever({user,showToast}){
   const {confirm,Modal:ConfirmModalEl}=useConfirm();
   const [alunos,]=useAsyncData(()=>DB.getAlunosDe(user.id),[user.id],[]);
   const [alunoSel,setAlunoSel]=useState(null);
+  const [planoDeletado,setPlanoDeletado]=useState(false);
   const [nomePlano,setNomePlano]=useState("Treino A/B/C");
   const [modalidade,setModalidade]=useState("musculacao");
   const [duracao,setDuracao]=useState(1);
@@ -1607,7 +1669,7 @@ function TreinadorPrescrever({user,showToast}){
   const [inicio,setInicio]=useState(()=>new Date().toISOString().split("T")[0]);
   const [dias,setDias]=useState(()=>DIAS_SEMANA.map((_,i)=>({nome:`Treino ${String.fromCharCode(65+i)}`,tipo:i<5?"academia":"descanso",obs:"",exercicios:[],distancia:"",ritmo:"",zona:"",duracaoTotal:"",rounds:"",tempoRound:"",foco:"",modalidadeLuta:""})));
   const [diaEdit,setDiaEdit]=useState(0);
-  const [novoEx,setNovoEx]=useState({nome:"",series:"",reps:"",carga:"",duracao:""});
+  const [novoEx,setNovoEx]=useState({nome:"",series:"",reps:"",carga:"",duracao:"",video:""});
   const [salvandoRascunho,setSalvandoRascunho]=useState(false);
   // Auto-save rascunho a cada 30s quando tem aluno selecionado
   useEffect(()=>{
@@ -1631,12 +1693,14 @@ function TreinadorPrescrever({user,showToast}){
 
   async function salvar(){
     if(!alunoSel){showToast&&showToast("Selecione um aluno primeiro","warn");return;}
+    const diasSemEx=dias.filter(d=>d.tipo!=="descanso"&&(!d.exercicios||d.exercicios.length===0));
+    if(diasSemEx.length>0){const nomes=diasSemEx.map(d=>d.nome||d.dia||"?").join(", ");showToast&&showToast(`⚠️ ${nomes} sem exercícios. Plano enviado mesmo assim.`,"warn");}
     const fimDate=addMonths(new Date(inicio),duracao);
     const plano={nome:nomePlano,modalidade,duracao,inicio,fim:fimDate.toISOString(),dias,periodizacao,criadoEm:new Date().toISOString()};
     try{
       await DB.setData("plano_treino_aluno",alunoSel.id,plano);
-      showToast&&showToast(`✅ Treino prescrito para ${alunoSel.nome.split(" ")[0]}!`);
-      try{await DB.criarNotificacao(alunoSel.id,"treino","Novo treino disponível",`${user.nome} prescreveu um novo plano para você! 💪`);}catch{}
+      showToast&&showToast(`— Treino prescrito para ${alunoSel.nome.split(" ")[0]}!`);
+      try{await DB.criarNotificacao(alunoSel.id,"treino","Novo treino disponível",`${user.nome} prescreveu um novo plano para você! 📅ª`);}catch{}
     }catch(e){
       showToast&&showToast("Erro: "+e.message,"warn");
     }
@@ -1649,21 +1713,21 @@ function TreinadorPrescrever({user,showToast}){
     <div className="page">
       <div className="page-title orange">PRESCREVER TREINO</div>
       <div className="page-sub">Monte a semana completa de treinos para um aluno</div>
-      {alunos.length===0&&<div className="alert alert-warn">⚠️ Nenhum aluno vinculado. Código: <b style={{fontFamily:"var(--font-mono)"}}>{user.codigo||"------"}</b></div>}
+      {alunos.length===0&&<div className="alert alert-warn">— ï¸ Nenhum aluno vinculado. Código: <b style={{fontFamily:"var(--font-mono)"}}>{user.codigo||"------"}</b></div>}
 
       {/* SELECIONAR ALUNO */}
       <div className="card">
-        <div className="card-title">👤 SELECIONAR ALUNO</div>
+        <div className="card-title">📅¤ SELECIONAR ALUNO</div>
         <AlunoSelector alunos={alunos||[]} selecionado={alunoSel} onSelect={setAlunoSel} accentClass="sel-orange"/>
-        {(alunos||[]).length===0&&<div style={{color:"var(--text3)",fontSize:"0.85rem",padding:"0.5rem 0"}}>⏳ Nenhum aluno vinculado ainda. Compartilhe seu código com seus alunos para que eles se conectem.</div>}
+        {(alunos||[]).length===0&&<div style={{color:"var(--text3)",fontSize:"0.85rem",padding:"0.5rem 0"}}>—³ Nenhum aluno vinculado ainda. Compartilhe seu código com seus alunos para que eles se conectem.</div>}
         {!alunoSel&&(alunos||[]).length>0&&<div style={{color:"var(--text3)",fontSize:"0.85rem"}}>Selecione um aluno acima para montar o plano.</div>}
       </div>
 
       {alunoSel&&(
         <>
-          {/* CONFIGURAÇÕES DO PLANO */}
+          {/* CONFIGURAÃÃES DO PLANO */}
           <div className="card">
-            <div className="card-title">⚙️ CONFIGURAÇÕES DO PLANO</div>
+            <div className="card-title">—ï¸ CONFIGURAÃÃES DO PLANO</div>
             <div className="grid-2">
               <div className="form-group"><label className="form-label">Nome do plano</label><input className="form-input" value={nomePlano} onChange={e=>setNomePlano(e.target.value)} placeholder="Ex: Treino A/B/C, Hipertrofia..."/></div>
               <div className="form-group"><label className="form-label">Modalidade principal</label>
@@ -1680,18 +1744,19 @@ function TreinadorPrescrever({user,showToast}){
             </div>
             <div className="periodo-card">
               <div style={{fontSize:"0.8rem",color:"var(--text3)",marginBottom:"0.25rem"}}>Vigência do plano</div>
-              <div style={{fontWeight:600}}>{fmtDate(inicio)} → {fmtDate(addMonths(new Date(inicio),duracao))}</div>
+              <div style={{fontWeight:600}}>{fmtDate(inicio)} — {fmtDate(addMonths(new Date(inicio),duracao))}</div>
               <div style={{fontSize:"0.8rem",color:"var(--text2)",marginTop:"0.15rem"}}>{duracao} {duracao===1?"mês":"meses"} para {alunoSel.nome.split(" ")[0]}</div>
             </div>
           </div>
 
           {/* DIAS DA SEMANA */}
           <div className="card">
-            <div className="card-title">📅 MONTAR OS DIAS DA SEMANA</div>
+            <div className="card-title">📅 MONTAR OS DIAS DA SEMANA</div>
             <div className="week-tabs">
               {DIAS_SEMANA.map((d,i)=>(
                 <button key={i} className={`week-tab ${diaEdit===i?"active orange":""}`} onClick={()=>setDiaEdit(i)}>
-                  {d.slice(0,3)}{dias[i].tipo==="descanso"?" 💤":""}
+                    {d.slice(0,3)}{dias[i]?.tipo==="descanso"?" 😴":""}
+                    {dias[i]?.tipo!=="descanso"&&dias[i]?.exercicios?.length>0&&<span style={{fontSize:"0.6rem",color:"var(--green)",display:"block"}}>✓{dias[i].exercicios.length}ex</span>}
                 </button>
               ))}
             </div>
@@ -1702,7 +1767,7 @@ function TreinadorPrescrever({user,showToast}){
               <div className="form-group">
                 <label className="form-label">Tipo do dia</label>
                 <div style={{display:"flex",gap:"0.5rem",flexWrap:"wrap"}}>
-                  {[["descanso","😴 Descanso"],["academia","🏋️ Academia"],["corrida","🏃 Corrida"],["natacao","🏊 Natação"],["luta","🥊 Luta"],["ciclismo","🚴 Ciclismo"],["funcional","⚡ Funcional"],["caminhada","🚶 Caminhada"]].map(([v,l])=>(
+                  {[["descanso","📅´ Descanso"],["academia","📅ï¸ Academia"],["corrida","📅 Corrida"],["natacao","📅 Natação"],["luta","📅¥ Luta"],["ciclismo","📅´ Ciclismo"],["funcional","—¡ Funcional"],["caminhada","📅¶ Caminhada"]].map(([v,l])=>(
                     <button key={v} className={`toggle-btn ${diaAtual.tipo===v?"active-orange":""}`} onClick={()=>setDiaTipo(diaEdit,v)}>{l}</button>
                   ))}
                 </div>
@@ -1714,18 +1779,18 @@ function TreinadorPrescrever({user,showToast}){
                     diaAtual.tipo==="natacao"?"Ex: Natação técnica 2000m":
                     diaAtual.tipo==="luta"?"Ex: Treino de Jiu-Jitsu":
                     diaAtual.tipo==="ciclismo"?"Ex: Ciclismo Z2 40km":
-                    "Ex: Treino A — Peito + Tríceps"
+                    "Ex: Treino A — Peito + Tríceps"
                   }/></div>
                   <div className="form-group"><label className="form-label">Observações do dia</label><input className="form-input" value={diaAtual.obs} onChange={e=>setDiaObs(diaEdit,e.target.value)} placeholder="Instruções específicas..."/></div>
 
-                  {/* CAMPOS ESPECÍFICOS POR MODALIDADE */}
+                  {/* CAMPOS ESPECÃFICOS POR MODALIDADE */}
                   {(diaAtual.tipo==="corrida"||diaAtual.tipo==="natacao"||diaAtual.tipo==="ciclismo"||diaAtual.tipo==="caminhada")&&(
                     <div style={{background:"rgba(52,152,219,0.08)",border:"1px solid rgba(52,152,219,0.2)",borderRadius:"var(--radius)",padding:"1rem",marginBottom:"1rem"}}>
                       <div style={{fontSize:"0.8rem",color:"var(--blue)",marginBottom:"0.75rem",textTransform:"uppercase",letterSpacing:"0.1em"}}>
-                        {diaAtual.tipo==="corrida"?"🏃 Prescrição de corrida":diaAtual.tipo==="natacao"?"🏊 Prescrição de natação":diaAtual.tipo==="ciclismo"?"🚴 Prescrição de ciclismo":"🚶 Prescrição de caminhada"}
+                        {diaAtual.tipo==="corrida"?"📅 Prescrição de corrida":diaAtual.tipo==="natacao"?"📅 Prescrição de natação":diaAtual.tipo==="ciclismo"?"📅´ Prescrição de ciclismo":"📅¶ Prescrição de caminhada"}
                       </div>
                       <div className="grid-2">
-                        <div className="form-group"><label className="form-label">Distância</label><input className="form-input" placeholder={diaAtual.tipo==="natacao"?"Ex: 2000m":"Ex: 5km ou 10km"} value={diaAtual.distancia||""} onChange={e=>setDias(p=>{const n=[...p];n[diaEdit]={...n[diaEdit],distancia:e.target.value};return n;})}/></div>
+                        <div className="form-group"><label className="form-label">Dist—ncia</label><input className="form-input" placeholder={diaAtual.tipo==="natacao"?"Ex: 2000m":"Ex: 5km ou 10km"} value={diaAtual.distancia||""} onChange={e=>setDias(p=>{const n=[...p];n[diaEdit]={...n[diaEdit],distancia:e.target.value};return n;})}/></div>
                         <div className="form-group"><label className="form-label">Tempo / Ritmo</label><input className="form-input" placeholder={diaAtual.tipo==="natacao"?"Ex: 2min/100m":"Ex: 6min/km ou 30min"} value={diaAtual.ritmo||""} onChange={e=>setDias(p=>{const n=[...p];n[diaEdit]={...n[diaEdit],ritmo:e.target.value};return n;})}/></div>
                         <div className="form-group"><label className="form-label">Zona / Intensidade</label><input className="form-input" placeholder="Ex: Z2, leve, moderado..." value={diaAtual.zona||""} onChange={e=>setDias(p=>{const n=[...p];n[diaEdit]={...n[diaEdit],zona:e.target.value};return n;})}/></div>
                         <div className="form-group"><label className="form-label">Duração total</label><input className="form-input" placeholder="Ex: 45min" value={diaAtual.duracaoTotal||""} onChange={e=>setDias(p=>{const n=[...p];n[diaEdit]={...n[diaEdit],duracaoTotal:e.target.value};return n;})}/></div>
@@ -1734,7 +1799,7 @@ function TreinadorPrescrever({user,showToast}){
                   )}
                   {diaAtual.tipo==="luta"&&(
                     <div style={{background:"rgba(231,76,60,0.08)",border:"1px solid rgba(231,76,60,0.2)",borderRadius:"var(--radius)",padding:"1rem",marginBottom:"1rem"}}>
-                      <div style={{fontSize:"0.8rem",color:"var(--red)",marginBottom:"0.75rem",textTransform:"uppercase",letterSpacing:"0.1em"}}>🥊 Prescrição de luta</div>
+                      <div style={{fontSize:"0.8rem",color:"var(--red)",marginBottom:"0.75rem",textTransform:"uppercase",letterSpacing:"0.1em"}}>📅¥ Prescrição de luta</div>
                       <div className="grid-2">
                         <div className="form-group"><label className="form-label">Rounds</label><input className="form-input" placeholder="Ex: 5 rounds" value={diaAtual.rounds||""} onChange={e=>setDias(p=>{const n=[...p];n[diaEdit]={...n[diaEdit],rounds:e.target.value};return n;})}/></div>
                         <div className="form-group"><label className="form-label">Tempo por round</label><input className="form-input" placeholder="Ex: 5min / 1min descanso" value={diaAtual.tempoRound||""} onChange={e=>setDias(p=>{const n=[...p];n[diaEdit]={...n[diaEdit],tempoRound:e.target.value};return n;})}/></div>
@@ -1744,7 +1809,7 @@ function TreinadorPrescrever({user,showToast}){
                     </div>
                   )}
 
-                  {/* EXERCÍCIOS (academia/funcional) */}
+                  {/* EXERCÃCIOS (academia/funcional) */}
                   {(diaAtual.tipo==="academia"||diaAtual.tipo==="funcional")&&(
                     <>
                   {diaAtual.exercicios&&diaAtual.exercicios.length>0&&(
@@ -1752,8 +1817,8 @@ function TreinadorPrescrever({user,showToast}){
                       {(diaAtual?.exercicios||[]).map((ex,j)=>(
                         <div key={j} style={{display:"flex",alignItems:"center",gap:"0.75rem",padding:"0.65rem",background:"var(--card)",borderRadius:"var(--radius)",marginBottom:"0.4rem",fontSize:"0.85rem"}}>
                           <span style={{fontWeight:600,flex:1}}>{ex.nome}</span>
-                          <span style={{color:"var(--text2)"}}>{ex.series&&`${ex.series}x`} {ex.reps} {ex.carga&&`• ${ex.carga}`}</span>
-                          <button className="btn btn-sm btn-ghost" onClick={()=>removeEx(diaEdit,j)}>✕</button>
+                          <span style={{color:"var(--text2)"}}>{ex.series&&`${ex.series}x`} {ex.reps} {ex.carga&&`—¢ ${ex.carga}`}</span>
+                          <button className="btn btn-sm btn-ghost" onClick={()=>removeEx(diaEdit,j)}>—</button>
                         </div>
                       ))}
                     </div>
@@ -1761,12 +1826,15 @@ function TreinadorPrescrever({user,showToast}){
                   <div style={{background:"var(--card)",borderRadius:"var(--radius)",padding:"1rem"}}>
                     <div style={{fontSize:"0.8rem",color:"var(--text3)",marginBottom:"0.75rem",textTransform:"uppercase",letterSpacing:"0.1em"}}>+ Adicionar exercício</div>
                     <div className="grid-2">
-                      <div className="form-group"><label className="form-label">Nome</label><input className="form-input" placeholder="Ex: Supino Reto" value={novoEx.nome} onChange={e=>setNovoEx(p=>({...p,nome:e.target.value}))}/></div>
+                      <div className="form-group"><label className="form-label">Nome</label><input className="form-input" placeholder="Ex: Supino Reto" list="banco-exercicios-list" value={novoEx.nome} onChange={e=>{const match=BANCO_EXERCICIOS.find(b=>b.nome===e.target.value);setNovoEx(p=>({...p,nome:e.target.value,video:match?.video||p.video}))}}/></div><datalist id="banco-exercicios-list">{BANCO_EXERCICIOS.map(b=><option key={b.nome} value={b.nome}/>)}</datalist>
                       <div className="form-group"><label className="form-label">Séries</label><input className="form-input" placeholder="Ex: 4" value={novoEx.series} onChange={e=>setNovoEx(p=>({...p,series:e.target.value}))}/></div>
                       <div className="form-group"><label className="form-label">Reps / Tempo</label><input className="form-input" placeholder="Ex: 8-10 ou 30s" value={novoEx.reps} onChange={e=>setNovoEx(p=>({...p,reps:e.target.value}))}/></div>
                       <div className="form-group"><label className="form-label">Carga</label><input className="form-input" placeholder="Ex: 80kg ou Corporal" value={novoEx.carga} onChange={e=>setNovoEx(p=>({...p,carga:e.target.value}))}/></div>
                     </div>
-                    <button className="btn btn-orange btn-sm" onClick={()=>addEx(diaEdit)}>+ Adicionar</button>
+                    <div style={{marginTop:"0.3rem"}}>
+                      <input className="form-input" placeholder="📅¬ Link YouTube da execução (opcional)" value={novoEx.video||""} onChange={e=>setNovoEx(p=>({...p,video:e.target.value}))}/>
+                    </div>
+                    <button className="btn btn-orange btn-sm" style={{marginTop:"0.4rem"}} onClick={()=>addEx(diaEdit)}>+ Adicionar exercício</button>
                   </div>
                     </>
                   )}
@@ -1781,9 +1849,13 @@ function TreinadorPrescrever({user,showToast}){
               if(!ok)return;
               await DB.setData("plano_treino_aluno",alunoSel.id,null);
               showToast&&showToast("Plano deletado!","warn");
-            }}>🗑️ Deletar plano</button>
+              setPlanoDeletado(true);
+              // Reset dias para novo plano
+              setDias(DIAS_SEMANA.map((_,i)=>({nome:`Treino ${String.fromCharCode(65+i)}`,tipo:i<5?"academia":"descanso",obs:"",exercicios:[]})));
+              setNomePlano("Treino A/B/C");
+            }}>📅ï¸ Deletar plano</button>
           </div>
-          <button className="btn btn-orange btn-full" onClick={salvar}>📤 Enviar plano para {alunoSel.nome.split(" ")[0]}</button>
+          <button className="btn btn-orange btn-full" onClick={salvar}>📅¤ Enviar plano para {alunoSel.nome.split(" ")[0]}</button>
         </>
       )}
     </div>
@@ -1792,7 +1864,7 @@ function TreinadorPrescrever({user,showToast}){
 }
 
 // ============================================================
-// TREINADOR — DASHBOARD + ACOMPANHAMENTO
+// TREINADOR — DASHBOARD + ACOMPANHAMENTO
 // ============================================================
 
 // Resumo semanal (visão de acompanhamento)
@@ -1823,34 +1895,34 @@ function ResumoSemanalAluno({aluno,onVerCompleto}){
   // Média de água (só temos hoje, mostrar o de hoje)
   const pctAgua=Math.round((agua/meta)*100);
 
-  // Ícone da modalidade principal
-  const modIcons={musculacao:"🏋️",corrida:"🏃",natacao:"🏊",luta:"🥊",ciclismo:"🚴",funcional:"⚡",caminhada:"🚶"};
-  const modIcon=modIcons[planoTreino?.modalidade]||"🏋️";
+  // Ãcone da modalidade principal
+  const modIcons={musculacao:"📅ï¸",corrida:"📅",natacao:"📅",luta:"📅¥",ciclismo:"📅´",funcional:"—¡",caminhada:"📅¶"};
+  const modIcon=modIcons[planoTreino?.modalidade]||"📅ï¸";
 
   return(
     <div className="card" style={{cursor:"pointer"}} onClick={onVerCompleto}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:"1rem"}}>
         <div>
           <div style={{fontFamily:"var(--font-display)",fontSize:"1.3rem",letterSpacing:"0.05em"}}>{aluno.nome}</div>
-          {planoTreino&&<div style={{fontSize:"0.78rem",color:"var(--text2)",marginTop:"0.15rem"}}>{modIcon} {planoTreino.nome} • até {fmtDate(planoTreino.fim)}</div>}
+          {planoTreino&&<div style={{fontSize:"0.78rem",color:"var(--text2)",marginTop:"0.15rem"}}>{modIcon} {planoTreino.nome} —¢ até {fmtDate(planoTreino.fim)}</div>}
         </div>
         <div style={{display:"flex",gap:"0.4rem",flexWrap:"wrap",alignItems:"center"}}>
-          {saude.doente&&<span className="tag tag-red">🤒 {diasDoente}d</span>}
+          {saude.doente&&<span className="tag tag-red">📅¤ {diasDoente}d</span>}
           {objAluno&&(()=>{const obj=getObjetivo(objAluno);return(
             <span style={{fontSize:"0.7rem",padding:"2px 8px",borderRadius:"20px",
               border:"1.5px solid "+obj.color,color:obj.color,background:obj.color+"18",fontWeight:500,whiteSpace:"nowrap"}}>
               {obj.icon} {obj.label}
             </span>
           );})()}
-          {saude.dores&&saude.dores.length>0&&<span className="tag tag-orange">🔴 {saude.dores.length} dor{saude.dores.length>1?"es":""}</span>}
-          {saude.mens&&<span className="tag tag-orange">🔴 Ciclo</span>}
+          {saude.dores&&saude.dores.length>0&&<span className="tag tag-orange">📅´ {saude.dores.length} dor{saude.dores.length>1?"es":""}</span>}
+          {saude.mens&&<span className="tag tag-orange">📅´ Ciclo</span>}
         </div>
       </div>
 
       {/* LINHA DE RESUMO */}
       <div className="grid-3" style={{marginBottom:"1rem"}}>
         <div style={{background:"var(--bg2)",borderRadius:"var(--radius)",padding:"0.85rem",textAlign:"center"}}>
-          <div style={{fontSize:"0.65rem",color:"var(--text3)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:"0.25rem"}}>Água hoje</div>
+          <div style={{fontSize:"0.65rem",color:"var(--text3)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:"0.25rem"}}>Ãgua hoje</div>
           <div style={{fontFamily:"var(--font-display)",fontSize:"1.5rem",color:"var(--blue)"}}>{pctAgua}%</div>
           <div style={{fontSize:"0.7rem",color:"var(--text3)"}}>{(agua/1000).toFixed(1)}L / {(meta/1000).toFixed(1)}L</div>
         </div>
@@ -1860,8 +1932,8 @@ function ResumoSemanalAluno({aluno,onVerCompleto}){
           <div style={{fontSize:"0.7rem",color:"var(--text3)"}}>dias com treino</div>
         </div>
         <div style={{background:"var(--bg2)",borderRadius:"var(--radius)",padding:"0.85rem",textAlign:"center"}}>
-          <div style={{fontSize:"0.65rem",color:"var(--text3)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:"0.25rem"}}>Último treino</div>
-          <div style={{fontSize:"1.2rem"}}>{av.rating>0?"★".repeat(av.rating):"—"}</div>
+          <div style={{fontSize:"0.65rem",color:"var(--text3)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:"0.25rem"}}>Ãltimo treino</div>
+          <div style={{fontSize:"1.2rem"}}>{av.rating>0?"—".repeat(av.rating):"—"}</div>
           <div style={{fontSize:"0.7rem",color:"var(--text3)"}}>{av.rating>0?`nota ${av.rating}/5`:"Sem avaliação"}</div>
         </div>
       </div>
@@ -1872,10 +1944,10 @@ function ResumoSemanalAluno({aluno,onVerCompleto}){
           <div style={{fontSize:"0.7rem",color:"var(--text3)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:"0.5rem"}}>Semana de treinos</div>
           <div style={{display:"flex",gap:"0.3rem"}}>
             {(planoTreino?.dias||[]).map((d,i)=>{
-              const tipoIcons={descanso:"😴",academia:"🏋️",corrida:"🏃",natacao:"🏊",luta:"🥊",ciclismo:"🚴",funcional:"⚡",caminhada:"🚶",treino:"🏋️"};
+              const tipoIcons={descanso:"📅´",academia:"📅ï¸",corrida:"📅",natacao:"📅",luta:"📅¥",ciclismo:"📅´",funcional:"—¡",caminhada:"📅¶",treino:"📅ï¸"};
               return(
                 <div key={i} style={{flex:1,textAlign:"center",padding:"0.4rem 0.2rem",background:"var(--bg2)",borderRadius:"8px",fontSize:"0.65rem"}}>
-                  <div style={{fontSize:"1rem",marginBottom:"0.15rem"}}>{tipoIcons[d.tipo]||"🏋️"}</div>
+                  <div style={{fontSize:"1rem",marginBottom:"0.15rem"}}>{tipoIcons[d.tipo]||"📅ï¸"}</div>
                   <div style={{color:"var(--text3)"}}>{DIAS_SEMANA[i].slice(0,3)}</div>
                 </div>
               );
@@ -1884,12 +1956,12 @@ function ResumoSemanalAluno({aluno,onVerCompleto}){
         </div>
       )}
 
-      <div style={{fontSize:"0.8rem",color:"var(--orange)",marginTop:"1rem"}}>Ver relatório completo do mês →</div>
+      <div style={{fontSize:"0.8rem",color:"var(--orange)",marginTop:"1rem"}}>Ver relatório completo do mês —</div>
     </div>
   );
 }
 
-// Diário completo — visão mensal
+// Diário completo — visão mensal
 function DiarioAluno({aluno,onBack}){
   const [saude]=useAlunoData(aluno.id,"saude",{});
   const [treino]=useAlunoData(aluno.id,"treino_avaliacao",{});
@@ -1913,19 +1985,19 @@ function DiarioAluno({aluno,onBack}){
   const qtdComido=Object.values(alimCheck).filter(Boolean).length;
   const diasDoente=saude.doente_desde?diffDays(saude.doente_desde):0;
 
-  const tipoIcons={descanso:"😴",academia:"🏋️",corrida:"🏃",natacao:"🏊",luta:"🥊",ciclismo:"🚴",funcional:"⚡",caminhada:"🚶",treino:"🏋️"};
-  const modIcons={musculacao:"🏋️",corrida:"🏃",natacao:"🏊",luta:"🥊",ciclismo:"🚴",funcional:"⚡",caminhada:"🚶"};
+  const tipoIcons={descanso:"📅´",academia:"📅ï¸",corrida:"📅",natacao:"📅",luta:"📅¥",ciclismo:"📅´",funcional:"—¡",caminhada:"📅¶",treino:"📅ï¸"};
+  const modIcons={musculacao:"📅ï¸",corrida:"📅",natacao:"📅",luta:"📅¥",ciclismo:"📅´",funcional:"—¡",caminhada:"📅¶"};
 
   return(
     <div className="page">
-      <div style={{marginBottom:"1rem"}}><button className="btn btn-ghost btn-sm" onClick={onBack}>← Voltar</button></div>
+      <div style={{marginBottom:"1rem"}}><button className="btn btn-ghost btn-sm" onClick={onBack}>— Voltar</button></div>
       <div className="page-title" style={{color:"var(--text)"}}>{aluno.nome}</div>
       <div className="page-sub">Relatório completo do mês</div>
 
       {/* DADOS PESSOAIS */}
       <div className="card">
         <div style={{display:"flex",alignItems:"center",gap:"0.75rem",marginBottom:"0.75rem",flexWrap:"wrap"}}>
-          <div className="card-title" style={{marginBottom:0}}>👤 PERFIL DO ALUNO</div>
+          <div className="card-title" style={{marginBottom:0}}>📅¤ PERFIL DO ALUNO</div>
           {objAluno&&(()=>{const obj=getObjetivo(objAluno);return(
             <span style={{fontSize:"0.75rem",padding:"3px 10px",borderRadius:"20px",
               border:"2px solid "+obj.color,color:obj.color,background:obj.color+"18",fontWeight:600}}>
@@ -1958,8 +2030,8 @@ function DiarioAluno({aluno,onBack}){
           );
         })()}
         <div className="grid-3">
-          <div className="diario-section"><div className="diario-label">Peso</div><div className="diario-val" style={{fontFamily:"var(--font-display)",fontSize:"1.5rem",color:"var(--green)"}}>{aval.peso||"—"}<span style={{fontSize:"0.8rem",color:"var(--text2)"}}>{aval.peso?" kg":""}</span></div></div>
-          <div className="diario-section"><div className="diario-label">% Gordura</div><div className="diario-val" style={{fontFamily:"var(--font-display)",fontSize:"1.5rem",color:"var(--orange)"}}>{aval.gordura||"—"}<span style={{fontSize:"0.8rem",color:"var(--text2)"}}>{aval.gordura?"%":""}</span></div></div>
+          <div className="diario-section"><div className="diario-label">Peso</div><div className="diario-val" style={{fontFamily:"var(--font-display)",fontSize:"1.5rem",color:"var(--green)"}}>{aval.peso||"—"}<span style={{fontSize:"0.8rem",color:"var(--text2)"}}>{aval.peso?" kg":""}</span></div></div>
+          <div className="diario-section"><div className="diario-label">% Gordura</div><div className="diario-val" style={{fontFamily:"var(--font-display)",fontSize:"1.5rem",color:"var(--orange)"}}>{aval.gordura||"—"}<span style={{fontSize:"0.8rem",color:"var(--text2)"}}>{aval.gordura?"%":""}</span></div></div>
           <div className="diario-section"><div className="diario-label">Email</div><div className="diario-val" style={{fontSize:"0.85rem"}}>{aluno.email}</div></div>
         </div>
         {aval.cintura&&(
@@ -1974,13 +2046,13 @@ function DiarioAluno({aluno,onBack}){
       {/* MODALIDADES QUE PRATICA */}
       {planoTreino&&(
         <div className="card">
-          <div className="card-title">🏅 MODALIDADES / PLANO ATIVO</div>
+          <div className="card-title">📅 MODALIDADES / PLANO ATIVO</div>
           <div style={{display:"flex",alignItems:"center",gap:"1rem",marginBottom:"1rem",flexWrap:"wrap"}}>
-            <div style={{fontSize:"2.5rem"}}>{modIcons[planoTreino.modalidade]||"🏋️"}</div>
+            <div style={{fontSize:"2.5rem"}}>{modIcons[planoTreino.modalidade]||"📅ï¸"}</div>
             <div>
               <div style={{fontWeight:600,fontSize:"1rem"}}>{planoTreino.nome}</div>
               <div style={{fontSize:"0.8rem",color:"var(--text2)"}}>Modalidade: {MODALIDADES.find(m=>m.v===planoTreino.modalidade)?.l||planoTreino.modalidade}</div>
-              <div style={{fontSize:"0.8rem",color:"var(--text2)"}}>{fmtDate(planoTreino.inicio)} → {fmtDate(planoTreino.fim)} • {planoTreino.duracao} {planoTreino.duracao===1?"mês":"meses"}</div>
+              <div style={{fontSize:"0.8rem",color:"var(--text2)"}}>{fmtDate(planoTreino.inicio)} — {fmtDate(planoTreino.fim)} —¢ {planoTreino.duracao} {planoTreino.duracao===1?"mês":"meses"}</div>
             </div>
           </div>
 
@@ -1989,9 +2061,9 @@ function DiarioAluno({aluno,onBack}){
           <div style={{display:"flex",gap:"0.5rem",flexWrap:"wrap"}}>
             {(planoTreino?.dias||[]).map((d,i)=>(
               <div key={i} style={{flex:"1",minWidth:"80px",background:d.tipo==="descanso"?"var(--bg2)":"var(--card2)",border:d.tipo==="descanso"?"1px solid var(--border)":"1px solid var(--green-dim)",borderRadius:"var(--radius)",padding:"0.65rem",textAlign:"center"}}>
-                <div style={{fontSize:"1.2rem",marginBottom:"0.2rem"}}>{tipoIcons[d.tipo]||"🏋️"}</div>
+                <div style={{fontSize:"1.2rem",marginBottom:"0.2rem"}}>{tipoIcons[d.tipo]||"📅ï¸"}</div>
                 <div style={{fontSize:"0.7rem",fontWeight:600,color:d.tipo==="descanso"?"var(--text3)":"var(--text)"}}>{DIAS_SEMANA[i].slice(0,3)}</div>
-                <div style={{fontSize:"0.65rem",color:"var(--text3)",marginTop:"0.1rem"}}>{d.tipo==="descanso"?"Descanso":d.nome?.split("—")[0]?.trim()||d.tipo}</div>
+                <div style={{fontSize:"0.65rem",color:"var(--text3)",marginTop:"0.1rem"}}>{d.tipo==="descanso"?"Descanso":d.nome?.split("—")[0]?.trim()||d.tipo}</div>
                 {/* Campos específicos */}
                 {d.distancia&&<div style={{fontSize:"0.65rem",color:"var(--blue)",marginTop:"0.15rem"}}>{d.distancia}</div>}
                 {d.rounds&&<div style={{fontSize:"0.65rem",color:"var(--red)",marginTop:"0.15rem"}}>{d.rounds}</div>}
@@ -2001,36 +2073,36 @@ function DiarioAluno({aluno,onBack}){
         </div>
       )}
 
-      {/* SAÚDE DO MÊS */}
+      {/* SAÃDE DO MÃS */}
       <div className="card">
-        <div className="card-title">❤️ SAÚDE DO MÊS</div>
+        <div className="card-title">—¤ï¸ SAÃDE DO MÃS</div>
         <SaudeStatusCard status={saude} soLeitura={true}/>
 
-        {/* HISTÓRICO DE DOENÇAS/DORES */}
+        {/* HISTÃRICO DE DOENÃAS/DORES */}
         <div style={{marginTop:"1rem",display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0.75rem"}}>
           <div className="diario-section">
-            <div className="diario-label">🤒 Dias doente no mês</div>
+            <div className="diario-label">📅¤ Dias doente no mês</div>
             <div className="diario-val" style={{fontFamily:"var(--font-display)",fontSize:"1.8rem",color:saude.doente?"var(--red)":"var(--green)"}}>{saude.doente?diasDoente:0}<span style={{fontSize:"0.8rem",color:"var(--text2)"}}> dias</span></div>
             {saude.sintomas&&<div style={{fontSize:"0.8rem",color:"var(--text2)",marginTop:"0.25rem"}}>{saude.sintomas}</div>}
           </div>
           <div className="diario-section">
-            <div className="diario-label">🔴 Dores musculares ativas</div>
+            <div className="diario-label">📅´ Dores musculares ativas</div>
             <div className="diario-val" style={{fontFamily:"var(--font-display)",fontSize:"1.8rem",color:saude.dores?.length?"var(--orange)":"var(--green)"}}>{saude.dores?.length||0}<span style={{fontSize:"0.8rem",color:"var(--text2)"}}> grupos</span></div>
             {(saude?.dores||[]).length>0&&<div style={{fontSize:"0.8rem",color:"var(--text2)",marginTop:"0.25rem"}}>{saude.dores.map(d=>`${d.musculo} (${diffDays(d.desde)}d)`).join(", ")}</div>}
           </div>
           <div className="diario-section">
-            <div className="diario-label">🔴 Ciclo menstrual</div>
+            <div className="diario-label">📅´ Ciclo menstrual</div>
             <div className="diario-val">{saude.mens?<span className="tag tag-orange">Semana menstrual ativa</span>:<span style={{color:"var(--text3)"}}>Não informado</span>}</div>
           </div>
           <div className="diario-section">
-            <div className="diario-label">💊 Medicamentos</div>
+            <div className="diario-label">📅 Medicamentos</div>
             <div className="diario-val" style={{fontSize:"0.85rem"}}>{saude.meds||<span style={{color:"var(--text3)"}}>Nenhum</span>}</div>
           </div>
         </div>
         {saude.obs&&<div className="diario-section" style={{marginTop:"0.75rem"}}><div className="diario-label">Observações</div><div className="diario-val">{saude.obs}</div></div>}
       </div>
 
-      {/* HIDRATAÇÃO */}
+      {/* HIDRATAÃÃO */}
       {proximaComp&&(()=>{
         const diff=Math.ceil((new Date(proximaComp.data)-new Date())/(1000*60*60*24));
         const color=diff<=7?"var(--red)":diff<=30?"var(--orange)":"var(--green)";
@@ -2038,8 +2110,8 @@ function DiarioAluno({aluno,onBack}){
           <div className="card" style={{borderLeft:"3px solid "+color}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
               <div>
-                <div style={{fontWeight:600,fontSize:"0.9rem"}}>🏆 {proximaComp.nome}</div>
-                <div style={{fontSize:"0.78rem",color:"var(--text2)"}}>{proximaComp.modalidade} • {proximaComp.local}</div>
+                <div style={{fontWeight:600,fontSize:"0.9rem"}}>📅 {proximaComp.nome}</div>
+                <div style={{fontSize:"0.78rem",color:"var(--text2)"}}>{proximaComp.modalidade} —¢ {proximaComp.local}</div>
               </div>
               <div style={{textAlign:"right"}}>
                 <div style={{fontWeight:700,color,fontSize:"1rem"}}>{diff===0?"HOJE!":diff===1?"Amanhã":diff+"d"}</div>
@@ -2050,7 +2122,7 @@ function DiarioAluno({aluno,onBack}){
         );
       })()}
       <div className="card">
-        <div className="card-title">💧 HIDRATAÇÃO</div>
+        <div className="card-title">📅§ HIDRATAÃÃO</div>
         <div className="grid-2" style={{marginBottom:"1rem"}}>
           <div className="diario-section" style={{textAlign:"center"}}>
             <div className="diario-label">Consumo hoje</div>
@@ -2067,22 +2139,22 @@ function DiarioAluno({aluno,onBack}){
         </div>
       </div>
 
-      {/* TREINO — AVALIAÇÃO */}
+      {/* TREINO — AVALIAÃÃO */}
       {treino.rating>0&&(
         <div className="card">
-          <div className="card-title">🏋️ AVALIAÇÃO DO ÚLTIMO TREINO</div>
+          <div className="card-title">📅ï¸ AVALIAÃÃO DO ÃLTIMO TREINO</div>
           <div className="grid-2">
-            <div className="diario-section"><div className="diario-label">Nota</div><div style={{fontSize:"1.8rem"}}>{"★".repeat(treino.rating)}{"☆".repeat(5-treino.rating)}</div></div>
-            <div className="diario-section"><div className="diario-label">Data</div><div className="diario-val">{treino.data?fmtDate(treino.data):"—"}</div></div>
+            <div className="diario-section"><div className="diario-label">Nota</div><div style={{fontSize:"1.8rem"}}>{"—".repeat(treino.rating)}{"—".repeat(5-treino.rating)}</div></div>
+            <div className="diario-section"><div className="diario-label">Data</div><div className="diario-val">{treino.data?fmtDate(treino.data):"—"}</div></div>
           </div>
           {treino.feedback&&<div className="diario-section" style={{marginTop:"0.5rem"}}><div className="diario-label">Feedback do aluno</div><div className="diario-val">"{treino.feedback}"</div></div>}
         </div>
       )}
 
-      {/* ALIMENTAÇÃO */}
+      {/* ALIMENTAÃÃO */}
       {planoAlim&&(
         <div className="card">
-          <div className="card-title">🥗 PLANO ALIMENTAR</div>
+          <div className="card-title">📅¥ PLANO ALIMENTAR</div>
           <PeriodoBadge plano={planoAlim}/>
           <div style={{fontSize:"0.9rem",color:"var(--text2)",marginTop:"0.5rem",marginBottom:"1rem"}}>
             Refeições feitas hoje: <span style={{color:"var(--green)",fontWeight:600}}>{qtdComido}/{refeicoes.length}</span>
@@ -2091,16 +2163,16 @@ function DiarioAluno({aluno,onBack}){
             <div key={i} className="meal-item" style={{background:alimCheck[i]?"var(--green-dim)":"var(--card2)",border:alimCheck[i]?"1px solid rgba(46,204,113,0.3)":"none"}}>
               <div style={{color:"var(--text3)",fontFamily:"var(--font-mono)",fontSize:"0.75rem",minWidth:"45px"}}>{r.h}</div>
               <div style={{flex:1,fontWeight:600,fontSize:"0.88rem"}}>{r.r}</div>
-              {alimCheck[i]?<span className="tag tag-green">✓ Comeu</span>:<span style={{fontSize:"0.75rem",color:"var(--text3)"}}>Não marcado</span>}
+              {alimCheck[i]?<span className="tag tag-green">— Comeu</span>:<span style={{fontSize:"0.75rem",color:"var(--text3)"}}>Não marcado</span>}
             </div>
           ))}
         </div>
       )}
 
-      {/* COMPETIÇÕES */}
+      {/* COMPETIÃÃES */}
       {comps.length>0&&(
         <div className="card">
-          <div className="card-title">🏆 COMPETIÇÕES</div>
+          <div className="card-title">📅 COMPETIÃÃES</div>
           {(comps||[]).map((c,i)=>{const d=new Date(c.data);return(<div key={i} className="comp-card" style={{background:"var(--bg2)"}}><div className="comp-date"><div className="comp-date-day">{d.getDate()}</div><div className="comp-date-month">{d.toLocaleDateString("pt-BR",{month:"short"})}</div></div><div style={{flex:1}}><div style={{fontWeight:600}}>{c.nome}</div><div style={{fontSize:"0.8rem",color:"var(--text2)"}}>{c.modalidade}</div></div><span className="tag tag-orange">{c.objetivo}</span></div>);})}
         </div>
       )}
@@ -2129,7 +2201,7 @@ function TreinadorDash({user}){
   if(alunoVer)return<DiarioAluno aluno={alunoVer} onBack={()=>setAlunoVer(null)}/>;
   return(
     <div className="page">
-      <div className="page-title orange">{getGreeting()}, {firstName(user.nome)} 👋</div>
+      <div className="page-title orange">{getGreeting()}, {firstName(user.nome)} 📅</div>
       <div className="page-sub">{getDateStr()}</div>
       <div className="card" style={{padding:"1rem 1.5rem"}}><CodigoProfissional user={user}/></div>
       <div className="grid-4">
@@ -2138,12 +2210,12 @@ function TreinadorDash({user}){
         <div className="stat-tile"><div className="stat-label">Código</div><div style={{marginTop:"0.35rem",fontFamily:"var(--font-mono)",fontSize:"1.1rem",color:"var(--green)",letterSpacing:"0.1em"}}>{user.codigo||"------"}</div></div>
         <div className="stat-tile"><div className="stat-label">Planos ativos</div><div className="stat-value green">{Object.values(planoMap||{}).filter(Boolean).length}</div></div>
       </div>
-      {comAlerta.length>0&&<div className="alert alert-danger">🔴 {comAlerta.map(a=>a.nome.split(" ")[0]).join(", ")} — verificar saúde!</div>}
+      {comAlerta.length>0&&<div className="alert alert-danger">📅´ {comAlerta.map(a=>a.nome.split(" ")[0]).join(", ")} — verificar saúde!</div>}
       {alunosList.length===0?(
-        <div className="card"><div className="card-title">👥 MEUS ALUNOS</div><div style={{color:"var(--text2)",fontSize:"0.9rem",lineHeight:1.7}}>Compartilhe seu código <b style={{color:"var(--green)",fontFamily:"var(--font-mono)"}}>{user.codigo||"------"}</b> para seus alunos se conectarem.</div></div>
+        <div className="card"><div className="card-title">📅¥ MEUS ALUNOS</div><div style={{color:"var(--text2)",fontSize:"0.9rem",lineHeight:1.7}}>Compartilhe seu código <b style={{color:"var(--green)",fontFamily:"var(--font-mono)"}}>{user.codigo||"------"}</b> para seus alunos se conectarem.</div></div>
       ):(
         <div className="card">
-          <div className="card-title">👥 MEUS ALUNOS</div>
+          <div className="card-title">📅¥ MEUS ALUNOS</div>
           {(alunosList||[]).map(a=>{
             const s=saudeMap[a.id]||{};
             const plano=planoMap?.[a.id];
@@ -2151,8 +2223,8 @@ function TreinadorDash({user}){
             return(
               <div key={a.id} className="aluno-row" onClick={()=>setAlunoVer(a)}>
                 <div className="aluno-avatar">{initials(a.nome)}</div>
-                <div style={{flex:1}}><div style={{fontWeight:600}}>{a.nome}</div><div style={{fontSize:"0.78rem",color:"var(--text2)"}}>{plano?`Plano: ${plano.nome} — até ${fmtDate(plano.fim)}`:"Sem plano ativo"}</div></div>
-                <div style={{display:"flex",gap:"0.4rem"}}>{temAlerta&&<span className="tag tag-red">⚠️</span>}{plano&&<span className="tag tag-green">✓ Plano</span>}</div>
+                <div style={{flex:1}}><div style={{fontWeight:600}}>{a.nome}</div><div style={{fontSize:"0.78rem",color:"var(--text2)"}}>{plano?`Plano: ${plano.nome} — até ${fmtDate(plano.fim)}`:"Sem plano ativo"}</div></div>
+                <div style={{display:"flex",gap:"0.4rem"}}>{temAlerta&&<span className="tag tag-red">— ï¸</span>}{plano&&<span className="tag tag-green">— Plano</span>}</div>
               </div>
             );
           })}
@@ -2171,7 +2243,7 @@ function TreinadorAcompanhamento({user}){
   return(
     <div className="page">
       <div className="page-title orange">ACOMPANHAMENTO</div>
-      <div className="page-sub">Resumo semanal — clique para ver o relatório completo do mês</div>
+      <div className="page-sub">Resumo semanal — clique para ver o relatório completo do mês</div>
       {alunos.length===0?(
         <div className="card"><div style={{color:"var(--text2)"}}>Nenhum aluno vinculado. Código: <b style={{fontFamily:"var(--font-mono)",color:"var(--green)"}}>{user.codigo||"------"}</b></div></div>
       ):(alunosList||[]).map(a=>(
@@ -2182,7 +2254,7 @@ function TreinadorAcompanhamento({user}){
 }
 
 // ============================================================
-// NUTRICIONISTA — PRESCREVER PLANO ALIMENTAR
+// NUTRICIONISTA — PRESCREVER PLANO ALIMENTAR
 // ============================================================
 function NutriPrescrever({user,showToast}){
   const {confirm,Modal:ConfirmModalNutri}=useConfirm();
@@ -2214,7 +2286,7 @@ function NutriPrescrever({user,showToast}){
     const fimDate=addMonths(new Date(inicio),duracao);
     const plano={nome:nomePlano,protocolo,duracao,inicio,fim:fimDate.toISOString(),refeicoes,kcalMeta:fases[protocolo],criadoEm:new Date().toISOString()};
     await DB.setData("plano_alim_aluno",alunoSel.id,plano);
-    showToast&&showToast(`✅ Plano alimentar enviado para ${alunoSel.nome.split(" ")[0]}!`);
+    showToast&&showToast(`— Plano alimentar enviado para ${alunoSel.nome.split(" ")[0]}!`);
   }
 
   return(
@@ -2222,11 +2294,11 @@ function NutriPrescrever({user,showToast}){
     <div className="page">
       <div className="page-title blue">PLANO ALIMENTAR</div>
       <div className="page-sub">Monte e atribua planos alimentares com período de validade</div>
-      {alunos.length===0&&<div className="alert alert-warn">⚠️ Sem pacientes vinculados. Código: <b style={{fontFamily:"var(--font-mono)"}}>{user.codigo||"------"}</b></div>}
+      {alunos.length===0&&<div className="alert alert-warn">— ï¸ Sem pacientes vinculados. Código: <b style={{fontFamily:"var(--font-mono)"}}>{user.codigo||"------"}</b></div>}
 
       {/* SELECIONAR PACIENTE */}
       <div className="card">
-        <div className="card-title">👤 SELECIONAR PACIENTE</div>
+        <div className="card-title">📅¤ SELECIONAR PACIENTE</div>
         <AlunoSelector alunos={alunos||[]} selecionado={alunoSel} onSelect={setAlunoSel} accentClass="sel-blue"/>
         {!alunoSel&&alunos.length>0&&<div style={{color:"var(--text3)",fontSize:"0.85rem"}}>Selecione um paciente para montar o plano.</div>}
       </div>
@@ -2235,7 +2307,7 @@ function NutriPrescrever({user,showToast}){
         <>
           {/* CONFIG */}
           <div className="card">
-            <div className="card-title">⚙️ CONFIGURAÇÕES</div>
+            <div className="card-title">—ï¸ CONFIGURAÃÃES</div>
             <div className="grid-2">
               <div className="form-group"><label className="form-label">Nome do plano</label><input className="form-input" value={nomePlano} onChange={e=>setNomePlano(e.target.value)} placeholder="Ex: Dieta Hipertrofia"/></div>
               <div className="form-group"><label className="form-label">Duração</label>
@@ -2255,15 +2327,15 @@ function NutriPrescrever({user,showToast}){
             </div>
             <div className="periodo-card">
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:"0.5rem"}}>
-                <div><div style={{fontWeight:600}}>{fmtDate(inicio)} → {fmtDate(addMonths(new Date(inicio),duracao))}</div><div style={{fontSize:"0.8rem",color:"var(--text2)",marginTop:"0.15rem"}}>{duracao} {duracao===1?"mês":"meses"} para {alunoSel.nome.split(" ")[0]}</div></div>
+                <div><div style={{fontWeight:600}}>{fmtDate(inicio)} — {fmtDate(addMonths(new Date(inicio),duracao))}</div><div style={{fontSize:"0.8rem",color:"var(--text2)",marginTop:"0.15rem"}}>{duracao} {duracao===1?"mês":"meses"} para {alunoSel.nome.split(" ")[0]}</div></div>
                 <div style={{textAlign:"right"}}><div style={{fontFamily:"var(--font-display)",fontSize:"1.8rem",color:"var(--blue)"}}>{totalKcal}<span style={{fontSize:"0.9rem",color:"var(--text2)"}}> kcal/dia</span></div><div style={{fontSize:"0.75rem",color:"var(--text3)"}}>Meta protocolo: {fases[protocolo]}kcal</div></div>
               </div>
             </div>
           </div>
 
-          {/* REFEIÇÕES */}
+          {/* REFEIÃÃES */}
           <div className="card">
-            <div className="card-title">🥗 REFEIÇÕES DO PLANO</div>
+            <div className="card-title">📅¥ REFEIÃÃES DO PLANO</div>
             {(refeicoes||[]).map((r,i)=>(
               <div key={i} style={{background:"var(--card2)",borderRadius:"var(--radius)",padding:"0.85rem",marginBottom:"0.75rem",border:"1px solid var(--border)"}}>
                 <div className="grid-2" style={{marginBottom:"0.5rem"}}>
@@ -2273,7 +2345,7 @@ function NutriPrescrever({user,showToast}){
                 <div className="form-group" style={{marginBottom:"0.5rem"}}><label className="form-label">Itens</label><textarea className="form-textarea" style={{minHeight:"60px"}} value={r.i} onChange={e=>updateRef(i,"i",e.target.value)}/></div>
                 <div style={{display:"flex",gap:"0.75rem",alignItems:"center"}}>
                   <div style={{flex:1}}><label className="form-label">Kcal</label><input className="form-input" type="number" value={r.k} onChange={e=>updateRef(i,"k",e.target.value)}/></div>
-                  <button className="btn btn-ghost btn-sm" style={{color:"var(--red)",alignSelf:"flex-end"}} onClick={()=>removeRef(i)}>✕ Remover</button>
+                  <button className="btn btn-ghost btn-sm" style={{color:"var(--red)",alignSelf:"flex-end"}} onClick={()=>removeRef(i)}>— Remover</button>
                 </div>
               </div>
             ))}
@@ -2286,13 +2358,13 @@ function NutriPrescrever({user,showToast}){
               if(!ok)return;
               await DB.setData("plano_alim_aluno",alunoSel.id,null);
               showToast&&showToast("Dieta deletada!","warn");
-            }}>🗑️ Deletar dieta</button>
+            }}>📅ï¸ Deletar dieta</button>
             <button className="btn btn-sm btn-ghost" onClick={()=>{
               setRefeicoes([{h:"07:00",r:"Café da manhã",i:"",k:""},{h:"12:00",r:"Almoço",i:"",k:""},{h:"19:00",r:"Jantar",i:"",k:""}]);
               showToast&&showToast("Novo plano em branco criado");
-            }}>📄 Novo plano</button>
+            }}>📅 Novo plano</button>
           </div>
-          <button className="btn btn-blue btn-full" onClick={salvar}>📤 Enviar plano para {alunoSel.nome.split(" ")[0]}</button>
+          <button className="btn btn-blue btn-full" onClick={salvar}>📅¤ Enviar plano para {alunoSel.nome.split(" ")[0]}</button>
         </>
       )}
     </div>
@@ -2301,7 +2373,7 @@ function NutriPrescrever({user,showToast}){
 }
 
 // ============================================================
-// NUTRI — DASHBOARD + ACOMPANHAMENTO
+// NUTRI — DASHBOARD + ACOMPANHAMENTO
 // ============================================================
 function NutriDash({user}){
   const [pacientes,]=useAsyncData(()=>DB.getAlunosDe(user.id),[user.id],[]);
@@ -2325,10 +2397,10 @@ function NutriDash({user}){
     });
   },[pacientes?.length]);
   if(pacVer)return<DiarioAluno aluno={pacVer} onBack={()=>setPacVer(null)}/>;
-  if(pacientes===null)return<div className="page"><div className="page-title blue">{getGreeting()}, {firstName(user.nome)} 👋</div><div style={{display:"flex",justifyContent:"center",padding:"3rem"}}><span className="spinner"/></div></div>;
+  if(pacientes===null)return<div className="page"><div className="page-title blue">{getGreeting()}, {firstName(user.nome)} 📅</div><div style={{display:"flex",justifyContent:"center",padding:"3rem"}}><span className="spinner"/></div></div>;
   return(
     <div className="page">
-      <div className="page-title blue">{getGreeting()}, {firstName(user.nome)} 👋</div>
+      <div className="page-title blue">{getGreeting()}, {firstName(user.nome)} 📅</div>
       <div className="page-sub">{getDateStr()}</div>
       <div className="card" style={{padding:"1rem 1.5rem"}}><CodigoProfissional user={user}/></div>
       <div className="grid-4">
@@ -2338,10 +2410,10 @@ function NutriDash({user}){
         <div className="stat-tile"><div className="stat-label">Alertas</div><div className="stat-value orange">{Object.values(saudeMapN).filter(s=>s.doente||s.mens).length}</div></div>
       </div>
       {pacientesList.length===0?(
-        <div className="card"><div className="card-title">👥 MEUS PACIENTES</div><div style={{color:"var(--text2)",lineHeight:1.7}}>Compartilhe o código <b style={{color:"var(--green)",fontFamily:"var(--font-mono)"}}>{user.codigo||"------"}</b> para seus pacientes se conectarem.</div></div>
+        <div className="card"><div className="card-title">📅¥ MEUS PACIENTES</div><div style={{color:"var(--text2)",lineHeight:1.7}}>Compartilhe o código <b style={{color:"var(--green)",fontFamily:"var(--font-mono)"}}>{user.codigo||"------"}</b> para seus pacientes se conectarem.</div></div>
       ):(
         <div className="card">
-          <div className="card-title">👥 MEUS PACIENTES</div>
+          <div className="card-title">📅¥ MEUS PACIENTES</div>
           {(pacientesList||[]).map(p=>{
             const s=saudeMapN[p.id]||{};
             const plano=planoMapN[p.id];
@@ -2351,11 +2423,11 @@ function NutriDash({user}){
             return(
               <div key={p.id} className="aluno-row" onClick={()=>setPacVer(p)}>
                 <div className="aluno-avatar" style={{background:"rgba(52,152,219,0.15)",color:"var(--blue)"}}>{initials(p.nome)}</div>
-                <div style={{flex:1}}><div style={{fontWeight:600}}>{p.nome}</div><div style={{fontSize:"0.78rem",color:"var(--text2)"}}>{plano?`Plano: ${plano.nome} — até ${fmtDate(plano.fim)}`:"Sem plano ativo"}{totalRef>0?` • ${qtdComido}/${totalRef} refeições`:""}</div></div>
+                <div style={{flex:1}}><div style={{fontWeight:600}}>{p.nome}</div><div style={{fontSize:"0.78rem",color:"var(--text2)"}}>{plano?`Plano: ${plano.nome} — até ${fmtDate(plano.fim)}`:"Sem plano ativo"}{totalRef>0?` —¢ ${qtdComido}/${totalRef} refeições`:""}</div></div>
                 <div style={{display:"flex",gap:"0.4rem"}}>
-                  {s.doente&&<span className="tag tag-red">🤒</span>}
-                  {s.mens&&<span className="tag tag-orange">🔴</span>}
-                  {plano&&<span className="tag tag-blue">✓</span>}
+                  {s.doente&&<span className="tag tag-red">📅¤</span>}
+                  {s.mens&&<span className="tag tag-orange">📅´</span>}
+                  {plano&&<span className="tag tag-blue">—</span>}
                 </div>
               </div>
             );
@@ -2411,15 +2483,15 @@ function NutriAcompanhamento({user}){
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"1rem"}}>
               <div className="card-title" style={{marginBottom:0}}>{p.nome}</div>
               <div style={{display:"flex",gap:"0.4rem",flexWrap:"wrap"}}>
-                {s.mens&&<span className="tag tag-orange">🔴 Ciclo</span>}
-                {s.doente&&<span className="tag tag-red">🤒 {diasDoente}d</span>}
-                {s.meds&&<span className="tag tag-blue">💊</span>}
-                {s.dores&&s.dores.length>0&&<span className="tag tag-orange">🔴 Dor</span>}
+                {s.mens&&<span className="tag tag-orange">📅´ Ciclo</span>}
+                {s.doente&&<span className="tag tag-red">📅¤ {diasDoente}d</span>}
+                {s.meds&&<span className="tag tag-blue">📅</span>}
+                {s.dores&&s.dores.length>0&&<span className="tag tag-orange">📅´ Dor</span>}
               </div>
             </div>
             {totalRef>0&&<div className="prog-wrap"><div className="prog-hdr"><span style={{fontSize:"0.8rem"}}>Refeições hoje</span><span className="green" style={{fontSize:"0.8rem"}}>{qtdComido}/{totalRef}</span></div><div className="prog-track"><div className="prog-fill green" style={{width:`${totalRef>0?(qtdComido/totalRef)*100:0}%`}}/></div></div>}
             <div className="prog-wrap"><div className="prog-hdr"><span style={{fontSize:"0.8rem"}}>Hidratação</span><span className="blue" style={{fontSize:"0.8rem"}}>{agua}ml / {meta}ml</span></div><div className="prog-track"><div className="prog-fill blue" style={{width:`${Math.min((agua/meta)*100,100)}%`}}/></div></div>
-            <div style={{fontSize:"0.8rem",color:"var(--blue)",marginTop:"0.5rem"}}>Ver diário completo →</div>
+            <div style={{fontSize:"0.8rem",color:"var(--blue)",marginTop:"0.5rem"}}>Ver diário completo —</div>
           </div>
         );
       })}
@@ -2431,25 +2503,25 @@ function NutriAcompanhamento({user}){
 // NAV
 // ============================================================
 const NAV_ALUNO=[
-  {section:"VISÃO GERAL",items:[{id:"dashboard",icon:"🏠",label:"Dashboard"},{id:"perfil",icon:"👤",label:"Meu Perfil"},{id:"chat",icon:"💬",label:"Chat"}]},
-  {section:"DIÁRIO",items:[{id:"treinos",icon:"🏋️",label:"Treinos da Semana"},{id:"alimentacao",icon:"🥗",label:"Alimentação"},{id:"hidratacao",icon:"💧",label:"Hidratação"},{id:"saude",icon:"❤️",label:"Saúde"}]},
-  {section:"PROGRESSO",items:[{id:"avaliacao",icon:"📊",label:"Avaliação Física"},{id:"competicoes",icon:"🏆",label:"Competições"}]},
-  {section:"EQUIPE",items:[{id:"vinculo",icon:"🔗",label:"Minha Equipe"}]},
+  {section:"VISÃO GERAL",items:[{id:"dashboard",icon:"📅 ",label:"Dashboard"},{id:"perfil",icon:"📅¤",label:"Meu Perfil"},{id:"chat",icon:"📅¬",label:"Chat"}]},
+  {section:"DIÃRIO",items:[{id:"treinos",icon:"📅ï¸",label:"Treinos da Semana"},{id:"alimentacao",icon:"📅¥",label:"Alimentação"},{id:"hidratacao",icon:"📅§",label:"Hidratação"},{id:"saude",icon:"—¤ï¸",label:"Saúde"}]},
+  {section:"PROGRESSO",items:[{id:"avaliacao",icon:"📅",label:"Avaliação Física"},{id:"competicoes",icon:"📅",label:"Competições"}]},
+  {section:"EQUIPE",items:[{id:"vinculo",icon:"📅",label:"Minha Equipe"}]},
 ];
 const NAV_TREINADOR=[
-  {section:"VISÃO GERAL",items:[{id:"dashboard",icon:"🏠",label:"Dashboard"}]},
-  {section:"ALUNOS",items:[{id:"cadastrar",icon:"➕",label:"Cadastrar Aluno"},{id:"acompanhamento",icon:"👁️",label:"Acompanhamento"},{id:"prescrever",icon:"📋",label:"Prescrever Treino"},{id:"chat",icon:"💬",label:"Chat"}]},
+  {section:"VISÃO GERAL",items:[{id:"dashboard",icon:"📅 ",label:"Dashboard"}]},
+  {section:"ALUNOS",items:[{id:"cadastrar",icon:"—",label:"Cadastrar Aluno"},{id:"acompanhamento",icon:"📅ï¸",label:"Acompanhamento"},{id:"prescrever",icon:"📅",label:"Prescrever Treino"},{id:"chat",icon:"📅¬",label:"Chat"}]},
 ];
 const NAV_NUTRI=[
-  {section:"VISÃO GERAL",items:[{id:"dashboard",icon:"🏠",label:"Dashboard"}]},
-  {section:"PACIENTES",items:[{id:"cadastrar",icon:"➕",label:"Cadastrar Paciente"},{id:"acompanhamento",icon:"👁️",label:"Acompanhamento"},{id:"prescrever",icon:"🥗",label:"Plano Alimentar"},{id:"chat",icon:"💬",label:"Chat"}]},
+  {section:"VISÃO GERAL",items:[{id:"dashboard",icon:"📅 ",label:"Dashboard"}]},
+  {section:"PACIENTES",items:[{id:"cadastrar",icon:"—",label:"Cadastrar Paciente"},{id:"acompanhamento",icon:"📅ï¸",label:"Acompanhamento"},{id:"prescrever",icon:"📅¥",label:"Plano Alimentar"},{id:"chat",icon:"📅¬",label:"Chat"}]},
 ];
 
 // ============================================================
 // ROLE APPS
 // ============================================================
 // ============================================================
-// ALUNO — MEU PERFIL
+// ALUNO — MEU PERFIL
 // ============================================================
 function MeuPerfil({user,treinador,nutri,vinculo,onVinculoChange,showToast}){
   const {confirm,Modal:ConfirmModalPerfil}=useConfirm();
@@ -2488,7 +2560,7 @@ function MeuPerfil({user,treinador,nutri,vinculo,onVinculoChange,showToast}){
     setSalvando(false);
     setEditando(false);
     if(form.objetivo!==undefined)user.objetivo=form.objetivo;
-    showToast&&showToast("✅ Perfil atualizado!");
+    showToast&&showToast("— Perfil atualizado!");
   }
 
   async function desvincularTreinador(){
@@ -2514,25 +2586,25 @@ function MeuPerfil({user,treinador,nutri,vinculo,onVinculoChange,showToast}){
 
       <div className="card">
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"1rem"}}>
-          <div className="card-title" style={{marginBottom:0}}>👤 DADOS PESSOAIS</div>
-          {!editando&&<button className="btn btn-ghost btn-sm" onClick={()=>setEditando(true)}>✏️ Editar</button>}
+          <div className="card-title" style={{marginBottom:0}}>📅¤ DADOS PESSOAIS</div>
+          {!editando&&<button className="btn btn-ghost btn-sm" onClick={()=>setEditando(true)}>—ï¸ Editar</button>}
         </div>
 
         {!editando?(
           <div style={{display:"flex",flexDirection:"column",gap:"0.6rem"}}>
             {[
-              ["Nome completo",`${form.nome} ${form.sobrenome}`.trim()||"—"],
-              ["E-mail",form.email||user.email||"—"],
-              ["Telefone",form.telefone||"—"],
-              ["Data de nascimento",form.nascimento?`${new Date(form.nascimento+'T12:00').toLocaleDateString('pt-BR')} (${idade} anos)`:"—"],
-              ["Local de treino",form.localTreino||"—"],
+              ["Nome completo",`${form.nome} ${form.sobrenome}`.trim()||"—"],
+              ["E-mail",form.email||user.email||"—"],
+              ["Telefone",form.telefone||"—"],
+              ["Data de nascimento",form.nascimento?`${new Date(form.nascimento+'T12:00').toLocaleDateString('pt-BR')} (${idade} anos)`:"—"],
+              ["Local de treino",form.localTreino||"—"],
             ].map(([label,val])=>(
               <div key={label} style={{display:"flex",gap:"0.5rem",flexWrap:"wrap"}}>
                 <span style={{fontSize:"0.8rem",color:"var(--text2)",minWidth:"140px"}}>{label}:</span>
                 <span style={{fontSize:"0.85rem",fontWeight:500}}>{val}</span>
               </div>
             ))}
-            {form.obs&&<div style={{marginTop:"0.5rem",padding:"0.6rem",background:"var(--card2)",borderRadius:"var(--radius)",fontSize:"0.82rem",color:"var(--text2)"}}>📝 {form.obs}</div>}
+            {form.obs&&<div style={{marginTop:"0.5rem",padding:"0.6rem",background:"var(--card2)",borderRadius:"var(--radius)",fontSize:"0.82rem",color:"var(--text2)"}}>📅 {form.obs}</div>}
             {form.objetivo&&(()=>{const obj=getObjetivo(form.objetivo);return(
               <div style={{marginTop:"0.5rem",display:"inline-flex",alignItems:"center",gap:"0.5rem",
                 padding:"0.35rem 0.8rem",borderRadius:"20px",border:"2px solid "+obj.color,
@@ -2542,13 +2614,13 @@ function MeuPerfil({user,treinador,nutri,vinculo,onVinculoChange,showToast}){
             );})()}
             {treinador&&(
               <div style={{marginTop:"0.75rem",padding:"0.6rem 0.75rem",background:"rgba(46,213,115,0.08)",borderRadius:"var(--radius)",fontSize:"0.82rem",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                <span>🏋️ Treinador: <b>{treinador.nome}</b></span>
+                <span>📅ï¸ Treinador: <b>{treinador.nome}</b></span>
                 <button className="btn btn-ghost btn-sm" style={{fontSize:"0.7rem",color:"var(--red)",padding:"2px 8px"}} onClick={desvincularTreinador}>Remover</button>
               </div>
             )}
             {nutri&&(
               <div style={{marginTop:"0.4rem",padding:"0.6rem 0.75rem",background:"rgba(52,152,219,0.08)",borderRadius:"var(--radius)",fontSize:"0.82rem",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                <span>🥗 Nutricionista: <b>{nutri.nome}</b></span>
+                <span>📅¥ Nutricionista: <b>{nutri.nome}</b></span>
                 <button className="btn btn-ghost btn-sm" style={{fontSize:"0.7rem",color:"var(--red)",padding:"2px 8px"}} onClick={desvincularNutri}>Remover</button>
               </div>
             )}
@@ -2570,7 +2642,7 @@ function MeuPerfil({user,treinador,nutri,vinculo,onVinculoChange,showToast}){
             </div>
             <div className="form-group"><label className="form-label">Observações</label><textarea className="form-textarea" rows={3} value={form.obs} onChange={e=>set("obs",e.target.value)}/></div>
             <div className="form-group">
-              <label className="form-label">🎯 Objetivo</label>
+              <label className="form-label">📅¯ Objetivo</label>
               <div style={{display:"flex",flexWrap:"wrap",gap:"0.4rem",marginTop:"0.25rem"}}>
                 {OBJETIVOS.map(o=>(
                   <button key={o.id} type="button" onClick={()=>set("objetivo",o.id)}
@@ -2586,7 +2658,7 @@ function MeuPerfil({user,treinador,nutri,vinculo,onVinculoChange,showToast}){
             </div>
             <div style={{display:"flex",gap:"0.5rem"}}>
               <button className="btn btn-ghost btn-sm" onClick={()=>setEditando(false)}>Cancelar</button>
-              <button className="btn btn-primary btn-sm" onClick={salvar} disabled={salvando}>{salvando?"Salvando...":"✅ Salvar"}</button>
+              <button className="btn btn-primary btn-sm" onClick={salvar} disabled={salvando}>{salvando?"Salvando...":"— Salvar"}</button>
             </div>
           </>
         )}
@@ -2596,7 +2668,7 @@ function MeuPerfil({user,treinador,nutri,vinculo,onVinculoChange,showToast}){
 }
 
 // ============================================================
-// CHAT — Treinador / Aluno / Nutri
+// CHAT — Treinador / Aluno / Nutri
 // ============================================================
 function ChatComponent({user,contato,showToast}){
   const [msgs,setMsgs]=useState([]);
@@ -2639,7 +2711,7 @@ function ChatComponent({user,contato,showToast}){
   if(!contato){
     return(
       <div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"60vh",color:"var(--text2)",flexDirection:"column",gap:"0.5rem"}}>
-        <div style={{fontSize:"2rem"}}>💬</div>
+        <div style={{fontSize:"2rem"}}>📅¬</div>
         <div>Sem contato vinculado para conversar</div>
       </div>
     );
@@ -2661,7 +2733,7 @@ function ChatComponent({user,contato,showToast}){
       <div style={{flex:1,overflowY:"auto",padding:"1rem",display:"flex",flexDirection:"column",gap:"0.5rem"}}>
         {msgs.length===0&&(
           <div style={{textAlign:"center",color:"var(--text2)",fontSize:"0.85rem",marginTop:"2rem"}}>
-            Nenhuma mensagem ainda. Diga olá! 👋
+            Nenhuma mensagem ainda. Diga olá! 📅
           </div>
         )}
         {msgs.map((m,i)=>{
@@ -2677,7 +2749,7 @@ function ChatComponent({user,contato,showToast}){
                 <div>{m.texto}</div>
                 <div style={{fontSize:"0.68rem",opacity:0.7,marginTop:"2px",textAlign:"right"}}>
                   {fmtTime(m.criado_em)}
-                  {minha&&<span style={{marginLeft:"4px"}}>{m.lida?"✓✓":"✓"}</span>}
+                  {minha&&<span style={{marginLeft:"4px"}}>{m.lida?"——":"—"}</span>}
                 </div>
               </div>
             </div>
@@ -2703,7 +2775,7 @@ function ChatComponent({user,contato,showToast}){
   );
 }
 
-// Wrapper para aluno — usa treinador ou nutri como contato
+// Wrapper para aluno — usa treinador ou nutri como contato
 function AlunoChat({user,treinador,nutri,showToast}){
   const [aba,setAba]=useState("treinador");
   const contato=aba==="treinador"?treinador:nutri;
@@ -2711,8 +2783,8 @@ function AlunoChat({user,treinador,nutri,showToast}){
     <div className="page" style={{padding:0}}>
       {(treinador||nutri)&&(
         <div style={{display:"flex",gap:"8px",padding:"0.75rem",background:"var(--bg)"}}>
-          {treinador&&<button className={`btn btn-sm ${aba==="treinador"?"btn-primary":"btn-ghost"}`} onClick={()=>setAba("treinador")}>🏋️ Treinador</button>}
-          {nutri&&<button className={`btn btn-sm ${aba==="nutri"?"btn-primary":"btn-ghost"}`} onClick={()=>setAba("nutri")}>🥗 Nutricionista</button>}
+          {treinador&&<button className={`btn btn-sm ${aba==="treinador"?"btn-primary":"btn-ghost"}`} onClick={()=>setAba("treinador")}>📅ï¸ Treinador</button>}
+          {nutri&&<button className={`btn btn-sm ${aba==="nutri"?"btn-primary":"btn-ghost"}`} onClick={()=>setAba("nutri")}>📅¥ Nutricionista</button>}
         </div>
       )}
       <ChatComponent user={user} contato={contato} showToast={showToast}/>
@@ -2720,7 +2792,7 @@ function AlunoChat({user,treinador,nutri,showToast}){
   );
 }
 
-// Wrapper para treinador/nutri — escolhe aluno da lista
+// Wrapper para treinador/nutri — escolhe aluno da lista
 function ProfChat({user,showToast}){
   const [alunos,setAlunos]=useState([]);
   const [alunoSel,setAlunoSel]=useState(null);
@@ -2733,7 +2805,7 @@ function ProfChat({user,showToast}){
     <div className="page" style={{padding:0}}>
       {!alunoSel?(
         <div style={{padding:"1rem"}}>
-          <div className="page-title orange" style={{marginBottom:"1rem"}}>💬 CHAT</div>
+          <div className="page-title orange" style={{marginBottom:"1rem"}}>📅¬ CHAT</div>
           {alunos.length===0?(
             <div style={{color:"var(--text2)",textAlign:"center",padding:"2rem"}}>Nenhum aluno vinculado ainda.</div>
           ):(alunos.map(a=>(
@@ -2745,13 +2817,13 @@ function ProfChat({user,showToast}){
                 <div style={{fontWeight:600}}>{a.nome}</div>
                 <div style={{fontSize:"0.8rem",color:"var(--text2)"}}>Toque para conversar</div>
               </div>
-              <div style={{marginLeft:"auto",color:"var(--text3)"}}>›</div>
+              <div style={{marginLeft:"auto",color:"var(--text3)"}}>—º</div>
             </div>
           )))}
         </div>
       ):(
         <div>
-          <button className="btn btn-ghost btn-sm" style={{margin:"0.5rem"}} onClick={()=>setAlunoSel(null)}>← Voltar</button>
+          <button className="btn btn-ghost btn-sm" style={{margin:"0.5rem"}} onClick={()=>setAlunoSel(null)}>— Voltar</button>
           <ChatComponent user={user} contato={alunoSel} showToast={showToast}/>
         </div>
       )}
@@ -2762,7 +2834,7 @@ function ProfChat({user,showToast}){
 function AlunoApp({user,onLogout}){
   const {show,ToastEl}=useToast();
   const [page,setPage]=useState("dashboard");
-  // Vínculo persistente — carrega do banco e mantém em estado
+  // Vínculo persistente — carrega do banco e mantém em estado
   // Carrega do sessionStorage imediatamente (persiste na aba, mesmo ao minimizar)
   const [vinculoApp,setVinculoApp]=useState(()=>{
     try{const c=localStorage.getItem("tfv_"+user.id);return c?JSON.parse(c):null;}catch{return null;}
@@ -2805,7 +2877,9 @@ function AlunoApp({user,onLogout}){
     const check=()=>DB.getMensagensNaoLidas(user.id).then(d=>setMsgsBadge(d.length)).catch(()=>{});
     check();
     const iv=setInterval(check,30000);
-    return()=>clearInterval(iv);
+    const onVisible=()=>{if(document.visibilityState==="visible")check();};
+    document.addEventListener("visibilitychange",onVisible);
+    return()=>{clearInterval(iv);document.removeEventListener("visibilitychange",onVisible);};
   },[user?.id]);
   // Função para atualizar vínculo após vincular/desvincular
   const refreshVinculo=useCallback(async()=>{
@@ -2827,7 +2901,7 @@ function AlunoApp({user,onLogout}){
   return(<>{ToastEl}<Shell user={user} onLogout={onLogout} nav={NAV_ALUNO} active={page} setActive={setPage} accent="" alertCount={msgsBadge}>{pages[page]}</Shell></>);
 }
 // ============================================================
-// TREINADOR — CADASTRAR ALUNO
+// TREINADOR — CADASTRAR ALUNO
 // ============================================================
 function CadastrarAluno({user,showToast}){
   const {confirm,Modal:ConfirmModalCad}=useConfirm();
@@ -2861,8 +2935,8 @@ function CadastrarAluno({user,showToast}){
       await DB.setData("alunos_cadastrados",user.id,novos);
       setAlunos(novos);
       setForm({nome:"",sobrenome:"",nascimento:"",telefone:"",email:"",localTreino:"",obs:""});
-      const msg=`Olá ${novo.nome}! Seu treinador ${user.nome} te cadastrou no TrioFit. Acesse triofit.vercel.app, crie sua conta${novo.email?" com o email "+novo.email:""} e vincule com o código ${user.codigo||"------"} 💪`;
-      showToast&&showToast(`✅ ${novo.nome} cadastrado!`);
+      const msg=`Olá ${novo.nome}! Seu treinador ${user.nome} te cadastrou no TrioFit. Acesse triofit.vercel.app, crie sua conta${novo.email?" com o email "+novo.email:""} e vincule com o código ${user.codigo||"------"} 📅ª`;
+      showToast&&showToast(`— ${novo.nome} cadastrado!`);
       setAba("lista");
     }catch(e){showToast&&showToast("Erro ao cadastrar","warn");}
     setSalvando(false);
@@ -2878,18 +2952,18 @@ function CadastrarAluno({user,showToast}){
 
   function abrirWhatsApp(aluno){
     const msg=aluno.contaCriada
-      ?encodeURIComponent(`Olá ${aluno.nome}! 🎉 Sua conta no TrioFit foi criada!
+      ?encodeURIComponent(`Olá ${aluno.nome}! 📅 Sua conta no TrioFit foi criada!
 
-📱 Acesse: https://triofit.vercel.app
-✉️ E-mail: ${aluno.email}
-🔑 Senha temporária: ${aluno.senhaTemp}
+📅± Acesse: https://triofit.vercel.app
+—ï¸ E-mail: ${aluno.email}
+📅 Senha temporária: ${aluno.senhaTemp}
 
-Ao entrar, vá em Meu Perfil para alterar a senha. Seu treinador ${user.nome} já está vinculado! 💪`)
+Ao entrar, vá em Meu Perfil para alterar a senha. Seu treinador ${user.nome} já está vinculado! 📅ª`)
       :encodeURIComponent(`Olá ${aluno.nome}! Você foi cadastrado no TrioFit.
 
-📱 Acesse: https://triofit.vercel.app
-✉️ Crie sua conta com: ${aluno.email||"seu e-mail"}
-🔑 Código do treinador: ${user.codigo||"------"} 💪`);
+📅± Acesse: https://triofit.vercel.app
+—ï¸ Crie sua conta com: ${aluno.email||"seu e-mail"}
+📅 Código do treinador: ${user.codigo||"------"} 📅ª`);
     window.open(`https://wa.me/55${aluno.telefone.replace(/[^0-9]/g,"")}?text=${msg}`,"_blank");
   }
 
@@ -2900,13 +2974,13 @@ Ao entrar, vá em Meu Perfil para alterar a senha. Seu treinador ${user.nome} j�
 
       {/* ABAS */}
       <div style={{display:"flex",gap:"8px",marginBottom:"1rem"}}>
-        <button className={`btn ${aba==="form"?"btn-primary":"btn-ghost"} btn-sm`} onClick={()=>setAba("form")}>➕ Novo aluno</button>
-        <button className={`btn ${aba==="lista"?"btn-primary":"btn-ghost"} btn-sm`} onClick={()=>setAba("lista")}>👥 Lista ({(alunos||[]).length})</button>
+        <button className={`btn ${aba==="form"?"btn-primary":"btn-ghost"} btn-sm`} onClick={()=>setAba("form")}>— Novo aluno</button>
+        <button className={`btn ${aba==="lista"?"btn-primary":"btn-ghost"} btn-sm`} onClick={()=>setAba("lista")}>📅¥ Lista ({(alunos||[]).length})</button>
       </div>
 
       {aba==="form"&&(
         <div className="card">
-          <div className="card-title">📋 DADOS DO ALUNO</div>
+          <div className="card-title">📅 DADOS DO ALUNO</div>
           <div className="grid-2">
             <div className="form-group"><label className="form-label">Nome *</label><input className="form-input" placeholder="João" value={form.nome} onChange={e=>set("nome",e.target.value)}/></div>
             <div className="form-group"><label className="form-label">Sobrenome</label><input className="form-input" placeholder="Silva" value={form.sobrenome} onChange={e=>set("sobrenome",e.target.value)}/></div>
@@ -2918,16 +2992,16 @@ Ao entrar, vá em Meu Perfil para alterar a senha. Seu treinador ${user.nome} j�
           <div className="form-group"><label className="form-label">Observações</label><textarea className="form-textarea" rows={3} placeholder="Limitações, objetivos, histórico de saúde..." value={form.obs} onChange={e=>set("obs",e.target.value)}/></div>
           <div className="card" style={{background:"var(--card2)",marginTop:"0.5rem"}}>
             <div style={{fontSize:"0.82rem",color:"var(--text2)",lineHeight:1.6}}>
-              🤖 <b>Automático:</b> ao cadastrar com e-mail, a conta do aluno é criada automaticamente e ele já fica vinculado a você. Basta enviar as credenciais por WhatsApp! O aluno entra com a senha temporária e pode alterar depois.
+              📅¤ <b>Automático:</b> ao cadastrar com e-mail, a conta do aluno é criada automaticamente e ele já fica vinculado a você. Basta enviar as credenciais por WhatsApp! O aluno entra com a senha temporária e pode alterar depois.
             </div>
           </div>
-          <button className="btn btn-primary btn-full" style={{marginTop:"1rem"}} onClick={salvar} disabled={salvando}>{salvando?"Salvando...":"✅ Cadastrar aluno"}</button>
+          <button className="btn btn-primary btn-full" style={{marginTop:"1rem"}} onClick={salvar} disabled={salvando}>{salvando?"Salvando...":"— Cadastrar aluno"}</button>
         </div>
       )}
 
       {aba==="lista"&&(
         <div className="card">
-          <div className="card-title">👥 ALUNOS CADASTRADOS</div>
+          <div className="card-title">📅¥ ALUNOS CADASTRADOS</div>
           {(alunos||[]).length===0?(
             <div style={{color:"var(--text2)",fontSize:"0.9rem",padding:"1rem 0"}}>Nenhum aluno cadastrado ainda.</div>
           ):(alunos||[]).map(a=>(
@@ -2937,22 +3011,22 @@ Ao entrar, vá em Meu Perfil para alterar a senha. Seu treinador ${user.nome} j�
                   <div style={{display:"flex",alignItems:"center",gap:"6px"}}>
                     <div style={{display:"flex",alignItems:"center",gap:"0.5rem",flexWrap:"wrap"}}>
                       <span style={{fontWeight:600,fontSize:"1rem"}}>{a.nome} {a.sobrenome}</span>
-                      {a.contaCriada&&<span style={{fontSize:"10px",background:"rgba(46,213,115,0.2)",color:"var(--green)",padding:"2px 6px",borderRadius:"4px"}}>✓ conta criada</span>}
+                      {a.contaCriada&&<span style={{fontSize:"10px",background:"rgba(46,213,115,0.2)",color:"var(--green)",padding:"2px 6px",borderRadius:"4px"}}>— conta criada</span>}
                     </div>
-                    {a.senhaTemp&&<div style={{fontSize:"0.75rem",marginTop:"3px",color:"var(--text2)"}}>🔑 Senha temp: <b style={{fontFamily:"var(--font-mono)"}}>{a.senhaTemp}</b></div>}
-                    {a.contaCriada&&<span style={{fontSize:"10px",background:"rgba(46,213,115,0.15)",color:"var(--green)",padding:"1px 6px",borderRadius:"4px"}}>✓ conta criada</span>}
+                    {a.senhaTemp&&<div style={{fontSize:"0.75rem",marginTop:"3px",color:"var(--text2)"}}>📅 Senha temp: <b style={{fontFamily:"var(--font-mono)"}}>{a.senhaTemp}</b></div>}
+                    {a.contaCriada&&<span style={{fontSize:"10px",background:"rgba(46,213,115,0.15)",color:"var(--green)",padding:"1px 6px",borderRadius:"4px"}}>— conta criada</span>}
                   </div>
                   <div style={{fontSize:"0.8rem",color:"var(--text2)",marginTop:"2px"}}>
-                    {a.email&&<span>✉️ {a.email} </span>}
-                    {a.telefone&&<span>📱 {a.telefone} </span>}
-                    {a.localTreino&&<span>📍 {a.localTreino}</span>}
+                    {a.email&&<span>—ï¸ {a.email} </span>}
+                    {a.telefone&&<span>📅± {a.telefone} </span>}
+                    {a.localTreino&&<span>📅 {a.localTreino}</span>}
                   </div>
-                  {a.senhaTemp&&<div style={{fontSize:"0.78rem",color:"var(--orange)",marginTop:"4px",background:"rgba(255,140,0,0.08)",padding:"3px 8px",borderRadius:"4px",display:"inline-block"}}>🔑 Senha temp: <b>{a.senhaTemp}</b></div>}
-                  {a.obs&&<div style={{fontSize:"0.78rem",color:"var(--text3)",marginTop:"4px"}}>📝 {a.obs}</div>}
+                  {a.senhaTemp&&<div style={{fontSize:"0.78rem",color:"var(--orange)",marginTop:"4px",background:"rgba(255,140,0,0.08)",padding:"3px 8px",borderRadius:"4px",display:"inline-block"}}>📅 Senha temp: <b>{a.senhaTemp}</b></div>}
+                  {a.obs&&<div style={{fontSize:"0.78rem",color:"var(--text3)",marginTop:"4px"}}>📅 {a.obs}</div>}
                 </div>
                 <div style={{display:"flex",gap:"6px",flexShrink:0}}>
                   {a.telefone&&<button className="btn btn-ghost btn-sm" style={{fontSize:"0.75rem",color:"#25D366"}} onClick={()=>abrirWhatsApp(a)}>WhatsApp</button>}
-                  <button className="btn btn-ghost btn-sm" style={{fontSize:"0.75rem",color:"var(--red)"}} onClick={()=>remover(a.id)}>✕</button>
+                  <button className="btn btn-ghost btn-sm" style={{fontSize:"0.75rem",color:"var(--red)"}} onClick={()=>remover(a.id)}>—</button>
                 </div>
               </div>
             </div>
@@ -2997,7 +3071,9 @@ function NutriApp({user,onLogout}){
     const check=()=>DB.getMensagensNaoLidas(user.id).then(d=>setMsgsBadgeN(d.length)).catch(()=>{});
     check();
     const iv=setInterval(check,30000);
-    return()=>clearInterval(iv);
+    const onVisible=()=>{if(document.visibilityState==="visible")check();};
+    document.addEventListener("visibilitychange",onVisible);
+    return()=>{clearInterval(iv);document.removeEventListener("visibilitychange",onVisible);};
   },[user?.id]);
   const pages={
     dashboard:<NutriDash user={user}/>,
