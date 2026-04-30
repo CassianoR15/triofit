@@ -33,7 +33,7 @@ function validateSenha(senha) {
 }
 import { supabase, DB } from "./lib/supabase.js";
 
-const _v='TRIOFIT_BUILD_1777555616';
+const _v='TRIOFIT_BUILD_1777556658';
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -1662,6 +1662,8 @@ function TreinadorPrescrever({user,showToast}){
   const [alunos,]=useAsyncData(()=>DB.getAlunosDe(user.id),[user.id],[]);
   const [alunoSel,setAlunoSel]=useState(null);
   const [planoDeletado,setPlanoDeletado]=useState(false);
+  // Reset planoDeletado quando aluno muda
+  useEffect(()=>{setPlanoDeletado(false);},[alunoSel?.id]);
   const [nomePlano,setNomePlano]=useState("Treino A/B/C");
   const [modalidade,setModalidade]=useState("musculacao");
   const [duracao,setDuracao]=useState(1);
@@ -2877,15 +2879,24 @@ function AlunoApp({user,onLogout}){
     const check=()=>DB.getMensagensNaoLidas(user.id).then(d=>setMsgsBadge(d.length)).catch(()=>{});
     check();
     const iv=setInterval(check,30000);
-    const onVisible=()=>{if(document.visibilityState==="visible")check();};
+    const onVisible=()=>{
+      if(document.visibilityState==="visible"){
+        check();
+        // Recarrega vínculos ao voltar para a aba
+        refreshVinculo&&refreshVinculo();
+      }
+    };
     document.addEventListener("visibilitychange",onVisible);
     return()=>{clearInterval(iv);document.removeEventListener("visibilitychange",onVisible);};
-  },[user?.id]);
+  },[user?.id,refreshVinculo]);
   // Função para atualizar vínculo após vincular/desvincular
   const refreshVinculo=useCallback(async()=>{
-    const v=await DB.getVinculoAluno(user.id).catch(()=>null);
-    setVinculoApp(v);
-    try{localStorage.setItem("tfv_"+user.id,JSON.stringify(v));}catch{}
+    const v=await DB.getVinculoAluno(user.id).catch(()=>{
+      // On error, use cached value from localStorage
+      try{const c=localStorage.getItem("tfv_"+user.id);return c?JSON.parse(c):null;}catch{return null;}
+    });
+    if(v!==null)setVinculoApp(v);
+    try{if(v)localStorage.setItem("tfv_"+user.id,JSON.stringify(v));}catch{}
     if(v?.treinadorId){
       const t=await DB.getUserById(v.treinadorId).catch(()=>null);
       setTreinadorApp(t);

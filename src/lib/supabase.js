@@ -163,6 +163,12 @@ export const DB = {
   },
 
   async setData(chave, userId, valor) {
+    if(valor === null || valor === undefined){
+      // Delete the record instead of upserting null
+      await supabase.from('dados').delete()
+        .eq('user_id', userId).eq('chave', chave);
+      return;
+    }
     await supabase.rpc('upsert_dado', {
       p_user_id: userId,
       p_chave: chave,
