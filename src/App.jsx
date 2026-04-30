@@ -33,7 +33,7 @@ function validateSenha(senha) {
 }
 import { supabase, DB } from "./lib/supabase.js";
 
-const _v='TRIOFIT_BUILD_1777562054';
+const _v='TRIOFIT_BUILD_1777562208';
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -1862,7 +1862,8 @@ function TreinadorPrescrever({user,showToast}){
 
           {!planoDeletado&&<div style={{display:"flex",gap:"0.5rem",marginBottom:"0.5rem",flexWrap:"wrap"}}>
             <button className="btn btn-sm btn-ghost" onClick={async()=>{
-              const ok=await confirm("Deletar o plano atual de "+alunoSel.nome.split(" ")[0]+"?");
+              // Deletar direto sem modal de confirmação
+              const ok=window.confirm("Deletar o plano de "+alunoSel.nome.split(" ")[0]+"? Esta ação não pode ser desfeita.");
               if(!ok)return;
               const alunoId=alunoSel.id;
               const alunoNomeTemp=alunoSel.nome;
