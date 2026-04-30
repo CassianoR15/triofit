@@ -33,7 +33,7 @@ function validateSenha(senha) {
 }
 import { supabase, DB } from "./lib/supabase.js";
 
-const _v='TRIOFIT_BUILD_1777561875';
+const _v='TRIOFIT_BUILD_1777562054';
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -1723,6 +1723,17 @@ function TreinadorPrescrever({user,showToast}){
         <div className="card-title">📅¤ SELECIONAR ALUNO</div>
         <AlunoSelector alunos={alunos||[]} selecionado={alunoSel} onSelect={setAlunoSel} accentClass="sel-orange"/>
         {(alunos||[]).length===0&&<div style={{color:"var(--text3)",fontSize:"0.85rem",padding:"0.5rem 0"}}>—³ Nenhum aluno vinculado ainda. Compartilhe seu código com seus alunos para que eles se conectem.</div>}
+      {planoDeletado&&typeof planoDeletado==="object"&&(
+        <div style={{padding:"1.5rem",background:"#22c55e18",border:"2px solid var(--green)",borderRadius:"12px",textAlign:"center",marginBottom:"1rem"}}>
+          <div style={{fontSize:"1.5rem",marginBottom:"0.5rem"}}>✅</div>
+          <div style={{fontWeight:700,color:"var(--green)",fontSize:"1.1rem",marginBottom:"0.25rem"}}>Plano deletado com sucesso!</div>
+          <div style={{fontSize:"0.85rem",color:"var(--text2)",marginBottom:"1rem"}}>Selecione o aluno abaixo para criar um novo plano</div>
+          <button className="btn btn-green btn-sm" onClick={()=>{
+            const aluno=(alunos||[]).find(a=>a.id===planoDeletado.id);
+            if(aluno){setAlunoSel(aluno);setPlanoDeletado(false);}
+          }}>🆕 Montar novo treino para {planoDeletado.nome?.split(" ")[0]}</button>
+        </div>
+      )}
         {!alunoSel&&(alunos||[]).length>0&&<div style={{color:"var(--text3)",fontSize:"0.85rem"}}>Selecione um aluno acima para montar o plano.</div>}
       </div>
 
@@ -1853,13 +1864,15 @@ function TreinadorPrescrever({user,showToast}){
             <button className="btn btn-sm btn-ghost" onClick={async()=>{
               const ok=await confirm("Deletar o plano atual de "+alunoSel.nome.split(" ")[0]+"?");
               if(!ok)return;
-              await DB.setData("plano_treino_aluno",alunoSel.id,null);
-              showToast&&showToast("Plano deletado! Monte o novo plano abaixo.","warn");
-              // Reset completo: limpa aluno, reseta form, restaura aluno
+              const alunoId=alunoSel.id;
+              const alunoNomeTemp=alunoSel.nome;
+              await DB.setData("plano_treino_aluno",alunoId,null);
+              // Limpa seleção para forçar re-render completo
+              setAlunoSel(null);
               setDias(DIAS_SEMANA.map((_,i)=>({nome:`Treino ${String.fromCharCode(65+i)}`,tipo:i<5?"academia":"descanso",obs:"",exercicios:[]})));
               setNomePlano("Treino A/B/C");
               setDiaEdit(0);
-              setPlanoDeletado(true);
+              setPlanoDeletado({id:alunoId,nome:alunoNomeTemp});
               setFormKey(k=>k+1);
             }}>🗑️ Deletar plano</button>
           </div>}
