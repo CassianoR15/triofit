@@ -33,7 +33,7 @@ function validateSenha(senha) {
 }
 import { supabase, DB } from "./lib/supabase.js";
 
-const _v='TRIOFIT_BUILD_1777557439720';
+const _v='TRIOFIT_BUILD_1777560442';
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -1855,9 +1855,13 @@ function TreinadorPrescrever({user,showToast}){
               // Reset dias para novo plano
               setDias(DIAS_SEMANA.map((_,i)=>({nome:`Treino ${String.fromCharCode(65+i)}`,tipo:i<5?"academia":"descanso",obs:"",exercicios:[]})));
               setNomePlano("Treino A/B/C");
-            }}>📅ï¸ Deletar plano</button>
+            }}>🗑️ Deletar plano</button>
           </div>
-          <button className="btn btn-orange btn-full" onClick={salvar}>📅¤ Enviar plano para {alunoSel.nome.split(" ")[0]}</button>
+          {planoDeletado&&<div style={{padding:"0.75rem",background:"#ff6b2b18",border:"2px dashed var(--orange)",borderRadius:"8px",marginBottom:"0.75rem",textAlign:"center"}}>
+            <div style={{fontWeight:700,color:"var(--orange)",fontSize:"1rem"}}>✏️ Criando novo plano para {alunoSel.nome.split(" ")[0]}</div>
+            <div style={{fontSize:"0.78rem",color:"var(--text2)",marginTop:"0.25rem"}}>Monte os dias abaixo e clique em Criar novo treino</div>
+          </div>}
+          <button className="btn btn-orange btn-full" onClick={()=>{setPlanoDeletado(false);salvar();}}>📤 {planoDeletado?"Criar novo treino para":"Enviar plano para"} {alunoSel.nome.split(" ")[0]}</button>
         </>
       )}
     </div>
