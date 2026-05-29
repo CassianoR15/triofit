@@ -852,7 +852,7 @@ function AuthScreen({onLogin}){
 
   return(
     <div className="auth-wrap">
-      <div className="auth-card" key={langAtual}>
+      <div className="auth-card">
         <div className="auth-logo">
           <div style={{width:"52px",height:"52px",borderRadius:"16px",background:"var(--green-dim2)",border:"1px solid rgba(74,222,128,0.2)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 12px",fontSize:"24px"}}>💪</div>
           <div className="auth-title">TrioFit</div>
@@ -884,7 +884,7 @@ function AuthScreen({onLogin}){
             <div className="form-group">
               <label className="form-label">{T("auth.senha")}</label>
               <input className="form-input" type="password" autoComplete="current-password"
-                placeholder="••••••" value={senha}
+                placeholder="sua senha" value={senha}
                 onChange={e=>changeSenha(e.target.value)}
                 onKeyDown={e=>e.key==="Enter"&&handleLogin()}/>
             </div>
@@ -990,6 +990,7 @@ function AuthScreen({onLogin}){
           <div style={{display:"flex",gap:"6px",flexWrap:"wrap"}}>
             {[["👤 Aluno","aluno@demo.com"],["🏋️ Personal","treinador@demo.com"],["🥗 Nutri","nutri@demo.com"]].map(([label,e])=>(
               <button key={e} onClick={()=>fillDemo(e,"123456")} disabled={loading}
+                title="Clique para entrar automaticamente"
                 style={{flex:"1 1 auto",padding:"9px 8px",borderRadius:"var(--r)",border:"1px solid rgba(74,222,128,0.2)",background:"rgba(74,222,128,0.05)",cursor:"pointer",fontSize:"12px",fontWeight:500,color:"var(--text)",transition:"background .1s"}}
                 onMouseEnter={ev=>ev.currentTarget.style.background="rgba(74,222,128,0.12)"}
                 onMouseLeave={ev=>ev.currentTarget.style.background="rgba(74,222,128,0.05)"}>
@@ -1500,7 +1501,7 @@ function AlunoTreinos({
           const nomeDia=['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'][i];
           return(
             <button key={i}
-              onClick={()=>{setDiaAtivo(i);setTreinoAtivo&&setTreinoAtivo(false);setTreinoDuracao&&setTreinoDuracao(0);setRestActive&&setRestActive(false);setRestTimer&&setRestTimer(0);}}
+              onClick={()=>{setDiaAtivo(i);if(typeof setTreinoAtivo==="function")setTreinoAtivo(false);if(typeof setTreinoDuracao==="function")setTreinoDuracao(0);}}
               style={{
                 display:"flex",flexDirection:"column",alignItems:"center",
                 padding:"6px 10px",borderRadius:"8px",border:"none",cursor:"pointer",
@@ -1546,7 +1547,7 @@ function AlunoTreinos({
                       <div style={{fontSize:"0.75rem",color:"var(--text2)",marginBottom:"0.4rem",fontWeight:600}}>{T("treino.fazerOutroDia")}</div>
                       {(dias||[]).map((d2,i2)=>i2!==diaHoje&&d2.tipo!=="descanso"?(
                         <button key={i2} className="btn btn-ghost btn-sm" style={{display:"block",width:"100%",textAlign:"left",fontSize:"0.8rem",padding:"0.3rem 0.5rem"}}
-                          onClick={()=>{setDiaOriginal(diaHoje);setDiaAtivo(i2);setMostrarTroca(false);setTreinoAtivo(false);setTreinoDuracao(0);setRestActive(false);setRestTimer(0);showToast&&showToast(`Fazendo ${d2.nome} hoje 💪`);}}>
+                          onClick={()=>{setDiaOriginal(diaHoje);setDiaAtivo(i2);setMostrarTroca(false);setTreinoAtivo(false);setTreinoDuracao(0);showToast&&showToast(`Fazendo ${d2.nome} hoje 💪`);}}>
                           {['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'][i2]} — {d2.nome}
                         </button>
                       ):null)}
@@ -4726,7 +4727,20 @@ function TrioFitInner(){
         }
         setLoading(false);
       }
-    }).catch(()=>{if(!c){c=true;clearTimeout(tout);setUser(null);setLoading(false);}});
+    }).catch(async()=>{
+      if(!c){
+        c=true;clearTimeout(tout);
+        // Retry with native Supabase session as fallback
+        try{
+          const {data:{session}}=await supabase.auth.getSession();
+          if(session?.user){
+            const u=await DB._formatUser(session.user);
+            setUser(u);setLoading(false);return;
+          }
+        }catch{}
+        setUser(null);setLoading(false);
+      }
+    });
     // Escuta mudanças de auth
     const {data:{subscription}}=supabase.auth.onAuthStateChange(async(event,session)=>{
       // Bloqueia restauração durante logout
