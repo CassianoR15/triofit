@@ -1573,6 +1573,31 @@ function AlunoTreinos({
 
           {diaInfo.exercicios&&(diaInfo.exercicios||[]).length>0?(
             <>
+              {/* ▶ Iniciar / Pausar cronômetro */}
+              <div style={{display:"flex",alignItems:"center",gap:"10px",marginBottom:"12px"}}>
+                {!treinoAtivo?(
+                  <button className="btn btn-primary btn-sm" onClick={()=>{setTreinoAtivo(true);if(!treinoInicio)setTreinoInicio(Date.now());}}>
+                    ▶ {T("treino.iniciar")||"Iniciar treino"}
+                  </button>
+                ):(
+                  <button className="btn btn-ghost btn-sm" onClick={()=>setTreinoAtivo(false)}>
+                    ⏸ {T("treino.pausar")||"Pausar"}
+                  </button>
+                )}
+                {treinoDuracao>0&&(
+                  <span style={{fontFamily:"monospace",fontSize:"1.1rem",fontWeight:700,color:"var(--green)"}}>
+                    {String(Math.floor(treinoDuracao/3600)).padStart(2,"0")}:{String(Math.floor((treinoDuracao%3600)/60)).padStart(2,"0")}:{String(treinoDuracao%60).padStart(2,"0")}
+                  </span>
+                )}
+                <div style={{marginLeft:"auto",display:"flex",gap:"6px"}}>
+                  {[30,60,90,120].map(s=>(
+                    <button key={s} className="btn btn-ghost btn-sm" style={{fontSize:"11px",padding:"3px 8px"}}
+                      onClick={()=>_startTimer(s)}>
+                      {s<60?s+"s":s/60+"min"}
+                    </button>
+                  ))}
+                </div>
+              </div>
               <div className="prog-wrap">
                 <div className="prog-hdr"><span>{T("treino.progresso")}: </span><span className="green">{(diaInfo.exercicios||[]).filter((_,j)=>checked[`${diaAtivo}_${j}`]).length}/{(diaInfo.exercicios||[]).length}</span></div>
                 <div className="prog-track"><div className="prog-fill green" style={{width:`${((diaInfo.exercicios||[]).filter((_,j)=>checked[`${diaAtivo}_${j}`]).length/(diaInfo.exercicios||[]).length)*100}%`}}/></div>
@@ -1615,7 +1640,7 @@ function AlunoTreinos({
           <div className="card" style={{textAlign:"center",padding:"1.5rem"}}>
             <div style={{fontSize:"3rem",marginBottom:"0.5rem"}}>🏆</div>
             <div style={{fontFamily:"var(--font-display)",fontSize:"1.2rem",color:"var(--green)",marginBottom:"0.3rem"}}>{T("treino.finalizado")}</div>
-            <div style={{fontSize:"0.85rem",color:"var(--text2)",marginBottom:"1rem"}}>{T("treino.otimoTrabalho")}</div>
+            <div style={{fontSize:"0.85rem",color:"var(--text2)",marginBottom:"0.5rem"}}>{T("treino.otimoTrabalho")}</div>
             <button className="btn btn-ghost btn-sm" onClick={async()=>{
               const chaveExtra=dataHojeStr+"_dia"+diaHoje+"_extra"+Date.now();
               const novo={...(treinosFinalizados||{}),[chaveExtra]:{dia:diaHoje,extra:true,data:new Date().toISOString()}};
@@ -3740,7 +3765,8 @@ function ChatComponent({
       setLastSend(Date.now());
     }catch(e){
       if(el){el.value=t;el._val=t;}
-      showToast&&showToast(T("chat.erro"),"warn");
+      showToast&&showToast("❌ Erro ao enviar. Tente novamente.","warn");
+      if(el){el.value=t;el._val=t;}
     }
     setEnviando(false);
   }

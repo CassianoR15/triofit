@@ -97,14 +97,15 @@ export const DB = {
   async _warmup() {
     // Ping Supabase to wake up from cold start (free tier sleeps after inactivity)
     if(this._warmedUp) return;
+    if(this._warmingUp) return; // prevent duplicate calls
+    this._warmingUp = true;
     try {
-      const start = Date.now();
-      await supabase.from('profiles').select('id').limit(1).maybeSingle();
+      await supabase.auth.getSession(); // lightweight session check
       this._warmedUp = true;
-      const elapsed = Date.now() - start;
-      if(elapsed > 2000) console.log('Supabase warm-up took', elapsed, 'ms');
     } catch(e) {
       // ignore warmup errors
+    } finally {
+      this._warmingUp = false;
     }
   },
 
