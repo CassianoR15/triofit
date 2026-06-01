@@ -504,16 +504,21 @@ export const DB = {
         return{ok:false,msg:m};
       }
       const uid=data?.user?.id;
+      const sessionExists=!!data?.session;
       // If no uid, email confirmation is required
       if(!uid)return{ok:true,user:{email:emailLimpo,nome:nomeFull},needsConfirmation:true};
+      // If uid exists but no session, email confirmation is pending
+      const emailConfirmationPending=!sessionExists;
       
       // Try to upsert profile (may fail if RLS blocks trainer from writing other users)
       // If it fails, the aluno profile will be created when they first login
       try{
-        await supabase.from('profiles').upsert(
+        const profPromise=supabase.from('profiles').upsert(
           {id:uid,nome:nomeFull,role:'aluno',objetivo:objetivo||''},
           {onConflict:'id'}
         );
+        const profTimeout=new Promise((_,r)=>setTimeout(()=>r(new Error('profile timeout')),6000));
+        await Promise.race([profPromise,profTimeout]);
       }catch(profileErr){
         console.warn('Profile upsert warning (will retry on aluno login):', profileErr?.message);
       }
@@ -523,14 +528,18 @@ export const DB = {
         const vd={aluno_id:uid};
         if(treinadorId)vd.treinador_id=treinadorId;
         if(nutriId)vd.nutri_id=nutriId;
-        const {error:vincErr}=await supabase.from('vinculos').upsert(vd,{onConflict:'aluno_id'});
+        // Use timeout to prevent hanging if RLS blocks the operation
+        const vincPromise=supabase.from('vinculos').upsert(vd,{onConflict:'aluno_id'});
+        const vincTimeout=new Promise((_,r)=>setTimeout(()=>r(new Error('vinculos timeout')),8000));
+        const {error:vincErr}=await Promise.race([vincPromise,vincTimeout]).catch(e=>{
+          console.warn('Vinculos operation warning:', e?.message);
+          return {error:e};
+        });
         if(vincErr){
           console.warn('Vinculos error:', vincErr?.message);
-          // Try insert instead of upsert
-          await supabase.from('vinculos').insert(vd).select();
         }
       }
-      return{ok:true,user:{id:uid,email:emailLimpo,nome:nomeFull}};
+      return{ok:true,user:{id:uid,email:emailLimpo,nome:nomeFull},needsConfirmation:emailConfirmationPending};
     }catch(e){return{ok:false,msg:e.message||'Erro ao cadastrar aluno.'};}
   },
 
