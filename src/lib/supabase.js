@@ -505,41 +505,31 @@ export const DB = {
       }
       const uid=data?.user?.id;
       const sessionExists=!!data?.session;
-      // If no uid, email confirmation is required
-      if(!uid)return{ok:true,user:{email:emailLimpo,nome:nomeFull},needsConfirmation:true};
-      // If uid exists but no session, email confirmation is pending
-      const emailConfirmationPending=!sessionExists;
       
-      // Try to upsert profile (may fail if RLS blocks trainer from writing other users)
-      // If it fails, the aluno profile will be created when they first login
+      // Se não tem uid ou não tem sessão → confirmação de email pendente
+      // Retorna IMEDIATAMENTE sem tentar ops no banco que vão travar por RLS
+      if(!uid||!sessionExists){
+        return{ok:true,user:{email:emailLimpo,nome:nomeFull,id:uid},needsConfirmation:true};
+      }
+      
+      // Só chega aqui se email confirmation está desabilitado no Supabase
+      // Nesse caso temos sessão e podemos criar profile + vinculos
       try{
-        const profPromise=supabase.from('profiles').upsert(
+        await supabase.from('profiles').upsert(
           {id:uid,nome:nomeFull,role:'aluno',objetivo:objetivo||''},
           {onConflict:'id'}
         );
-        const profTimeout=new Promise((_,r)=>setTimeout(()=>r(new Error('profile timeout')),6000));
-        await Promise.race([profPromise,profTimeout]);
-      }catch(profileErr){
-        console.warn('Profile upsert warning (will retry on aluno login):', profileErr?.message);
-      }
+      }catch(e){console.warn('Profile upsert:',e?.message);}
       
-      // Create vinculo — trainer/nutri IS authenticated so this should work
       if(treinadorId||nutriId){
         const vd={aluno_id:uid};
         if(treinadorId)vd.treinador_id=treinadorId;
         if(nutriId)vd.nutri_id=nutriId;
-        // Use timeout to prevent hanging if RLS blocks the operation
-        const vincPromise=supabase.from('vinculos').upsert(vd,{onConflict:'aluno_id'});
-        const vincTimeout=new Promise((_,r)=>setTimeout(()=>r(new Error('vinculos timeout')),8000));
-        const {error:vincErr}=await Promise.race([vincPromise,vincTimeout]).catch(e=>{
-          console.warn('Vinculos operation warning:', e?.message);
-          return {error:e};
-        });
-        if(vincErr){
-          console.warn('Vinculos error:', vincErr?.message);
-        }
+        try{
+          await supabase.from('vinculos').upsert(vd,{onConflict:'aluno_id'});
+        }catch(e){console.warn('Vinculos upsert:',e?.message);}
       }
-      return{ok:true,user:{id:uid,email:emailLimpo,nome:nomeFull},needsConfirmation:emailConfirmationPending};
+      return{ok:true,user:{id:uid,email:emailLimpo,nome:nomeFull},needsConfirmation:false};
     }catch(e){return{ok:false,msg:e.message||'Erro ao cadastrar aluno.'};}
   },
 
