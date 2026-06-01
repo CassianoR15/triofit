@@ -773,11 +773,13 @@ function AuthScreen({onLogin}){
     if(!e||!senha){setError(T("erros.preenchaEmail"));return;}
     if(senha.length<6){setError("Senha deve ter pelo menos 6 caracteres.");return;}
     if(!isValidEmail(e)){setError("Email inválido. Exemplo: nome@gmail.com");return;}
+    const loginSafety=setTimeout(()=>setLoading(false),12000);
     setLoading(true);
     let res;
     try{
       const timeout=new Promise((_,rej)=>setTimeout(()=>rej(new Error("Sem resposta do servidor. Verifique sua conexão.")),10000));
       res=await Promise.race([DB.login(e,senha),timeout]);
+      clearTimeout(loginSafety);
     }catch(err){
       setLoading(false);
       setError(err.message||T("erros.erroEntrar"));
@@ -809,13 +811,17 @@ function AuthScreen({onLogin}){
   }
 
   async function fillDemo(email,senha){
+    // Reset state first — ensures button is never stuck disabled
     setError("");setSuccess("");setTab("login");
+    setLoading(false);
     setEmail(email);setSenha(senha);
+    // Safety: reset loading after 15s regardless of outcome
+    const safetyTimer=setTimeout(()=>setLoading(false),15000);
     setLoading(true);
-    // DB._warmup is called inside DB.login — no need to call explicitly
     await new Promise(r=>setTimeout(r,50));
     try{
       const res=await DB.login(email,senha);
+      clearTimeout(safetyTimer);
       if(res&&res.ok&&res.user){
         setLoading(false);
         // Marca usuário demo para que o logout funcione sem sessão Supabase
@@ -989,7 +995,7 @@ function AuthScreen({onLogin}){
           <div className="auth-demo-title">⚡ Acesso rápido — contas demo</div>
           <div style={{display:"flex",gap:"6px",flexWrap:"wrap"}}>
             {[["👤 Aluno","aluno@demo.com"],["🏋️ Personal","treinador@demo.com"],["🥗 Nutri","nutri@demo.com"]].map(([label,e])=>(
-              <button key={e} onClick={()=>fillDemo(e,"123456")} disabled={loading}
+              <button key={e} onClick={()=>{setLoading(false);fillDemo(e,"123456");}}
                 title="Clique para entrar automaticamente"
                 style={{flex:"1 1 auto",padding:"9px 8px",borderRadius:"var(--r)",border:"1px solid rgba(74,222,128,0.2)",background:"rgba(74,222,128,0.05)",cursor:"pointer",fontSize:"12px",fontWeight:500,color:"var(--text)",transition:"background .1s"}}
                 onMouseEnter={ev=>ev.currentTarget.style.background="rgba(74,222,128,0.12)"}
