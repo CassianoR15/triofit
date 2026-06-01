@@ -499,9 +499,14 @@ export const DB = {
       });
       if(error){
         const m=error.message||'';
-        if(m.includes('already registered')||m.includes('User already registered'))
-          return{ok:false,msg:'Este email já está cadastrado.'};
-        return{ok:false,msg:m};
+        if(m.includes('already registered')||m.includes('User already registered')||
+           m.includes('already been registered')||m.includes('already exists'))
+          return{ok:false,msg:'Este email já está cadastrado. Use um email diferente.'};
+        if(m.includes('invalid email')||m.includes('valid email'))
+          return{ok:false,msg:'Email inválido. Verifique o endereço digitado.'};
+        if(m.includes('password')||m.includes('senha'))
+          return{ok:false,msg:'Senha deve ter pelo menos 6 caracteres.'};
+        return{ok:false,msg:m||'Erro ao cadastrar. Tente novamente.'};
       }
       const uid=data?.user?.id;
       const sessionExists=!!data?.session;

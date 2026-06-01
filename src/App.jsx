@@ -4147,6 +4147,7 @@ function CadastrarAluno({
   const [form,setForm]=useState({nome:"",sobrenome:"",email:"",telefone:"",genero:"",grupo:"",objetivo:"",senha:""});
   const [salvando,setSalvando]=useState(false);
   const [sucesso,setSucesso]=useState(null);
+  const [erroMsg,setErroMsg]=useState("");
   const [notifTarget,setNotifTarget]=useState(null);
   const [notifMsg,setNotifMsg]=useState("");
   const [busca,setBusca]=useState("");
@@ -4184,11 +4185,14 @@ function CadastrarAluno({
       res=await Promise.race([DB.cadastrarAluno({...form,senha:senhaFinal,...profField}),timeout]);
       setSalvando(false);
       if(!res||!res.ok){
-        showToast&&showToast((res&&res.msg)||"Erro ao cadastrar. Verifique os dados e tente novamente.","warn");
+        const msg=(res&&res.msg)||"Erro ao cadastrar. Verifique os dados e tente novamente.";
+        setErroMsg(msg);
+        showToast&&showToast(msg,"warn");
         setSalvando(false);
         return;
       }
       if(res.needsConfirmation){
+        setErroMsg("");
         showToast&&showToast("✅ Aluno cadastrado! Ele receberá um email para ativar a conta.","success",5000);
         setSucesso({nome:(form.nome+" "+form.sobrenome).trim(),email:form.email,senha:senhaFinal,tel:form.telefone,pendingConfirmation:true});
         setForm({nome:"",sobrenome:"",email:"",telefone:"",genero:"",grupo:"",objetivo:"",senha:""});
@@ -4201,6 +4205,7 @@ function CadastrarAluno({
       setAba("lista");
     }catch(e){
       setSalvando(false);
+      setErroMsg(e.message||"Erro ao cadastrar");
       showToast&&showToast(e.message||"Erro ao cadastrar","warn");
     }
   }
