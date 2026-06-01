@@ -484,6 +484,8 @@ export const DB = {
   },
   async cadastrarAluno({nome, sobrenome, email, telefone, genero, grupo, objetivo, senha, treinadorId, nutriId}) {
     try {
+      // Warmup Supabase first (cold start prevention)
+      await this._warmup();
       const emailLimpo=(email||'').trim().toLowerCase();
       const nomeFull=[nome,sobrenome].filter(Boolean).join(' ').trim();
       const emailRegex=/^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
@@ -502,15 +504,31 @@ export const DB = {
         return{ok:false,msg:m};
       }
       const uid=data?.user?.id;
+      // If no uid, email confirmation is required
       if(!uid)return{ok:true,user:{email:emailLimpo,nome:nomeFull},needsConfirmation:true};
-      // Upsert profile — minimal safe columns only
-      await supabase.from('profiles').upsert({id:uid,nome:nomeFull,role:'aluno'},{onConflict:'id'});
-      // Create vinculo
+      
+      // Try to upsert profile (may fail if RLS blocks trainer from writing other users)
+      // If it fails, the aluno profile will be created when they first login
+      try{
+        await supabase.from('profiles').upsert(
+          {id:uid,nome:nomeFull,role:'aluno',objetivo:objetivo||''},
+          {onConflict:'id'}
+        );
+      }catch(profileErr){
+        console.warn('Profile upsert warning (will retry on aluno login):', profileErr?.message);
+      }
+      
+      // Create vinculo — trainer/nutri IS authenticated so this should work
       if(treinadorId||nutriId){
         const vd={aluno_id:uid};
         if(treinadorId)vd.treinador_id=treinadorId;
         if(nutriId)vd.nutri_id=nutriId;
-        await supabase.from('vinculos').upsert(vd,{onConflict:'aluno_id'});
+        const {error:vincErr}=await supabase.from('vinculos').upsert(vd,{onConflict:'aluno_id'});
+        if(vincErr){
+          console.warn('Vinculos error:', vincErr?.message);
+          // Try insert instead of upsert
+          await supabase.from('vinculos').insert(vd).select();
+        }
       }
       return{ok:true,user:{id:uid,email:emailLimpo,nome:nomeFull}};
     }catch(e){return{ok:false,msg:e.message||'Erro ao cadastrar aluno.'};}

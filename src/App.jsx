@@ -4180,9 +4180,21 @@ function CadastrarAluno({
     let res;
     try{
       const profField=user.role==="nutri"?{nutriId:user.id}:{treinadorId:user.id};
-      res=await DB.cadastrarAluno({...form,senha:senhaFinal,...profField});
+      const timeout=new Promise((_,rej)=>setTimeout(()=>rej(new Error("Tempo esgotado. Tente novamente.")),30000));
+      res=await Promise.race([DB.cadastrarAluno({...form,senha:senhaFinal,...profField}),timeout]);
       setSalvando(false);
-      if(!res||!res.ok){showToast&&showToast((res&&res.msg)||"Erro ao cadastrar","warn");return;}
+      if(!res||!res.ok){
+        showToast&&showToast((res&&res.msg)||"Erro ao cadastrar. Verifique os dados e tente novamente.","warn");
+        setSalvando(false);
+        return;
+      }
+      if(res.needsConfirmation){
+        showToast&&showToast("✅ Aluno cadastrado! Ele receberá um email para ativar a conta.","success",5000);
+        setSucesso({nome:(form.nome+" "+form.sobrenome).trim(),email:form.email,senha:senhaFinal,tel:form.telefone,pendingConfirmation:true});
+        setForm({nome:"",sobrenome:"",email:"",telefone:"",genero:"",grupo:"",objetivo:"",senha:""});
+        setSalvando(false);
+        return;
+      }
       setSucesso({nome:(form.nome+" "+form.sobrenome).trim(),email:form.email,senha:senhaFinal,tel:form.telefone});
       setForm({nome:"",sobrenome:"",email:"",telefone:"",genero:"",grupo:"",objetivo:"",senha:""});
       reloadAlunos();
