@@ -3551,7 +3551,7 @@ function NutriAcompanhamento({
               </div>
             </div>
             {totalRef>0&&<div className="prog-wrap"><div className="prog-hdr"><span style={{fontSize:"0.8rem"}}>{T("acomp.refHoje")}</span><span className="green" style={{fontSize:"0.8rem"}}>{qtdComido}/{totalRef}</span></div><div className="prog-track"><div className="prog-fill green" style={{width:`${totalRef>0?(qtdComido/totalRef)*100:0}%`}}/></div></div>}
-            <div className="prog-wrap"><div className="prog-hdr"><span style={{fontSize:"0.8rem"}}>{T("acomp.hidratacao")}</span><span className="blue" style={{fontSize:"0.8rem"}}>{agua}ml / {meta}ml</span></div><div className="prog-track"><div className="prog-fill blue" style={{width:`${Math.min((agua/meta)*100,100)}%`}}/></div></div>
+            <div className="prog-wrap"><div className="prog-hdr"><span style={{fontSize:"0.8rem"}}>{T("acomp.hidratacao")}: </span><span className="blue" style={{fontSize:"0.8rem"}}>{agua}ml / {meta}ml</span></div><div className="prog-track"><div className="prog-fill blue" style={{width:`${Math.min((agua/meta)*100,100)}%`}}/></div></div>
             <div style={{fontSize:"0.8rem",color:"var(--blue)",marginTop:"0.5rem"}}>{T("acomp.verDiario")}</div>
           </div>
         );
@@ -4233,9 +4233,13 @@ function CadastrarAluno({
 
   async function toggleBloquear(aluno){
     const bloqueado=!aluno.bloqueado;
-    await DB.bloquearAluno(aluno.id,bloqueado).catch(()=>{});
+    const blockResult = await DB.bloquearAluno(aluno.id,bloqueado).catch(e=>e);
     reloadAlunos();
-    showToast&&showToast(aluno.nome.split(" ")[0]+(bloqueado?" bloqueado":" desbloqueado"),"warn");
+    if(blockResult instanceof Error){
+      showToast&&showToast("Sem permissão para bloquear (configure RLS no Supabase)","warn");
+    } else {
+      showToast&&showToast(aluno.nome.split(" ")[0]+(bloqueado?" bloqueado":" desbloqueado"),"warn");
+    }
   }
   const alunosFiltrados=(alunos||[]).filter(a=>!busca||a.nome?.toLowerCase().includes(busca.toLowerCase())||a.email?.toLowerCase().includes(busca.toLowerCase()));
 
