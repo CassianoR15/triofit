@@ -3322,7 +3322,7 @@ function NutriPrescrever({
       {/* SELECIONAR PACIENTE */}
       <div className="card">
         <div className="card-title">👤 SELECIONAR PACIENTE</div>
-        <AlunoSelector alunos={alunos||[]} selecionado={alunoSel} onSelect={(a)=>{setAlunoSel(a);if(a)setPlanoDeletado(false);}} accentClass="sel-blue"/>
+        <AlunoSelector alunos={alunos||[]} selecionado={alunoSel} onSelect={(a)=>{if(a)setPlanoDeletado(false);setTimeout(()=>setAlunoSel(a),50);}} accentClass="sel-blue"/>
         {!alunoSel&&alunos.length>0&&<div style={{color:"var(--text3)",fontSize:"0.85rem"}}>{T("prescr.selecionePaciente")}</div>}
       </div>
 
@@ -4065,6 +4065,8 @@ function AlunoApp({user,onLogout}){
     window.addEventListener("online",onOnline);
     return()=>{
       clearInterval(iv);
+      clearTimeout(visTimer);
+      document.removeEventListener("visibilitychange",onHidden);
       document.removeEventListener("visibilitychange",onVisible);
       window.removeEventListener("focus",onFocus);
       window.removeEventListener("online",onOnline);
