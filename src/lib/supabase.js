@@ -508,9 +508,15 @@ export const DB = {
           return{ok:false,msg:'Senha deve ter pelo menos 6 caracteres.'};
         if(m.includes('signup') && m.includes('disabled'))
           return{ok:false,msg:'Cadastro desabilitado. Entre em contato com o suporte.'};
-        if(m.includes('disabled'))
-          return{ok:false,msg:'Cadastro temporariamente desabilitado.'};
-        return{ok:false,msg:m||'Erro ao cadastrar. Tente novamente.'};
+        if(m.includes('disabled') || m.includes('email logins are disabled'))
+          return{ok:false,msg:'Login por email desabilitado. Contate o suporte.'};
+        if(m.includes('email not confirmed'))
+          return{ok:false,msg:'Email não confirmado. Verifique sua caixa de entrada.'};
+        if(m.includes('too many') || m.includes('rate') || m.includes('limit'))
+          return{ok:false,msg:'⏳ Muitas tentativas. Aguarde 1-2 minutos e tente novamente.'};
+        if(m.includes('network') || m.includes('fetch') || m.includes('connect'))
+          return{ok:false,msg:'Sem conexão com o servidor. Verifique sua internet.'};
+        return{ok:false,msg:'Email ou senha incorretos.'};
       }
       const uid=data?.user?.id;
       const sessionExists=!!data?.session;

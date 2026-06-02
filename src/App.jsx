@@ -753,7 +753,12 @@ function AuthScreen({onLogin}){
       const {error:err}=await supabase.auth.resetPasswordForEmail(e,{
         redirectTo:"https://triofit.vercel.app"
       });
-      if(err)setError(err.message||"Erro ao enviar email.");
+      if(err){
+        const em=(err.message||"").toLowerCase();
+        if(em.includes("disabled"))setError("Login por email desabilitado. Contate o suporte.");
+        else if(em.includes("not found")||em.includes("user"))setError("Email não encontrado.");
+        else setError("Erro ao enviar email. Tente novamente.");
+      }
       else setResetSent(true);
     }catch{setError("Erro de conexão.");}
     setLoading(false);
@@ -992,7 +997,7 @@ function AuthScreen({onLogin}){
           ))}
         </div>
         <div className="auth-demo">
-          <div className="auth-demo-title">⚡ Acesso rápido — contas demo</div>
+          <div className="auth-demo-title">{T("auth.demo")}</div>
           <div style={{display:"flex",gap:"6px",flexWrap:"wrap"}}>
             {[["👤 Aluno","aluno@demo.com"],["🏋️ Personal","treinador@demo.com"],["🥗 Nutri","nutri@demo.com"]].map(([label,e])=>(
               <button key={e} onClick={()=>{setLoading(false);fillDemo(e,"123456");}}
