@@ -2157,8 +2157,7 @@ function AlunoCompeticoes({user,showToast}){
                     <button className="btn btn-ghost btn-sm" style={{fontSize:"0.7rem",padding:"2px 6px",color:"var(--red)"}}
                       onClick={async e=>{
                         e.stopPropagation();
-                        const ok=await confirm("Deletar "+c.nome+"?");
-                        if(!ok)return;
+                        
                         const novo=(comps||[]).filter((_,j)=>j!==i);
                         await DB.setData("competicoes",user.id,novo);
                         setComps(novo);
@@ -3304,8 +3303,7 @@ function NutriPrescrever({
 
   async function salvar(){
     if(!alunoSel)return;
-    const planoExistente=await DB.getData("plano_alim_aluno",alunoSel.id);
-    if(planoExistente){const ok=await confirm(`Substituir a dieta de ${alunoSel.nome}? O plano atual será perdido.`);if(!ok)return;}
+    // Substituir plano sem confirmação — toast informa o usuário
     const fimDate=addMonths(new Date(inicio),duracao);
     const plano={nome:nomePlano,protocolo,duracao,inicio,fim:fimDate.toISOString(),refeicoes,kcalMeta:fases[protocolo],criadoEm:new Date().toISOString()};
     await DB.setData("plano_alim_aluno",alunoSel.id,plano);
@@ -3379,8 +3377,6 @@ function NutriPrescrever({
 
           <div style={{display:"flex",gap:"0.5rem",marginBottom:"0.5rem",flexWrap:"wrap"}}>
             <button className="btn btn-sm btn-ghost" onClick={async()=>{
-              const ok=await confirm("Deletar a dieta de "+alunoSel.nome.split(" ")[0]+"?");
-              if(!ok)return;
               await DB.setData("plano_alim_aluno",alunoSel.id,null);
               showToast&&showToast("Dieta deletada!","warn");
             }}>🗑️️ Deletar dieta</button>
@@ -3630,14 +3626,14 @@ function MeuPerfil({
   }
 
   async function desvincularTreinador(){
-    const okT=await confirm("Remover vínculo com "+treinador?.nome+"?");if(!okT)return;
+    
     await DB.setVinculoAluno(user.id,null,vinculo?.nutriId||null);
     onVinculoChange&&await onVinculoChange();
     showToast&&showToast("Treinador desvinculado.","warn");
   }
 
   async function desvincularNutri(){
-    const okN=await confirm("Remover vínculo com "+nutri?.nome+"?");if(!okN)return;
+    
     await DB.setVinculoAluno(user.id,vinculo?.treinadorId||null,null);
     onVinculoChange&&await onVinculoChange();
     showToast&&showToast("Nutricionista desvinculada.","warn");
@@ -4235,8 +4231,6 @@ function CadastrarAluno({
 
   async function toggleBloquear(aluno){
     const bloqueado=!aluno.bloqueado;
-    const ok=await confirm((bloqueado?"Bloquear":"Desbloquear")+" acesso de "+aluno.nome+"?");
-    if(!ok)return;
     await DB.bloquearAluno(aluno.id,bloqueado).catch(()=>{});
     reloadAlunos();
     showToast&&showToast(aluno.nome.split(" ")[0]+(bloqueado?" bloqueado":" desbloqueado"),"warn");
