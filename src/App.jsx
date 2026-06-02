@@ -4182,19 +4182,20 @@ function CadastrarAluno({
     if(!form.nome.trim()){showToast&&showToast("Nome é obrigatório","warn");return;}
     if(!form.email.trim()){showToast&&showToast("Email é obrigatório","warn");return;}
     if(!isValidEmail(form.email)){showToast&&showToast("Email inválido. Ex: nome@gmail.com","warn");return;}
+    const safetyCad=setTimeout(()=>{setSalvando(false);setErroMsg("Tempo esgotado. Tente novamente.");},28000);
     setSalvando(true);
     const senhaFinal=form.senha||gerarSenha();
     let res;
     try{
       const profField=user.role==="nutri"?{nutriId:user.id}:{treinadorId:user.id};
-      const timeout=new Promise((_,rej)=>setTimeout(()=>rej(new Error("Tempo esgotado. Tente novamente.")),30000));
+      const timeout=new Promise((_,rej)=>setTimeout(()=>rej(new Error("Tempo esgotado. Tente novamente.")),25000));
       res=await Promise.race([DB.cadastrarAluno({...form,senha:senhaFinal,...profField}),timeout]);
       setSalvando(false);
       if(!res||!res.ok){
         const msg=(res&&res.msg)||"Erro ao cadastrar. Verifique os dados e tente novamente.";
         setErroMsg(msg);
         showToast&&showToast(msg,"warn");
-        setSalvando(false);
+        clearTimeout(safetyCad);setSalvando(false);
         return;
       }
       if(res.needsConfirmation){
@@ -4366,7 +4367,7 @@ function CadastrarAluno({
             <button className="btn btn-full" style={{marginTop:"0",fontSize:"15px",padding:"14px",
               background:cfg.corGrad,color:cfg.cor,border:"1px solid "+cfg.corBorder,fontWeight:700,
               borderRadius:"var(--r)",cursor:"pointer",width:"100%",transition:"all .15s"}}
-              onClick={cadastrar} disabled={salvando}>
+              onClick={()=>{setSalvando(false);setTimeout(cadastrar,10);}} disabled={salvando}>
               {salvando?"⏳ Cadastrando...":"✅ "+cfg.labelBtn}
             </button>
           </div>

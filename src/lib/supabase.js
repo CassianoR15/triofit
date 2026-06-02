@@ -506,6 +506,10 @@ export const DB = {
           return{ok:false,msg:'Email inválido. Verifique o endereço digitado.'};
         if(m.includes('password')||m.includes('senha'))
           return{ok:false,msg:'Senha deve ter pelo menos 6 caracteres.'};
+        if(m.includes('signup') && m.includes('disabled'))
+          return{ok:false,msg:'Cadastro desabilitado. Entre em contato com o suporte.'};
+        if(m.includes('disabled'))
+          return{ok:false,msg:'Cadastro temporariamente desabilitado.'};
         return{ok:false,msg:m||'Erro ao cadastrar. Tente novamente.'};
       }
       const uid=data?.user?.id;
