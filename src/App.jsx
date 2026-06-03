@@ -895,7 +895,7 @@ function AuthScreen({onLogin}){
             <div className="form-group">
               <label className="form-label">{T("auth.senha")}</label>
               <input className="form-input" type="password" autoComplete="current-password"
-                placeholder="sua senha" value={senha}
+                placeholder={T("auth.senhaEx")||"sua senha"} value={senha}
                 onChange={e=>changeSenha(e.target.value)}
                 onKeyDown={e=>e.key==="Enter"&&handleLogin()}/>
             </div>
@@ -2939,7 +2939,7 @@ function DiarioAluno({aluno,onBack}){
           </div>
         </div>
         <div className="prog-wrap">
-          <div className="prog-hdr"><span>{T("diario.atingimento")}</span><span className="blue">{Math.round((agua/metaAgua)*100)}%</span></div>
+          <div className="prog-hdr"><span>{T("diario.atingimento")}: </span><span className="blue">{Math.round((agua/metaAgua)*100)}%</span></div>
           <div className="prog-track"><div className="prog-fill blue" style={{width:`${Math.min((agua/metaAgua)*100,100)}%`}}/></div>
         </div>
       </div>
@@ -3307,8 +3307,8 @@ function NutriPrescrever({
     const fimDate=addMonths(new Date(inicio),duracao);
     const plano={nome:nomePlano,protocolo,duracao,inicio,fim:fimDate.toISOString(),refeicoes,kcalMeta:fases[protocolo],criadoEm:new Date().toISOString()};
     await DB.setData("plano_alim_aluno",alunoSel.id,plano);
-      // Invalidar cache do aluno para próxima abertura buscar dado atualizado
       _cs(alunoSel.id,"plano_alim_aluno",plano);
+    showToast&&showToast(`✅ Plano alimentar salvo com sucesso para ${alunoSel.nome}! 🥗`,"success");
     showToast&&showToast(`✅ Plano alimentar enviado para ${alunoSel.nome}!`);
   }
 
@@ -4440,7 +4440,7 @@ function CadastrarAluno({
                       placeholder={"Msg para "+a.nome.split(" ")[0]+"..."}
                       value={notifMsg} onChange={e=>setNotifMsg(e.target.value)}
                       onKeyDown={async e=>{
-                        if(e.key==="Enter"&&notifMsg.trim()){
+                        if(e.key==="Enter"&&!e.shiftKey&&notifMsg.trim()){e.preventDefault();
                           await DB.criarNotificacao(a.id,"geral",T("notif.msgPersonal"),notifMsg.trim()).catch(()=>{});
                           showToast&&showToast("✅ Notificação enviada!");
                           setNotifTarget(null);setNotifMsg("");
