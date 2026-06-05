@@ -2404,6 +2404,18 @@ const [saving,setSaving]=useState(false);
   },[user.id]);
   const [alunoSel,setAlunoSel]=useState(null);
   const [planoDeletado,setPlanoDeletado]=useState(false);
+  // Dados do aluno para preview (carregados quando alunoSel muda)
+  const [saude,setSaude]=useState({});
+  const [planoAlim,setPlanoAlim]=useState(null);
+  const [agua,setAgua]=useState(0);
+  const [historico,setHistorico]=useState([]);
+  const [proximaComp,setProximaComp]=useState(null);
+  useEffect(()=>{
+    if(!alunoSel?.id){setSaude({});setPlanoAlim(null);setAgua(0);setHistorico([]);setProximaComp(null);return;}
+    DB.getData("saude",alunoSel.id).then(d=>setSaude(d||{})).catch(()=>{});
+    DB.getData("plano_alim_aluno",alunoSel.id).then(d=>setPlanoAlim(d)).catch(()=>{});
+    DB.getData("agua_hoje",alunoSel.id).then(d=>setAgua(d||0)).catch(()=>{});
+  },[alunoSel?.id]);
   const [confirmandoDeletar,setConfirmandoDeletar]=useState(false);
   const [formKey,setFormKey]=useState(0);
   const [nomePlano,setNomePlano]=useState("Treino A/B/C");
