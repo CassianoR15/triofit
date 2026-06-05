@@ -15,6 +15,10 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     autoRefreshToken: true,
     detectSessionInUrl: true,
     storageKey: 'triofit_auth',
+    // Disable Web Locks API — prevents deadlock that blocks getSession() indefinitely
+    lock: async (name, acquireTimeout, fn) => {
+      return await fn();
+    },
   },
 });
 
@@ -189,6 +193,20 @@ export const DB = {
         if(!error&&data){profile=data;break;}
         if(attempt<1)await new Promise(r=>setTimeout(r,200));
       }catch{if(attempt<1)await new Promise(r=>setTimeout(r,200));}
+    }
+    // Auto-create profile if missing (runs silently on every login)
+    if(!profile){
+      try{
+        await supabase.from('profiles').upsert({
+          id:supaUser.id,
+          nome:supaUser.user_metadata?.nome||supaUser.email,
+          role:supaUser.user_metadata?.role||'aluno',
+          criado_em:supaUser.created_at||new Date().toISOString(),
+        },{onConflict:'id',ignoreDuplicates:false});
+        const{data:p2}=await supabase.from('profiles')
+          .select('nome,role,codigo,objetivo,criado_em').eq('id',supaUser.id).maybeSingle();
+        if(p2)profile=p2;
+      }catch(e){console.warn('Auto-profile:',e?.message);}
     }
     return {
       id: supaUser.id,
@@ -560,13 +578,17 @@ export const DB = {
       // MAS: ainda podemos criar o vínculo usando a sessão do TREINADOR/NUTRI atual
       if(!sessionExists){
         // Criar vínculo com sessão atual (treinador/nutri está autenticado)
+        // Create vinculo with trainer/nutri's session
         if(treinadorId||nutriId){
-          try{
-            const vd={aluno_id:uid};
-            if(treinadorId)vd.treinador_id=treinadorId;
-            if(nutriId)vd.nutri_id=nutriId;
-            await supabase.from('vinculos').upsert(vd,{onConflict:'aluno_id'}).select();
-          }catch(e){console.warn('Vinculo (confirmation pending):',e?.message);}
+          const vd={aluno_id:uid};
+          if(treinadorId)vd.treinador_id=treinadorId;
+          if(nutriId)vd.nutri_id=nutriId;
+          try{await supabase.from('vinculos').upsert(vd,{onConflict:'aluno_id'});}
+          catch(e){
+            // Try insert as fallback
+            try{await supabase.from('vinculos').insert(vd);}catch{}
+          }
+          this._ac.delete(treinadorId||nutriId);
         }
         // Salvar no perfil local como cadastrado (aparece na lista mesmo sem confirmar)
         try{
