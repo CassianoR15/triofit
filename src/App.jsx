@@ -2635,7 +2635,7 @@ const [saving,setSaving]=useState(false);
               </>
             )}
           </div>
-          <button className="btn btn-orange btn-full" onClick={salvar} disabled={saving}>📤 Enviar plano para {alunoSel.nome}</button>
+          <button className="btn btn-orange btn-full" onClick={salvar} disabled={saving}>📤 Enviar plano para {alunoSel?.nome||"aluno"}</button>
         </React.Fragment>
       )}
     </div>
@@ -3323,7 +3323,17 @@ function NutriPrescrever({
       {/* SELECIONAR PACIENTE */}
       <div className="card">
         <div className="card-title">👤 SELECIONAR PACIENTE</div>
-        <AlunoSelector alunos={alunos||[]} selecionado={alunoSel} onSelect={(a)=>{if(a)setPlanoDeletado(false);setTimeout(()=>setAlunoSel(a),50);}} accentClass="sel-blue"/>
+        <AlunoSelector alunos={alunos||[]} selecionado={alunoSel} onSelect={(a)=>{
+          if(a){
+            setPlanoDeletado(false);
+            // Ensure all fields have defaults to prevent undefined crashes
+            const safe={id:a.id,nome:a.nome||"",email:a.email||"",
+              objetivo:a.objetivo||"",role:a.role||"aluno",...a};
+            setTimeout(()=>setAlunoSel(safe),50);
+          } else {
+            setAlunoSel(null);
+          }
+        }} accentClass="sel-blue"/>
         {!alunoSel&&alunos.length>0&&<div style={{color:"var(--text3)",fontSize:"0.85rem"}}>{T("prescr.selecionePaciente")}</div>}
       </div>
 

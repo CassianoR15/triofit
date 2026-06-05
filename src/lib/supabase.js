@@ -599,6 +599,17 @@ export const DB = {
       const uid=data?.user?.id;
       const sessionExists=!!data?.session;
       
+      // Restore trainer/nutri session immediately after signUp
+      // (signUp auto-logs in as the new user, which would kick out the trainer)
+      if(currentSession?.access_token) {
+        try {
+          await supabase.auth.setSession({
+            access_token: currentSession.access_token,
+            refresh_token: currentSession.refresh_token,
+          });
+        } catch(e) { console.warn('Session restore:', e?.message); }
+      }
+      
       // Se não tem uid → falhou de verdade
       if(!uid){
         return{ok:true,user:{email:emailLimpo,nome:nomeFull},needsConfirmation:true};
