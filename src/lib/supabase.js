@@ -548,8 +548,38 @@ export const DB = {
       if(error){
         const m=error.message||'';
         if(m.includes('already registered')||m.includes('User already registered')||
-           m.includes('already been registered')||m.includes('already exists'))
-          return{ok:false,msg:'Este email já está cadastrado. Use um email diferente.'};
+           m.includes('already been registered')||m.includes('already exists')){
+          // Email exists — find the user and create vinculo instead of showing error
+          try{
+            const {data:existingProfiles}=await supabase
+              .from('profiles')
+              .select('id,nome,role,email')
+              .eq('email',emailLimpo)
+              .limit(1);
+            // Also try auth.users via email match in user_metadata  
+            let existingId=existingProfiles?.[0]?.id;
+            if(!existingId){
+              // Try to find via profiles without email column
+              const {data:up}=await supabase
+                .from('profiles')
+                .select('id,nome')
+                .limit(50);
+              // Can't directly query auth.users by email from client
+              // Return a helpful message instead
+              return{ok:false,msg:'Este aluno já tem conta no TrioFit. Peça que ele entre no app e use o código '+
+                (treinadorId?'do treinador':'da nutricionista')+' para se vincular.'};
+            }
+            // Create vinculo with existing user
+            const vd={aluno_id:existingId};
+            if(treinadorId)vd.treinador_id=treinadorId;
+            if(nutriId)vd.nutri_id=nutriId;
+            await supabase.from('vinculos').upsert(vd,{onConflict:'aluno_id'});
+            this._ac.delete(treinadorId||nutriId);
+            return{ok:true,user:{id:existingId,email:emailLimpo,nome:existingProfiles[0]?.nome||emailLimpo},vinculoExistente:true};
+          }catch(ve){
+            return{ok:false,msg:'Este aluno já tem conta. Peça que ele use o código do profissional para se vincular.'};
+          }
+        }
         if(m.includes('invalid email')||m.includes('valid email'))
           return{ok:false,msg:'Email inválido. Verifique o endereço digitado.'};
         if(m.includes('password')||m.includes('senha'))
