@@ -2482,7 +2482,7 @@ const [saving,setSaving]=useState(false);
       </div>
 
       {alunoSel&&(
-        <React.Fragment key={formKey}>
+        <>
           <div className="card">
             <div className="card-title">⚙️ CONFIGURAÇÕES DO PLANO</div>
             <div className="grid-2">
@@ -2636,7 +2636,7 @@ const [saving,setSaving]=useState(false);
             )}
           </div>
           <button className="btn btn-orange btn-full" onClick={salvar} disabled={saving}>📤 Enviar plano para {alunoSel?.nome||"aluno"}</button>
-        </React.Fragment>
+        </>
       )}
     </div>
   );
@@ -2889,7 +2889,7 @@ function DiarioAluno({aluno,onBack}){
           <div className="diario-section">
             <div className="diario-label">🔴 Dores musculares ativas</div>
             <div className="diario-val" style={{fontFamily:"var(--font-display)",fontSize:"1.8rem",color:saude.dores?.length?"var(--orange)":"var(--green)"}}>{saude.dores?.length||0}<span style={{fontSize:"0.8rem",color:"var(--text2)"}}> grupos</span></div>
-            {(saude?.dores||[]).length>0&&<div style={{fontSize:"0.8rem",color:"var(--text2)",marginTop:"0.25rem"}}>{saude.dores.map(d=>`${d.musculo} (${diffDays(d.desde)}d)`).join(", ")}</div>}
+            {(saude?.dores||[]).length>0&&<div style={{fontSize:"0.8rem",color:"var(--text2)",marginTop:"0.25rem"}}>{(saude?.dores||[]).map(d=>`${d.musculo||""} (${diffDays(d.desde)}d)`).join(", ")}</div>}
           </div>
           <div className="diario-section">
             <div className="diario-label">🔴 Ciclo menstrual</div>
@@ -3223,7 +3223,7 @@ function TreinadorNotificacoes({
       {historico.length>0&&(
         <div className="card" style={{marginTop:"20px"}}>
           <div className="card-title">{T("notif.enviadas")}</div>
-          {historico.map((h,i)=>(
+          {(historico||[]).map((h,i)=>(
             <div key={i} style={{padding:"10px 0",borderBottom:i<historico.length-1?"1px solid var(--border)":"none"}}>
               <div style={{fontSize:"13px",color:"var(--text)",marginBottom:"4px"}}>"{h.msg.slice(0,60)}{h.msg.length>60?"...":""}"</div>
               <div style={{fontSize:"11px",color:"var(--text3)"}}>{h.qtd} aluno{h.qtd!==1?"s":""} • {new Date(h.data).toLocaleString("pt-BR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})}</div>
