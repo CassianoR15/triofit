@@ -323,14 +323,44 @@ export const DB = {
       return [{id:'f4a2bce7-1706-4af2-8631-22df8e3a0d82',nome:'Aluno Demo',email:'aluno@demo.com',role:'aluno',bloqueado:false}];
     }
     const c = this._ac.get(profId);
-    if (c && Date.now() - c.ts < 30000) return c.d; // 30s cache
-    const { data } = await supabase.rpc('get_alunos_do_prof', { prof_id: profId });
-    const r = data || [];
-    this._ac.set(profId, { d: r, ts: Date.now() });
-        // Deduplicate by id
-    const _seen=new Set();
-    const _deduped=(data||[]).filter(a=>{if(_seen.has(a.id))return false;_seen.add(a.id);return true;});
-    return _deduped;
+    if (c && Date.now() - c.ts < 15000) return c.d; // 15s cache
+    
+    // Direct vinculos query (no stored procedure needed)
+    try {
+      const { data: vd, error: ve } = await supabase
+        .from('vinculos')
+        .select('aluno_id')
+        .or(`treinador_id.eq.${profId},nutri_id.eq.${profId}`);
+      
+      if(!ve && vd && vd.length > 0) {
+        const alunoIds = vd.map(v => v.aluno_id).filter(Boolean);
+        if(alunoIds.length > 0) {
+          const { data: pd } = await supabase
+            .from('profiles')
+            .select('id, nome, role, codigo, email, objetivo, bloqueado')
+            .in('id', alunoIds);
+          if(pd && pd.length > 0) {
+            const seen = new Set();
+            const result = pd.filter(a => {if(seen.has(a.id))return false;seen.add(a.id);return true;});
+            this._ac.set(profId, { d: result, ts: Date.now() });
+            return result;
+          }
+        }
+      }
+    } catch(e) { console.warn('getAlunosDe direct query:', e?.message); }
+    
+    // Fallback: try RPC
+    try {
+      const { data } = await supabase.rpc('get_alunos_do_prof', { prof_id: profId });
+      if(data && data.length > 0) {
+        const seen = new Set();
+        const result = data.filter(a=>{if(seen.has(a.id))return false;seen.add(a.id);return true;});
+        this._ac.set(profId, { d: result, ts: Date.now() });
+        return result;
+      }
+    } catch(e) {}
+    
+    return [];
   },
 
   // ----------------------------------------------------------
@@ -521,9 +551,32 @@ export const DB = {
       const uid=data?.user?.id;
       const sessionExists=!!data?.session;
       
-      // Se não tem uid ou não tem sessão → confirmação de email pendente
-      // Retorna IMEDIATAMENTE sem tentar ops no banco que vão travar por RLS
-      if(!uid||!sessionExists){
+      // Se não tem uid → falhou de verdade
+      if(!uid){
+        return{ok:true,user:{email:emailLimpo,nome:nomeFull},needsConfirmation:true};
+      }
+      
+      // Tem uid mas sem sessão = email confirmation pendente
+      // MAS: ainda podemos criar o vínculo usando a sessão do TREINADOR/NUTRI atual
+      if(!sessionExists){
+        // Criar vínculo com sessão atual (treinador/nutri está autenticado)
+        if(treinadorId||nutriId){
+          try{
+            const vd={aluno_id:uid};
+            if(treinadorId)vd.treinador_id=treinadorId;
+            if(nutriId)vd.nutri_id=nutriId;
+            await supabase.from('vinculos').upsert(vd,{onConflict:'aluno_id'}).select();
+          }catch(e){console.warn('Vinculo (confirmation pending):',e?.message);}
+        }
+        // Salvar no perfil local como cadastrado (aparece na lista mesmo sem confirmar)
+        try{
+          await supabase.from('profiles').upsert(
+            {id:uid,nome:nomeFull,role:'aluno',objetivo:objetivo||''},
+            {onConflict:'id'}
+          ).select();
+        }catch(e){console.warn('Profile (confirmation pending):',e?.message);}
+        // Invalidar cache do prof para nova lista aparecer imediatamente
+        this._ac.delete(treinadorId||nutriId);
         return{ok:true,user:{email:emailLimpo,nome:nomeFull,id:uid},needsConfirmation:true};
       }
       
@@ -544,6 +597,8 @@ export const DB = {
           await supabase.from('vinculos').upsert(vd,{onConflict:'aluno_id'});
         }catch(e){console.warn('Vinculos upsert:',e?.message);}
       }
+      // Invalidar cache
+      this._ac.delete(treinadorId||nutriId);
       return{ok:true,user:{id:uid,email:emailLimpo,nome:nomeFull},needsConfirmation:false};
     }catch(e){return{ok:false,msg:e.message||'Erro ao cadastrar aluno.'};}
   },
