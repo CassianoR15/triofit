@@ -549,36 +549,47 @@ export const DB = {
         const m=error.message||'';
         if(m.includes('already registered')||m.includes('User already registered')||
            m.includes('already been registered')||m.includes('already exists')){
-          // Email exists — find the user and create vinculo instead of showing error
+          // Email already exists — try to find user by querying profiles with user_metadata email
           try{
-            const {data:existingProfiles}=await supabase
+            // Try to find profile by matching email stored in user_metadata via RPC or direct
+            // First: try profiles table directly (some projects store email there)
+            let existingId=null;
+            let existingNome=emailLimpo;
+            
+            const {data:byEmail}=await supabase
               .from('profiles')
-              .select('id,nome,role,email')
+              .select('id,nome,role')
               .eq('email',emailLimpo)
-              .limit(1);
-            // Also try auth.users via email match in user_metadata  
-            let existingId=existingProfiles?.[0]?.id;
-            if(!existingId){
-              // Try to find via profiles without email column
-              const {data:up}=await supabase
-                .from('profiles')
-                .select('id,nome')
-                .limit(50);
-              // Can't directly query auth.users by email from client
-              // Return a helpful message instead
-              return{ok:false,msg:'Este aluno já tem conta no TrioFit. Peça que ele entre no app e use o código '+
-                (treinadorId?'do treinador':'da nutricionista')+' para se vincular.'};
+              .maybeSingle();
+            
+            if(byEmail?.id){
+              existingId=byEmail.id;
+              existingNome=byEmail.nome||emailLimpo;
+            } else {
+              // Try rpc to find user by email (if function exists)
+              const {data:byRpc}=await supabase
+                .rpc('get_user_id_by_email',{p_email:emailLimpo})
+                .maybeSingle().catch(()=>({data:null}));
+              if(byRpc){existingId=byRpc;existingNome=nomeFull;}
             }
-            // Create vinculo with existing user
-            const vd={aluno_id:existingId};
-            if(treinadorId)vd.treinador_id=treinadorId;
-            if(nutriId)vd.nutri_id=nutriId;
-            await supabase.from('vinculos').upsert(vd,{onConflict:'aluno_id'});
-            this._ac.delete(treinadorId||nutriId);
-            return{ok:true,user:{id:existingId,email:emailLimpo,nome:existingProfiles[0]?.nome||emailLimpo},vinculoExistente:true};
-          }catch(ve){
-            return{ok:false,msg:'Este aluno já tem conta. Peça que ele use o código do profissional para se vincular.'};
-          }
+            
+            if(existingId){
+              // Found user — create vinculo directly
+              const vd={aluno_id:existingId};
+              if(treinadorId)vd.treinador_id=treinadorId;
+              if(nutriId)vd.nutri_id=nutriId;
+              try{await supabase.from('vinculos').upsert(vd,{onConflict:'aluno_id'});}
+              catch{await supabase.from('vinculos').insert(vd).catch(()=>{});}
+              this._ac.delete(treinadorId||nutriId);
+              return{ok:true,user:{id:existingId,email:emailLimpo,nome:existingNome},vinculoExistente:true};
+            }
+          }catch(ve){console.warn('Link existing user:',ve?.message);}
+          
+          // Could not find user — show helpful instruction
+          return{ok:false,
+            isAlreadyRegistered:true,
+            msg:nomeFull+' já tem conta no TrioFit. Para vincular, peça que '+nomeFull.split(' ')[0]+
+              ' entre no app → Minha Equipe → e insira o código do profissional.'};
         }
         if(m.includes('invalid email')||m.includes('valid email'))
           return{ok:false,msg:'Email inválido. Verifique o endereço digitado.'};
