@@ -2582,8 +2582,9 @@ const [saving,setSaving]=useState(false);
                         <label className="form-label">{T("geral.nome")}</label>
                         <input className="form-input" placeholder="Ex: Supino Reto" list="banco-ex-list" value={novoEx.nome}
                           onInput={e=>{const match=BANCO_EXERCICIOS.find(b=>b.nome.toLowerCase()===e.target.value.toLowerCase());if(match)setNovoEx(p=>({...p,nome:match.nome,video:match.video}));}}
-                          onChange={e=>{const val=e.target.value;const match=BANCO_EXERCICIOS.find(b=>b.nome.toLowerCase()===val.toLowerCase());setNovoEx(p=>({...p,nome:val,video:match?match.video:p.video}));}}/>
-                        <datalist id="banco-ex-list">{BANCO_EXERCICIOS.map(b=><option key={b.nome} value={b.nome}/>)}</datalist>
+                          onChange={e=>{setNovoEx(p=>({...p,nome:e.target.value}));}}
+                          onBlur={e=>{const match=BANCO_EXERCICIOS.find(b=>b.nome.toLowerCase()===e.target.value.toLowerCase());if(match)setNovoEx(p=>({...p,video:p.video||match.video}));}}/>
+                        <datalist id="banco-ex-list">{React.useMemo(()=>BANCO_EXERCICIOS.map(b=><option key={b.nome} value={b.nome}/>),[])}</datalist>
                       </div>
                       <div className="form-group">
                         <label className="form-label">{T("prescr.series")}</label>
@@ -4372,7 +4373,7 @@ function CadastrarAluno({
             <button className="btn btn-full" style={{marginTop:"0",fontSize:"15px",padding:"14px",
               background:cfg.corGrad,color:cfg.cor,border:"1px solid "+cfg.corBorder,fontWeight:700,
               borderRadius:"var(--r)",cursor:"pointer",width:"100%",transition:"all .15s"}}
-              onClick={()=>{setSalvando(false);setTimeout(cadastrar,10);}} disabled={salvando}>
+              onClick={()=>{setErroMsg("");setSalvando(false);setTimeout(cadastrar,10);}} disabled={salvando}>
               {salvando?"⏳ Cadastrando...":"✅ "+cfg.labelBtn}
             </button>
           </div>
@@ -4803,7 +4804,11 @@ function TrioFitInner(){
       // Ignora SIGNED_OUT causado por token_refresh_failed (browser voltou do background)
       if(event==='TOKEN_REFRESHED'||event==='SIGNED_IN'){
         if(session?.user){
+          // Small delay to avoid race with onLogin direct call
+          await new Promise(r=>setTimeout(r,100));
+          if(_loggingOut.current) return;
           const u=await DB._formatUser(session.user);
+          if(_loggingOut.current) return;
           try{sessionStorage.setItem('tf_user_backup',JSON.stringify(u));}catch{}
           setUser(u);
         }

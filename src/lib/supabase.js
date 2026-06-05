@@ -525,7 +525,7 @@ export const DB = {
       // Create auth user
       const{data,error}=await supabase.auth.signUp({
         email:emailLimpo,password:senha,
-        options:{data:{nome:nomeFull,role:'aluno'},emailRedirectTo:window.location.origin},
+        options:{data:{nome:nomeFull,role:'aluno'},emailRedirectTo:'https://triofit.vercel.app'},
       });
       if(error){
         const m=error.message||'';
