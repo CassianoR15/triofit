@@ -4292,7 +4292,16 @@ function CadastrarAluno({
           </div>
 
           {/* MODAL SUCESSO */}
-          {sucesso&&(
+          {sucesso?.infoMsg&&(
+          <div style={{background:"rgba(59,130,246,0.1)",border:"1px solid rgba(59,130,246,0.4)",
+            borderRadius:"var(--r)",padding:"16px",marginBottom:"12px",color:"var(--blue)",fontSize:"13px"}}>
+            ℹ️ {sucesso.infoMsg}
+            <button style={{display:"block",marginTop:"8px",background:"none",border:"none",
+              color:"var(--blue)",cursor:"pointer",textDecoration:"underline",fontSize:"12px"}}
+              onClick={()=>setSucesso(null)}>Entendido</button>
+          </div>
+        )}
+        {sucesso&&!sucesso.infoMsg&&(
             <div style={{background:"linear-gradient(135deg,rgba(74,222,128,0.1),rgba(74,222,128,0.04))",
               border:"1px solid rgba(74,222,128,0.25)",borderRadius:"var(--r)",
               padding:"16px",marginBottom:"20px",boxShadow:"0 0 20px rgba(74,222,128,0.08)"}}>

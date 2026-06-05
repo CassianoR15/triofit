@@ -201,6 +201,7 @@ export const DB = {
           id:supaUser.id,
           nome:supaUser.user_metadata?.nome||supaUser.email,
           role:supaUser.user_metadata?.role||'aluno',
+          email:supaUser.email,
           criado_em:supaUser.created_at||new Date().toISOString(),
         },{onConflict:'id',ignoreDuplicates:false});
         const{data:p2}=await supabase.from('profiles')
@@ -585,11 +586,13 @@ export const DB = {
             }
           }catch(ve){console.warn('Link existing user:',ve?.message);}
           
-          // Could not find user — show helpful instruction
+          // Could not find user in profiles table — show helpful instruction
+          // The aluno needs to link themselves using the trainer's code
+          const profCode = treinadorId ? 'do treinador' : 'da nutricionista';
           return{ok:false,
             isAlreadyRegistered:true,
-            msg:nomeFull+' já tem conta no TrioFit. Para vincular, peça que '+nomeFull.split(' ')[0]+
-              ' entre no app → Minha Equipe → e insira o código do profissional.'};
+            msg:nomeFull+' já tem conta no TrioFit! Peça que '+nomeFull.split(' ')[0]+
+              ' abra o app → "Minha Equipe" → insira o código '+profCode+' para se vincular automaticamente.'};
         }
         if(m.includes('invalid email')||m.includes('valid email'))
           return{ok:false,msg:'Email inválido. Verifique o endereço digitado.'};
