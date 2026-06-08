@@ -3402,6 +3402,7 @@ function NutriDash({
 
   return(
     <div className="page">
+      <PlanoGratuitoBanner user={user}/>
       <div className="page-header">
         <div className="page-title">Olá, {user.nome?.split(" ")[0]}! 👋</div>
         <div className="page-sub" style={{textTransform:"capitalize"}}>{hoje}</div>
