@@ -116,11 +116,11 @@ export const DB = {
     if(this._warmingUp) return;
     this._warmingUp = true;
     try {
-      // Warm BOTH the session endpoint AND the password endpoint
-      // by making a lightweight DB query (wakes the auth service)
+      // Wake auth service with a dummy signIn (fails fast but wakes the server)
       await Promise.race([
-        supabase.from('profiles').select('id').limit(1).maybeSingle(),
-        new Promise(r=>setTimeout(r,3000)), // max 3s warmup
+        supabase.auth.signInWithPassword({email:'warmup@warmup.io',password:'warmup'})
+          .catch(()=>{}), // expected to fail — just waking the server
+        new Promise(r=>setTimeout(r,5000)),
       ]);
       this._warmedUp = true;
     } catch(e) {}
