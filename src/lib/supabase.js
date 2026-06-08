@@ -486,7 +486,7 @@ export const DB = {
     // Try direct upsert first (most reliable)
     try {
       const { error:e1 } = await supabase.from('dados').upsert(
-        { user_id: userId, chave, valor },
+        { user_id: userId, chave, valor, atualizado_em: new Date().toISOString() },
         { onConflict: 'user_id,chave' }
       );
       if(!e1) return; // Success
