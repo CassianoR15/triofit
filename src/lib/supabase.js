@@ -139,9 +139,7 @@ export const DB = {
     this._loginAttempts.set(key, [...recent, now]);
 
     try {
-    // Wake up Supabase first (free tier cold start can take 30-60s)
-    await this._warmup();
-    // Login with 25s timeout
+    // Login (warmup already done proactively on page load)
     const signInPromise = supabase.auth.signInWithPassword({
       email: (email||'').trim().toLowerCase(),
       password: senha,
