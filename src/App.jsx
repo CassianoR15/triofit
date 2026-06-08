@@ -4066,6 +4066,121 @@ function ContaBloqueada({user, onLogout}){
   );
 }
 
+function TreinadorDash({
+  user,setPage}){
+  useLang();
+  const [alunos,setAlunos]=useState([]);
+  useEffect(()=>{
+    DB.getAlunosDe(user.id).then(d=>{
+      const base=d||[];
+      if(DEMO_IDS.includes(user.id)){
+        const demo=DEMO_ALUNO;
+        setAlunos(base.some(a=>a.id===demo.id)?base:[demo,...base]);
+      } else setAlunos(base);
+    }).catch(()=>setAlunos([]));
+  },[user.id]);
+  const [msgs,setMsgs]=useState(0);
+  const [atualizacoes,setAtualizacoes]=useState([]);
+  useEffect(()=>{
+    let c=false;
+    DB.getAlunosDe(user.id).then(d=>{
+      if(c)return;
+      const base=d||[];
+      if(DEMO_IDS.includes(user.id)){
+        const demo=DEMO_ALUNO;
+        setAlunos(base.some(a=>a.id===demo.id)?base:[...base,demo]);
+      }else setAlunos(base);
+    }).catch(()=>setAlunos([]));
+    return()=>{c=true;};
+  },[user.id])
+
+  const total=(alunos||[]).length;
+  const hoje=new Date().toLocaleDateString("pt-BR",{weekday:"long",day:"numeric",month:"long"});
+
+  return(
+    <div className="page">
+      <PlanoGratuitoBanner user={user}/>
+      <div className="page-header">
+        <div className="page-title">Olá, {user.nome?.split(" ")[0]}! 👋</div>
+        <div className="page-sub" style={{textTransform:"capitalize"}}>{hoje}</div>
+      </div>
+
+      {/* STATS */}
+      <div className="grid-3" style={{marginBottom:"20px"}}>
+        <div className="stat-card">
+          <div className="stat-label">{T("dash.alunos")}</div>
+          <div className="stat-value orange">{total}</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-label">{T("dash.mensagens")}</div>
+          <div className={"stat-value "+(msgs>0?"orange":"green")}>{msgs}</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-label">{T("dash.seuCodigo")}</div>
+          <div style={{letterSpacing:"4px",fontSize:"1.6rem",fontFamily:"var(--font-mono)",
+                  color:"var(--green)",textShadow:"0 0 20px rgba(74,222,128,0.3)"}}>
+                  {user.codigo||"——"}</div>
+          <div className="stat-sub">{T("dash.compartilhe")}</div>
+        </div>
+      </div>
+
+      {/* AÇÕES RÁPIDAS */}
+      <div className="grid-2" style={{marginBottom:"20px"}}>
+        <button className="btn btn-orange btn-full" style={{padding:"14px"}} onClick={()=>setPage("prescrever")}>
+          📋 Prescrever Treino
+        </button>
+        <button className="btn btn-ghost btn-full" style={{padding:"14px"}} onClick={()=>setPage("cadastrar")}>
+          ➕ Novo Aluno
+        </button>
+      </div>
+
+      {/* ATUALIZAÇÕES RECENTES */}
+      {atualizacoes.length>0&&(
+        <div className="card">
+          <div className="card-title">{T("dash.atualizacoes")}</div>
+          {atualizacoes.map((a,i)=>(
+            <div key={i} style={{display:"flex",alignItems:"center",gap:"12px",padding:"10px 0",borderBottom:i<atualizacoes.length-1?"1px solid var(--border)":"none"}}>
+              <div style={{width:"36px",height:"36px",borderRadius:"50%",background:"var(--green-dim2)",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,color:"var(--green)",fontSize:"12px",flexShrink:0}}>{initials(a.nome)}</div>
+              <div style={{flex:1}}>
+                <div style={{fontWeight:600,fontSize:"13px"}}>{a.nome.split(" ")[0]}</div>
+                <div style={{fontSize:"12px",color:"var(--text2)"}}>{a.msg}</div>
+              </div>
+              <div style={{fontSize:"11px",color:"var(--text3)"}}>{new Date(a.data).toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit"})}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* LISTA DE ALUNOS */}
+      <div className="card">
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"14px"}}>
+          <div className="card-title" style={{marginBottom:0}}>{T("dash.meusAlunos")}</div>
+          {total>3&&<button className="btn btn-ghost btn-sm" onClick={()=>setPage("cadastrar")}>{T("dash.verTodos")}</button>}
+        </div>
+        {total===0?(
+          <div style={{textAlign:"center",padding:"2rem",color:"var(--text3)"}}>
+            <div style={{fontSize:"2.5rem",marginBottom:"8px"}}>👥</div>
+            <div style={{fontWeight:600,color:"var(--text2)",marginBottom:"4px"}}>{T("dash.semAluno")}</div>
+            <button className="btn btn-orange btn-sm" style={{marginTop:"8px"}} onClick={()=>setPage("cadastrar")}>{T("dash.cadastrarAluno")}</button>
+          </div>
+        ):(alunos||[]).slice(0,5).map(a=>(
+          <div key={a.id} style={{display:"flex",alignItems:"center",gap:"12px",padding:"10px 0",borderBottom:"1px solid var(--border)"}}>
+            <div style={{width:"38px",height:"38px",borderRadius:"50%",background:a.bloqueado?"var(--red-dim)":"var(--orange-dim)",border:"1.5px solid",borderColor:a.bloqueado?"rgba(248,113,113,0.3)":"rgba(251,146,60,0.25)",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,color:a.bloqueado?"var(--red)":"var(--orange)",fontSize:"13px",flexShrink:0}}>{initials(a.nome)}</div>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontWeight:600,fontSize:"13px",display:"flex",alignItems:"center",gap:"6px"}}>
+                {a.nome.split(" ").slice(0,2).join(" ")}
+                {a.bloqueado&&<span style={{fontSize:"10px",padding:"1px 6px",borderRadius:"20px",background:"var(--red-dim)",color:"var(--red)"}}>{T("geral.bloqueado")}</span>}
+              </div>
+              <div style={{fontSize:"11px",color:"var(--text2)"}}>{a.grupo||a.objetivo||a.email}</div>
+            </div>
+            {getObjetivo(a.objetivo)&&<span className="obj-badge" style={{background:getObjetivo(a.objetivo).bg,color:getObjetivo(a.objetivo).color,fontSize:"10px"}}>{getObjetivo(a.objetivo).badge}</span>}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function TreinadorApp({user,onLogout}){
   useLang();
   const {show,ToastEl}=useToast();
