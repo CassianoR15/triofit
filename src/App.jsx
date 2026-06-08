@@ -914,7 +914,7 @@ function AuthScreen({onLogin}){
             </div>
             <button className="btn btn-green btn-full" style={{marginTop:"8px",padding:"13px",fontSize:"15px"}}
               onClick={handleLogin} disabled={loading}>
-              {loading?<_LoginTimer/>:T("auth.btnEntrar")}
+              {loading?"⏳ Aguardando...":T("auth.btnEntrar")}
             </button>
             <button type="button" onClick={()=>{goTab("recover");setResetSent(false);}}
               style={{background:"none",border:"none",color:"var(--text3)",
