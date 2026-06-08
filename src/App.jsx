@@ -4414,7 +4414,7 @@ function CadastrarAluno({
               background:cfg.corGrad,color:cfg.cor,border:"1px solid "+cfg.corBorder,fontWeight:700,
               borderRadius:"var(--r)",cursor:"pointer",width:"100%",transition:"all .15s"}}
               onClick={()=>{setErroMsg("");setSalvando(false);setTimeout(cadastrar,10);}} disabled={salvando}>
-              {salvando?<CadTimer/>:"✅ "+cfg.labelBtn}
+              {salvando?<_CadTimer/>:"✅ "+cfg.labelBtn}
             </button>
           </div>
         </div>

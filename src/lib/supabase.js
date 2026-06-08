@@ -392,6 +392,27 @@ export const DB = {
       }
     } catch(e) {}
     
+    // Last resort: try profiles with any email/treinador reference
+    try {
+      const {data:dp}=await supabase
+        .from('profiles')
+        .select('id,nome,role,email,codigo,objetivo,bloqueado')
+        .eq('role','aluno')
+        .limit(50);
+      if(dp&&dp.length>0){
+        // Filter by checking vinculos separately
+        const {data:vAll}=await supabase.from('vinculos')
+          .select('aluno_id').or(`treinador_id.eq.${profId},nutri_id.eq.${profId}`);
+        if(vAll&&vAll.length>0){
+          const ids=new Set(vAll.map(v=>v.aluno_id));
+          const filtered=dp.filter(p=>ids.has(p.id));
+          if(filtered.length>0){
+            this._ac.set(profId,{d:filtered,ts:Date.now()});
+            return filtered;
+          }
+        }
+      }
+    }catch(e){console.warn('getAlunosDe last resort:',e?.message);}
     return [];
   },
 
@@ -556,11 +577,14 @@ export const DB = {
       if(!emailLimpo||!emailRegex.test(emailLimpo))return{ok:false,msg:'Email inválido. Ex: nome@gmail.com'};
       if(!nomeFull)return{ok:false,msg:'Nome obrigatório.'};
       if(!senha||senha.length<6)return{ok:false,msg:'Senha deve ter pelo menos 6 caracteres.'};
-      // Create auth user
-      const{data,error}=await supabase.auth.signUp({
+      // Create auth user using isolated client (never affects trainer session)
+      const tempClient=createTempSignupClient();
+      const{data,error}=await tempClient.auth.signUp({
         email:emailLimpo,password:senha,
         options:{data:{nome:nomeFull,role:'aluno'},emailRedirectTo:'https://triofit.vercel.app'},
       });
+      // Destroy temp client immediately
+      try{tempClient.auth.signOut();}catch{}
       if(error){
         const m=error.message||'';
         if(m.includes('already registered')||m.includes('User already registered')||
