@@ -2484,6 +2484,17 @@ const [saving,setSaving]=useState(false);
   const diaAtual=dias[diaEdit]||{exercicios:[]};
   const fimDate=addMonths(new Date(inicio),duracao);
 
+  function handleSelectAluno(a){
+    if(a){
+      const safe={id:a.id||"",nome:a.nome||"",email:a.email||"",
+        objetivo:a.objetivo||"",role:a.role||"aluno",...a};
+      setPlanoDeletado(false);
+      setAlunoSel(safe);
+    } else {
+      setAlunoSel(null);
+    }
+  }
+
   return(
     <div className="page">
       <div className="page-header">
@@ -2496,18 +2507,7 @@ const [saving,setSaving]=useState(false);
         {planoDeletado&&<div style={{padding:"0.75rem",background:"#22c55e18",border:"2px solid var(--green)",borderRadius:"8px",marginBottom:"0.75rem",textAlign:"center"}}>
           <div style={{fontWeight:700,color:"var(--green)"}}>✅ Plano deletado! Selecione o aluno para criar novo plano.</div>
         </div>}
-        <AlunoSelector alunos={alunos||[]} selecionado={alunoSel} onSelect={React.useCallback((a)=>{
-            if(a){
-              const safe={id:a.id||"",nome:a.nome||"",email:a.email||"",
-                objetivo:a.objetivo||"",role:a.role||"aluno",...a};
-              React.startTransition(()=>{
-                setPlanoDeletado(false);
-                setAlunoSel(safe);
-              });
-            } else {
-              React.startTransition(()=>setAlunoSel(null));
-            }
-          },[setAlunoSel,setPlanoDeletado])} accentClass="active orange"/>
+        <AlunoSelector alunos={alunos||[]} selecionado={alunoSel} onSelect={handleSelectAluno} accentClass="active orange"/>
         {!alunoSel&&(alunos||[]).length>0&&<div style={{color:"var(--text3)",fontSize:"0.85rem",padding:"0.5rem 0"}}>{T("prescr.selecioneAluno")}</div>}
       </div>
 
