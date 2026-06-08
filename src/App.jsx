@@ -2493,7 +2493,10 @@ function TreinadorPrescrever({user,showToast}){
       // Notificar aluno
       try{await DB.criarNotificacao(alunoSel.id,"treino","Novo plano de treino!",
         `${user.nome} prescreveu um novo plano para você!`);}catch{}
-      showToast&&showToast(`✅ Plano enviado para ${alunoSel.nome}!`,"success");
+      // Invalidar cache do aluno para que ele veja o plano imediatamente
+      const kClear = alunoSel.id + '|plano_treino_aluno';
+      if(DB._dc2) DB._dc2.delete(kClear);
+      showToast&&showToast(`✅ Plano enviado para ${alunoSel.nome}! 🏋️`,"success",4000);
       setAlunoSel(null);
       setNomePlano("Treino A/B/C");
       setDias(DIAS_SEMANA.map((_,i)=>({nome:`Treino ${String.fromCharCode(65+i)}`,tipo:i<5?"academia":"descanso",exercicios:[]})));

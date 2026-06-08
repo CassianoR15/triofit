@@ -467,7 +467,6 @@ export const DB = {
 
   async setData(chave, userId, valor) {
     if(!userId)return;
-    // Demo mode — save to localStorage
     if(userId.startsWith('demo-')){
       try{localStorage.setItem('demo_data_'+userId+'_'+chave,JSON.stringify(valor));}catch{}
       return;
@@ -475,9 +474,23 @@ export const DB = {
     const k = userId + '|' + chave;
     this._dc2 = this._dc2 || new Map();
     this._dc2.set(k, { v: valor, ts: Date.now() });
-    await supabase.rpc('upsert_dado', {
-      p_user_id: userId, p_chave: chave, p_valor: valor,
-    });
+    // Try RPC first, then direct upsert as fallback
+    let saved = false;
+    try {
+      const { error } = await supabase.rpc('upsert_dado', {
+        p_user_id: userId, p_chave: chave, p_valor: valor,
+      });
+      if (!error) saved = true;
+    } catch(e) {}
+    if (!saved) {
+      // Fallback: direct upsert on dados table
+      try {
+        await supabase.from('dados').upsert(
+          { user_id: userId, chave, valor, updated_at: new Date().toISOString() },
+          { onConflict: 'user_id,chave' }
+        );
+      } catch(e) { console.warn('setData fallback:', e?.message); }
+    }
   },
 
   // ----------------------------------------------------------
