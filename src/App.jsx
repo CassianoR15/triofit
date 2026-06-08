@@ -3797,6 +3797,7 @@ function CadastrarAluno({
   function setF(k,v){setForm(p=>({...p,[k]:v}));}
 
   async function cadastrar(){
+    if(salvando)return; // Prevent double-click
     if(!form.nome.trim()){showToast&&showToast("Nome é obrigatório","warn");return;}
     if(!form.email.trim()){showToast&&showToast("Email é obrigatório","warn");return;}
     if(!isValidEmail(form.email)){showToast&&showToast("Email inválido. Ex: nome@gmail.com","warn");return;}
@@ -3996,7 +3997,7 @@ function CadastrarAluno({
             <button className="btn btn-full" style={{marginTop:"0",fontSize:"15px",padding:"14px",
               background:cfg.corGrad,color:cfg.cor,border:"1px solid "+cfg.corBorder,fontWeight:700,
               borderRadius:"var(--r)",cursor:"pointer",width:"100%",transition:"all .15s"}}
-              onClick={()=>{setErroMsg("");setSalvando(false);setTimeout(cadastrar,10);}} disabled={salvando}>
+              onClick={()=>{if(salvando)return;setErroMsg("");setTimeout(cadastrar,10);}} disabled={salvando}>
               {salvando?"⏳ Cadastrando...":"✅ "+cfg.labelBtn}
             </button>
           </div>
