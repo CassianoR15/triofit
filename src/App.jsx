@@ -2976,6 +2976,8 @@ function DiarioAluno({aluno,onBack}){
 
 // ── BANNER PLANO GRATUITO (Treinador + Nutri) ─────────────────
 function PlanoGratuitoBanner({user}){
+  // Contas demo nunca mostram banner de trial
+  if(user?.isDemoUser||user?.email?.endsWith('@demo.com'))return null;
   const criadoEm=user?.criadoEm||user?.created_at||new Date().toISOString();
   const diasTotal=30;
   const ms=Date.now()-new Date(criadoEm).getTime();
@@ -4529,6 +4531,38 @@ function CadastrarAluno({
   );
 }
 
+
+
+// ── TELA DE BLOQUEIO PÓS-TRIAL ───────────────────────────────
+function ContaBloqueada({user, onLogout}){
+  return(
+    <div style={{minHeight:"100vh",display:"flex",flexDirection:"column",
+      alignItems:"center",justifyContent:"center",padding:"2rem",
+      background:"var(--bg)",textAlign:"center"}}>
+      <div style={{fontSize:"4rem",marginBottom:"1rem"}}>🔒</div>
+      <div style={{fontFamily:"var(--font-display,sans-serif)",fontSize:"1.6rem",
+        fontWeight:800,color:"var(--text1)",marginBottom:"0.5rem"}}>
+        Período gratuito encerrado
+      </div>
+      <div style={{fontSize:"0.95rem",color:"var(--text3)",marginBottom:"2rem",maxWidth:"360px",lineHeight:"1.6"}}>
+        Seu período de 30 dias gratuitos chegou ao fim.<br/>
+        Para continuar usando o TrioFit, entre em contato e ative seu plano.
+      </div>
+      <button
+        onClick={()=>window.open("mailto:contato@triofit.app?subject=Quero+ativar+meu+plano&body=Olá!+Meu+email+é+"+encodeURIComponent(user?.email||""),"_blank")}
+        style={{background:"var(--blue)",color:"#fff",border:"none",borderRadius:"12px",
+          padding:"14px 32px",fontSize:"1rem",fontWeight:700,cursor:"pointer",
+          marginBottom:"1rem",boxShadow:"0 4px 16px rgba(99,102,241,0.4)"}}>
+        ✉️ Ativar meu plano
+      </button>
+      <button onClick={onLogout}
+        style={{background:"none",border:"1px solid var(--border2)",borderRadius:"8px",
+          padding:"8px 20px",fontSize:"0.85rem",color:"var(--text3)",cursor:"pointer"}}>
+        Sair da conta
+      </button>
+    </div>
+  );
+}
 
 function TreinadorApp({user,onLogout}){
   useLang();
