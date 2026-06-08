@@ -2496,16 +2496,18 @@ const [saving,setSaving]=useState(false);
         {planoDeletado&&<div style={{padding:"0.75rem",background:"#22c55e18",border:"2px solid var(--green)",borderRadius:"8px",marginBottom:"0.75rem",textAlign:"center"}}>
           <div style={{fontWeight:700,color:"var(--green)"}}>✅ Plano deletado! Selecione o aluno para criar novo plano.</div>
         </div>}
-        <AlunoSelector alunos={alunos||[]} selecionado={alunoSel} onSelect={a=>{
+        <AlunoSelector alunos={alunos||[]} selecionado={alunoSel} onSelect={React.useCallback((a)=>{
             if(a){
-              setPlanoDeletado(false);
               const safe={id:a.id||"",nome:a.nome||"",email:a.email||"",
                 objetivo:a.objetivo||"",role:a.role||"aluno",...a};
-              setAlunoSel(safe);
+              React.startTransition(()=>{
+                setPlanoDeletado(false);
+                setAlunoSel(safe);
+              });
             } else {
-              setAlunoSel(null);
+              React.startTransition(()=>setAlunoSel(null));
             }
-          }} accentClass="active orange"/>
+          },[setAlunoSel,setPlanoDeletado])} accentClass="active orange"/>
         {!alunoSel&&(alunos||[]).length>0&&<div style={{color:"var(--text3)",fontSize:"0.85rem",padding:"0.5rem 0"}}>{T("prescr.selecioneAluno")}</div>}
       </div>
 
