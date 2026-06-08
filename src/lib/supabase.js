@@ -536,7 +536,6 @@ export const DB = {
       // Warmup Supabase first (cold start prevention)
       // Warmup auth service specifically (different from DB warmup)
       await this._warmup();
-      // Small delay to let warmup complete
       await new Promise(r=>setTimeout(r,500));
       const emailLimpo=(email||'').trim().toLowerCase();
       const nomeFull=[nome,sobrenome].filter(Boolean).join(' ').trim();
@@ -634,6 +633,10 @@ export const DB = {
             });
           }
         } catch(e) { console.warn('Session restore:', e?.message); }
+        // Liberar flag APÓS restaurar sessão do treinador
+        if(typeof window!=='undefined') window._triofit_cadastrando=false;
+      } else {
+        if(typeof window!=='undefined') window._triofit_cadastrando=false;
       }
       
       // Se não tem uid → falhou de verdade
