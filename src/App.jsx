@@ -4471,7 +4471,7 @@ function DiarioAluno({aluno,onBack}){
   );
 }
 
-// ── BANNER PLANO GRATUITO (Treinador + Nutri) ─────────────────
+// ── BANNER PLANO GRATUITO (Treinador + Nutri) [1780948294] ─────────────────
 function TreinadorDash({
   user,setPage}){
   useLang();
