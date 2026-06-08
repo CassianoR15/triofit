@@ -3609,8 +3609,14 @@ function AlunoApp({user,onLogout}){
     }catch{return null;}
   });
   const [msgsBadge,setMsgsBadge]=useState(0);
+  const [notifBadge,setNotifBadge]=useState(0);
   useEffect(()=>{
     if(!user?.id)return;
+    // Check unread notifications
+    DB.getNotificacoes(user.id).then(ns=>{
+      const unread=(ns||[]).filter(n=>!n.lida).length;
+      setNotifBadge(unread);
+    }).catch(()=>{});
     let cancelled=false;
     DB.getVinculoAluno(user.id).then(async v=>{
       if(cancelled)return;

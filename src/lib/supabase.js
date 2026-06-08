@@ -564,9 +564,12 @@ export const DB = {
   // NOTIFICAÇÕES
   // ----------------------------------------------------------
   async criarNotificacao(userId, tipo, titulo, corpo) {
+    if(!userId)return;
     try {
-      await supabase.from('notificacoes').insert({ user_id: userId, tipo, titulo, corpo });
-    } catch(e) { console.error('criarNotificacao:', e); }
+      const {error} = await supabase.from('notificacoes')
+        .insert({ user_id: userId, tipo, titulo, corpo, lida: false });
+      if(error) console.warn('criarNotificacao RLS:', error.message);
+    } catch(e) { console.warn('criarNotificacao:', e?.message); }
   },
 
   async getNotificacoes(userId) {
