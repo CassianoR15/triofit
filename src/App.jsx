@@ -3799,7 +3799,14 @@ function ChatComponent({
     // Carregar mensagens
     DB.getMensagens(user.id,contato.id).then(d=>{if(!cancelled)setMsgs(d||[]);});
     // Marcar como lidas
-    DB.marcarLidas(user.id,contato.id).catch(()=>{});
+    // Marcar como lidas E atualizar badge imediatamente
+    DB.marcarLidas(user.id,contato.id).then(()=>{
+      // Re-check total unread to update badge accurately
+      DB.getMensagensNaoLidas(user.id).then(d=>{
+        // Dispatch custom event so Shell can update badge
+        window.dispatchEvent(new CustomEvent('triofit-msgs-read',{detail:{count:d.length}}));
+      }).catch(()=>{});
+    }).catch(()=>{});
     // Subscribe realtime
     const sub=DB.subscribeMensagens(user.id,(payload)=>{
       if(!cancelled)setMsgs(p=>[...p,payload.new]);
@@ -4601,7 +4608,7 @@ function TreinadorApp({user,onLogout}){
     if(p==="chat")return <ProfChat user={user} showToast={show}/>;
     return <TreinadorDash user={user} setPage={setPage}/>;
   }
-  return(<>{ToastEl}<Shell user={user} onLogout={onLogout} nav={getNavTreinador()} active={page} setActive={setPage} accent="orange" alertCount={alertCount}>{renderPage(page)}</Shell></>);
+  return(<>{ToastEl}<Shell user={user} onLogout={onLogout} nav={getNavTreinador()} active={page} setActive={(p)=>{setPage(p);if(p==="chat")setAlertCount(0);}} accent="orange" alertCount={alertCount}>{renderPage(page)}</Shell></>);
 }
 
 // ============================================================
