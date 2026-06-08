@@ -4877,7 +4877,16 @@ function TrioFitInner(){
         if(cu?.id&&cu?.role&&!cu?.isDemoUser){setUser(cu);setLoading(false);}
       }
     }catch{}
-    const tout=setTimeout(()=>{if(!c){c=true;setUser(null);setLoading(false);}},1500);
+    const tout=setTimeout(()=>{
+      if(!c){
+        // Before clearing user, check sessionStorage backup
+        try{
+          const bk=sessionStorage.getItem('tf_user_backup');
+          if(bk){const u=JSON.parse(bk);if(u?.id){c=true;setUser(u);setLoading(false);return;}}
+        }catch{}
+        c=true;setUser(null);setLoading(false);
+      }
+    },8000); // 8s timeout (increased from 1.5s)
     DB.getSession().then(u=>{
       if(!c){
         c=true;clearTimeout(tout);
@@ -4946,17 +4955,22 @@ function TrioFitInner(){
     const handleVisibility=()=>{
       if(_loggingOut.current) return;
       if(document.visibilityState==='visible'){
+        // Restore from backup IMMEDIATELY (no delay) then verify in background
+        try{
+          const backup=sessionStorage.getItem('tf_user_backup');
+          if(backup&&!user){const u=JSON.parse(backup);if(u?.id)setUser(u);}
+        }catch{}
+        // Verify session silently in background
         supabase.auth.getSession().then(({data:{session}})=>{
           if(session?.user){
-            DB._formatUser(session.user).then(u=>setUser(u));
-          } else {
-            // Tenta refresh — NÃO desloga se falhar (pode ser apenas lentidão)
-            supabase.auth.refreshSession().then(({data:{session:s}})=>{
-              if(s?.user){DB._formatUser(s.user).then(u=>setUser(u));}
-              // Se refresh falhar, NÃO desloga — mantém usuário atual
-            }).catch(()=>{});
+            DB._formatUser(session.user).then(u=>{
+              if(!_loggingOut.current)setUser(u);
+            });
           }
+          // Never logout on visibility change — only on explicit logout
         }).catch(()=>{});
+
+
       }
     };
     document.addEventListener('visibilitychange',handleVisibility);
