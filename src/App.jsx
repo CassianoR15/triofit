@@ -2574,7 +2574,7 @@ function TreinadorPrescrever({user,showToast}){
         {(!planoExistente||planoDeletado)&&(<>
         {/* Config do plano */}
         <div className="card">
-          <div className="card-title">⚙️ {T("prescr.config")||"CONFIGURAÇÕES DO PLANO"}</div>
+          <div className="card-title">⚙️ CONFIGURAÇÕES DO PLANO</div>
           <div className="grid-2">
             <div className="form-group">
               <label className="form-label">{T("prescr.nomePlano")}</label>
@@ -2608,7 +2608,7 @@ function TreinadorPrescrever({user,showToast}){
 
         {/* Dias da semana */}
         <div className="card">
-          <div className="card-title">📅 {T("prescr.diasTreino")||"DIAS DE TREINO"}</div>
+          <div className="card-title">📅 DIAS DE TREINO</div>
           {/* Selector de dia */}
           <div style={{display:"flex",gap:"6px",flexWrap:"wrap",marginBottom:"16px"}}>
             {DIAS_SEMANA.map((d_nome,i)=>(
