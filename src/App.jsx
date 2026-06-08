@@ -2415,94 +2415,98 @@ function AlunoDash({
   );
 }
 
-function TreinadorPrescrever({
-  user,showToast,setPage}){
-  useLang();
-const [saving,setSaving]=useState(false);
+function TreinadorPrescrever({user,showToast}){
   const [alunos,setAlunos]=useState([]);
-  useEffect(()=>{
-    DB.getAlunosDe(user.id).then(d=>{
-      const base=d||[];
-      if(DEMO_IDS.includes(user.id)){
-        const demo=DEMO_ALUNO;
-        setAlunos(base.some(a=>a.id===demo.id)?base:[demo,...base]);
-      } else setAlunos(base);
-    }).catch(()=>setAlunos([]));
-  },[user.id]);
   const [alunoSel,setAlunoSel]=useState(null);
-  const [planoDeletado,setPlanoDeletado]=useState(false);
-
-  const [confirmandoDeletar,setConfirmandoDeletar]=useState(false);
-  const [formKey,setFormKey]=useState(0);
   const [nomePlano,setNomePlano]=useState("Treino A/B/C");
   const [modalidade,setModalidade]=useState("musculacao");
   const [duracao,setDuracao]=useState(1);
-  const [periodizacao,setPeriodizacao]=useState("linear");
   const [inicio,setInicio]=useState(()=>new Date().toISOString().split("T")[0]);
-  const [dias,setDias]=useState(()=>DIAS_SEMANA.map((_,i)=>({nome:`Treino ${String.fromCharCode(65+i)}`,tipo:i<5?"academia":"descanso",obs:"",exercicios:[]})));
+  const [dias,setDias]=useState(()=>DIAS_SEMANA.map((_,i)=>({
+    nome:`Treino ${String.fromCharCode(65+i)}`,
+    tipo:i<5?"academia":"descanso",
+    exercicios:[]
+  })));
   const [diaEdit,setDiaEdit]=useState(0);
   const [novoEx,setNovoEx]=useState({nome:"",series:"",reps:"",carga:"",video:"",obs:""});
+  const [salvando,setSalvando]=useState(false);
+  const [planoDeletado,setPlanoDeletado]=useState(false);
+  useLang();
 
-  function resetForm(){
-    setAlunoSel(null);
-    setNomePlano("Treino A/B/C");
-    setModalidade("musculacao");
-    setDuracao(1);
-    setPeriodizacao("linear");
-    setInicio(new Date().toISOString().split("T")[0]);
-    setDias(DIAS_SEMANA.map((_,i)=>({nome:`Treino ${String.fromCharCode(65+i)}`,tipo:i<5?"academia":"descanso",obs:"",exercicios:[]})));
-    setDiaEdit(0);
-    setNovoEx({nome:"",series:"",reps:"",carga:"",video:"",obs:""});
-    setFormKey(k=>k+1);
+  // Carregar alunos (uma única vez)
+  useEffect(()=>{
+    let cancelled=false;
+    DB.getAlunosDe(user.id).then(d=>{
+      if(cancelled)return;
+      const base=d||[];
+      if(DEMO_IDS.includes(user.id)){
+        setAlunos(base.some(a=>a.id===DEMO_ALUNO_ID)?base:[DEMO_ALUNO,...base]);
+      } else {
+        setAlunos(base);
+      }
+    }).catch(()=>setAlunos([]));
+    return()=>{cancelled=true;};
+  },[user.id]);
+
+  // Selecionar aluno
+  function selecionarAluno(a){
+    if(!a){setAlunoSel(null);return;}
+    setAlunoSel({id:a.id||"",nome:a.nome||"",email:a.email||"",role:a.role||"aluno",...a});
+    setPlanoDeletado(false);
   }
 
-  function setDiaTipo(i,tipo){setDias(p=>{const n=[...p];n[i]={...n[i],tipo};return n;});}
-  function setDiaNome(i,nome){setDias(p=>{const n=[...p];n[i]={...n[i],nome};return n;});}
-  function setDiaObs(i,obs){setDias(p=>{const n=[...p];n[i]={...n[i],obs};return n;});}
-  function addEx(i){
-    if(!novoEx.nome)return;
-    setDias(p=>{const n=[...p];n[i]={...n[i],exercicios:[...(n[i].exercicios||[]),{...novoEx}]};return n;});
+  // Adicionar exercício
+  function addExercicio(){
+    if(!novoEx.nome.trim())return;
+    setDias(prev=>{
+      const n=[...prev];
+      n[diaEdit]={...n[diaEdit],exercicios:[...(n[diaEdit].exercicios||[]),{...novoEx}]};
+      return n;
+    });
     setNovoEx({nome:"",series:"",reps:"",carga:"",video:"",obs:""});
   }
-  function removeEx(di,ei){setDias(p=>{const n=[...p];n[di]={...n[di],exercicios:n[di].exercicios.filter((_,j)=>j!==ei)};return n;});}
 
+  // Remover exercício
+  function removeExercicio(di,ei){
+    setDias(prev=>{
+      const n=[...prev];
+      n[di]={...n[di],exercicios:n[di].exercicios.filter((_,j)=>j!==ei)};
+      return n;
+    });
+  }
+
+  // Salvar plano
   async function salvar(){
-    if(!alunoSel){showToast&&showToast("Selecione um aluno primeiro","warn");return;}
-    const diasSemEx=dias.filter(d=>d.tipo!=="descanso"&&(!d.exercicios||d.exercicios.length===0));
-    if(diasSemEx.length>0){showToast&&showToast(`⚠️ ${diasSemEx.map(d=>d.nome).join(", ")} sem exercícios. Verifique o plano.`,"warn");}
-    const fimDate=addMonths(new Date(inicio),duracao);
-    // Enrich exercises with videos from bank
-    const diasEnriquecidos=dias.map(d=>({...d,exercicios:(d.exercicios||[]).map(ex=>{
-      if(ex.video)return ex;
-      const found=BANCO_EXERCICIOS.find(b=>b.nome.toLowerCase()===ex.nome.toLowerCase());
-      return found?{...ex,video:found.video}:ex;
-    })}));
-    const plano={nome:nomePlano,modalidade,duracao,inicio,fim:fimDate.toISOString(),dias:diasEnriquecidos,periodizacao,criadoEm:new Date().toISOString()};
+    if(!alunoSel?.id)return;
+    setSalvando(true);
     try{
-      const nomeAluno=alunoSel.nome;
-      const idAluno=alunoSel.id;
-      await DB.setData("plano_treino_aluno",idAluno,plano);
-      try{await DB.criarNotificacao(idAluno,"treino","Novo treino disponivel",`${user.nome} prescreveu um novo plano para voce!`);}catch{}
-      resetForm();
-      showToast&&showToast(`✅ Plano enviado para ${nomeAluno.split(" ")[0]}! O aluno já pode ver no app.`);
-    }catch(e){
-      showToast&&showToast("Erro ao salvar: "+e.message,"warn");
-    }
-  }
-
-  const diaAtual=dias[diaEdit]||{exercicios:[]};
-  const fimDate=addMonths(new Date(inicio),duracao);
-
-  function handleSelectAluno(a){
-    if(a){
-      const safe={id:a.id||"",nome:a.nome||"",email:a.email||"",
-        objetivo:a.objetivo||"",role:a.role||"aluno",...a};
-      setPlanoDeletado(false);
-      setAlunoSel(safe);
-    } else {
+      const fim=new Date(inicio);
+      fim.setMonth(fim.getMonth()+Number(duracao));
+      const plano={
+        nome:nomePlano,modalidade,duracao:Number(duracao),
+        inicio,fim:fim.toISOString(),
+        periodizacao:"linear",
+        dias:dias.map(d=>({...d,exercicios:d.exercicios||[]})),
+        criadoEm:new Date().toISOString()
+      };
+      await DB.setData("plano_treino_aluno",alunoSel.id,plano);
+      // Notificar aluno
+      try{await DB.criarNotificacao(alunoSel.id,"treino","Novo plano de treino!",
+        `${user.nome} prescreveu um novo plano para você!`);}catch{}
+      showToast&&showToast(`✅ Plano enviado para ${alunoSel.nome}!`,"success");
       setAlunoSel(null);
+      setNomePlano("Treino A/B/C");
+      setDias(DIAS_SEMANA.map((_,i)=>({nome:`Treino ${String.fromCharCode(65+i)}`,tipo:i<5?"academia":"descanso",exercicios:[]})));
+      setDiaEdit(0);
+    }catch(e){
+      showToast&&showToast("Erro ao salvar plano: "+e.message,"warn");
     }
+    setSalvando(false);
   }
+
+  const d=dias[diaEdit]||{};
+  const TIPOS=[["academia","🏋️ Academia"],["corrida","🏃 Corrida"],["descanso","😴 Descanso"],
+    ["natacao","🏊 Natação"],["luta","🥊 Luta"],["ciclismo","🚴 Ciclismo"],["funcional","⚡ Funcional"]];
 
   return(
     <div className="page">
@@ -2510,650 +2514,134 @@ const [saving,setSaving]=useState(false);
         <div className="page-title orange">{T("paginas.prescrever")}</div>
         <div className="page-sub">{T("prescr.instrucao")}</div>
       </div>
-      {(alunos||[]).length===0&&<div className="alert alert-warn">⚠️ Nenhum aluno vinculado. Cadastre um aluno primeiro.</div>}
+
+      {/* Selecionar aluno */}
       <div className="card">
-        <div className="card-title">👤 SELECIONAR ALUNO</div>
-        {planoDeletado&&<div style={{padding:"0.75rem",background:"#22c55e18",border:"2px solid var(--green)",borderRadius:"8px",marginBottom:"0.75rem",textAlign:"center"}}>
-          <div style={{fontWeight:700,color:"var(--green)"}}>✅ Plano deletado! Selecione o aluno para criar novo plano.</div>
-        </div>}
-        <AlunoSelector alunos={alunos||[]} selecionado={alunoSel} onSelect={handleSelectAluno} accentClass="active orange"/>
-        {!alunoSel&&(alunos||[]).length>0&&<div style={{color:"var(--text3)",fontSize:"0.85rem",padding:"0.5rem 0"}}>{T("prescr.selecioneAluno")}</div>}
+        <div className="card-title">👤 {T("geral.selecionarAluno")}</div>
+        {alunos.length===0
+          ?<div className="alert alert-warn">⚠️ {T("prescr.nenhumAluno")}</div>
+          :<AlunoSelector alunos={alunos} selecionado={alunoSel} onSelect={selecionarAluno} accentClass="active orange"/>
+        }
       </div>
 
-      {alunoSel&&(
-        <>
-          <div className="card">
-            <div className="card-title">⚙️ CONFIGURAÇÕES DO PLANO</div>
-            <div className="grid-2">
-              <div className="form-group"><label className="form-label">{T("prescr.nomePlano")}</label><input className="form-input" value={nomePlano} onChange={e=>setNomePlano(e.target.value)} placeholder="Ex: Treino A/B/C"/></div>
-              <div className="form-group"><label className="form-label">{T("prescr.modalidade")}</label>
-                <select className="form-select" value={modalidade} onChange={e=>setModalidade(e.target.value)}>
-                  <option value="musculacao">💪 Musculação</option>
-                  <option value="corrida">🏃 Corrida</option>
-                  <option value="natacao">🏊 Natação</option>
-                  <option value="luta">🥊 Luta / Artes Marciais</option>
-                  <option value="ciclismo">🚴 Ciclismo</option>
-                  <option value="caminhada">🚶 Caminhada</option>
-                  <option value="funcional">⚡ Funcional</option>
-                </select>
-              </div>
+      {alunoSel&&(<>
+        {/* Config do plano */}
+        <div className="card">
+          <div className="card-title">⚙️ {T("prescr.config")||"CONFIGURAÇÕES DO PLANO"}</div>
+          <div className="grid-2">
+            <div className="form-group">
+              <label className="form-label">{T("prescr.nomePlano")}</label>
+              <input className="form-input" value={nomePlano} onChange={e=>setNomePlano(e.target.value)} placeholder="Ex: Treino A/B/C"/>
             </div>
-            <div className="grid-2">
-              <div className="form-group"><label className="form-label">{T("prescr.dataInicio")}</label><input type="date" className="form-input" value={inicio} onChange={e=>setInicio(e.target.value)}/></div>
-              <div className="form-group"><label className="form-label">{T("prescr.duracao")}</label>
-                <select className="form-select" value={duracao} onChange={e=>setDuracao(Number(e.target.value))}>
-                  <option value={1}>1 mês</option><option value={2}>2 meses</option><option value={3}>3 meses</option>
-                </select>
-              </div>
-            </div>
-            <div className="form-group"><label className="form-label">{T("prescr.periodizacao")}</label>
-              <select className="form-select" value={periodizacao} onChange={e=>setPeriodizacao(e.target.value)}>
-                <option value="linear">📈 Linear</option>
-                <option value="ondulada">〰️ Ondulada</option>
-                <option value="bloco">🧱 Por Blocos</option>
-                <option value="conjugada">🔀 Conjugada</option>
-                <option value="livre">✏️ Livre</option>
+            <div className="form-group">
+              <label className="form-label">{T("prescr.modalidade")}</label>
+              <select className="form-select" value={modalidade} onChange={e=>setModalidade(e.target.value)}>
+                <option value="musculacao">💪 Musculação</option>
+                <option value="corrida">🏃 Corrida</option>
+                <option value="natacao">🏊 Natação</option>
+                <option value="luta">🥊 Luta / Artes Marciais</option>
+                <option value="ciclismo">🚴 Ciclismo</option>
+                <option value="funcional">⚡ Funcional</option>
               </select>
             </div>
-            <div className="periodo-card">
-              <div style={{fontSize:"0.75rem",color:"var(--text3)",marginBottom:"0.25rem"}}>{T("prescr.vigencia")}</div>
-              <div style={{fontWeight:600}}>{fmtDate(inicio)} → {fmtDate(fimDate.toISOString())}</div>
-              <div style={{fontSize:"0.8rem",color:"var(--text2)"}}>{duracao} {duracao===1?"mês":"meses"} • {nomePlano} para {alunoSel.nome}</div>
+          </div>
+          <div className="grid-2">
+            <div className="form-group">
+              <label className="form-label">{T("prescr.dataInicio")}</label>
+              <input className="form-input" type="date" value={inicio} onChange={e=>setInicio(e.target.value)}/>
+            </div>
+            <div className="form-group">
+              <label className="form-label">{T("prescr.duracao")}</label>
+              <select className="form-select" value={duracao} onChange={e=>setDuracao(Number(e.target.value))}>
+                {[1,2,3,4,6].map(m=><option key={m} value={m}>{m} {m===1?"mês":"meses"}</option>)}
+              </select>
             </div>
           </div>
-
-          <div className="card">
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"0.5rem"}}>
-              <div className="card-title" style={{marginBottom:0}}>📅 MONTAR OS DIAS DA SEMANA</div>
-              <div style={{fontSize:"0.78rem",color:"var(--text2)"}}>
-                💪 {dias.filter(d=>d.tipo!=="descanso").length} treinos/sem &nbsp;•&nbsp;
-                📦 {dias.reduce((acc,d)=>acc+(d.exercicios?.length||0),0)} exercícios
-              </div>
-            </div>
-            <div className="week-tabs">
-              {DIAS_SEMANA.map((d,i)=>(
-                <button key={i} className={`btn btn-sm ${diaEdit===i?"btn-primary":""}`} onClick={()=>setDiaEdit(i)} style={{position:"relative"}}>
-                  {d.slice(0,3)}{dias[i]?.tipo==="descanso"?" 😴":""}
-                  {dias[i]?.tipo!=="descanso"&&dias[i]?.exercicios?.length>0&&
-                    <span style={{fontSize:"0.6rem",color:"var(--green)",display:"block"}}>✓{dias[i].exercicios.length}ex</span>}
-                </button>
-              ))}
-            </div>
-
-            <div style={{marginTop:"1rem"}}>
-              <div className="form-group"><label className="form-label">{T("prescr.tipoDia")}</label>
-                <select className="form-select" value={diaAtual.tipo||"academia"} onChange={e=>setDiaTipo(diaEdit,e.target.value)}>
-                  <option value="descanso">😴 Descanso</option>
-                  <option value="academia">🏋️ Academia</option>
-                  <option value="corrida">🏃 Corrida</option>
-                  <option value="natacao">🏊 Natação</option>
-                  <option value="luta">🥊 Luta</option>
-                  <option value="ciclismo">🚴 Ciclismo</option>
-                  <option value="funcional">⚡ Funcional</option>
-                  <option value="caminhada">🚶 Caminhada</option>
-                </select>
-              </div>
-              {diaAtual.tipo!=="descanso"&&(
-                <>
-                  <div className="form-group"><label className="form-label">{T("prescr.nomeTreino")}</label>
-                    <input className="form-input" value={diaAtual.nome||""} onChange={e=>setDiaNome(diaEdit,e.target.value)} placeholder={T("prescr.treinoEx")}/>
-                  </div>
-                  <div className="form-group"><label className="form-label">{T("prescr.obsDia")}</label>
-                    <input className="form-input" value={diaAtual.obs||""} onChange={e=>setDiaObs(diaEdit,e.target.value)} placeholder={T("prescr.obsEx")}/>
-                  </div>
-                  <div style={{marginBottom:"0.75rem"}}>
-                    {(diaAtual.exercicios||[]).map((ex,ei)=>(
-                      <div key={ei} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"0.4rem 0",borderBottom:"1px solid var(--border)"}}>
-                        <div>
-                          <div style={{fontWeight:500}}>{ex.nome}</div>
-                          {ex.obs&&<div style={{fontSize:"11px",color:"var(--orange)",fontStyle:"italic",marginTop:"2px"}}>💡 {ex.obs}</div>}
-                          <div style={{fontSize:"0.78rem",color:"var(--text2)"}}>{ex.series&&`${ex.series}x`} {ex.reps} {ex.carga&&`• ${ex.carga}`}</div>
-                          {ex.video&&<a href={ex.video} target="_blank" rel="noreferrer" style={{fontSize:"0.7rem",color:"var(--green)"}}>▶ Ver vídeo</a>}
-                        </div>
-                        <button className="btn btn-ghost btn-sm" style={{color:"var(--red)"}} onClick={()=>removeEx(diaEdit,ei)}>✕</button>
-                      </div>
-                    ))}
-                  </div>
-                  <div style={{background:"var(--bg)",borderRadius:"8px",padding:"0.75rem",border:"1px solid var(--border)"}}>
-                    <div style={{fontSize:"0.8rem",color:"var(--text3)",marginBottom:"0.75rem",textTransform:"uppercase",letterSpacing:"0.05em",fontWeight:600}}>+ Adicionar exercício</div>
-                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"10px"}}>
-                      <div className="form-group">
-                        <label className="form-label">{T("geral.nome")}</label>
-                        <input className="form-input" placeholder="Ex: Supino Reto" list="banco-ex-list" value={novoEx.nome}
-                          onInput={e=>{const match=BANCO_EXERCICIOS.find(b=>b.nome.toLowerCase()===e.target.value.toLowerCase());if(match)setNovoEx(p=>({...p,nome:match.nome,video:match.video}));}}
-                          onChange={e=>{setNovoEx(p=>({...p,nome:e.target.value}));}}
-                          onBlur={e=>{const match=BANCO_EXERCICIOS.find(b=>b.nome.toLowerCase()===e.target.value.toLowerCase());if(match)setNovoEx(p=>({...p,video:p.video||match.video}));}}/>
-                        <datalist id="banco-ex-list">{React.useMemo(()=>BANCO_EXERCICIOS.map(b=><option key={b.nome} value={b.nome}/>),[])}</datalist>
-                      </div>
-                      <div className="form-group">
-                        <label className="form-label">{T("prescr.series")}</label>
-                        <input className="form-input" placeholder="Ex: 4" value={novoEx.series} onChange={e=>setNovoEx(p=>({...p,series:e.target.value}))}/>
-                      </div>
-                      <div className="form-group">
-                        <label className="form-label">{T("treinador.reps")}</label>
-                        <input className="form-input" placeholder="Ex: 8-10 ou 30s" value={novoEx.reps} onChange={e=>setNovoEx(p=>({...p,reps:e.target.value}))}/>
-                      </div>
-                      <div className="form-group">
-                        <label className="form-label">{T("treinador.carga")}</label>
-                        <input className="form-input" placeholder="Ex: 80kg" value={novoEx.carga} onChange={e=>setNovoEx(p=>({...p,carga:e.target.value}))}/>
-                      </div>
-                      <div className="form-group" style={{gridColumn:"1 / -1"}}>
-                        <label className="form-label">Observação do exercício <span style={{color:"var(--text3)",fontWeight:400,fontSize:"11px"}}>(opcional — ex: lento e foco na coxa)</span></label>
-                        <input className="form-input" placeholder={T("prescr.dicaEx")} value={novoEx.obs||""} onChange={e=>setNovoEx(p=>({...p,obs:e.target.value}))}/>
-                      </div>
-                      <div className="form-group" style={{gridColumn:"1 / -1"}}>
-                        <input className="form-input" placeholder="🎬 Link YouTube (preenchido automaticamente)" value={novoEx.video||""}
-                          onChange={e=>setNovoEx(p=>({...p,video:e.target.value}))}
-                          style={{borderColor:novoEx.video?"var(--green)":"var(--border2)"}}/>
-                        {novoEx.video&&<div style={{fontSize:"11px",color:"var(--green2)",marginTop:"4px",fontWeight:500}}>✅ Vídeo vinculado — aluno verá ▶ Ver execução</div>}
-                      </div>
-                    </div>
-                    <button className="btn btn-orange btn-sm" style={{marginTop:"10px",width:"100%"}} onClick={()=>addEx(diaEdit)}>+ Adicionar exercício</button>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-
-          <div style={{display:"flex",gap:"0.5rem",marginBottom:"0.5rem",flexWrap:"wrap"}}>
-            {!confirmandoDeletar?(
-              <button className="btn btn-sm btn-ghost" style={{color:"var(--red)"}} onClick={()=>setConfirmandoDeletar(true)}>
-                🗑️ Deletar plano atual
-              </button>
-            ):(
-              <>
-                <span style={{fontSize:"0.82rem",color:"var(--red)",alignSelf:"center"}}>{T("geral.confirmarExclusao")}</span>
-                <button className="btn btn-sm btn-ghost" style={{color:"var(--red)",fontWeight:700}} onClick={async()=>{
-                  setConfirmandoDeletar(false);
-                  await DB.setData("plano_treino_aluno",alunoSel.id,null);
-                  sessionStorage.setItem("tf_goto","prescrever");
-                  sessionStorage.setItem("tf_toast","Plano deletado! Monte um novo plano.");
-                  window.location.reload();
-                }}>✅ Sim, deletar</button>
-                <button className="btn btn-sm btn-ghost" onClick={()=>setConfirmandoDeletar(false)}>{T("geral.cancelar")}</button>
-              </>
-            )}
-          </div>
-          <button className="btn btn-orange btn-full" onClick={salvar} disabled={saving}>📤 Enviar plano para {alunoSel?.nome||"aluno"}</button>
-        </>
-      )}
-    </div>
-  );
-}
-function ResumoSemanalAluno({aluno,onVerCompleto}){
-  const [saude]=useAlunoData(aluno.id,"saude",{});
-  const [agua]=useAlunoData(aluno.id,"agua_hoje",0);
-  const [meta]=useAlunoData(aluno.id,"meta_agua",3000);
-  const [planoTreino]=useAlunoData(aluno.id,"plano_treino_aluno",null);
-  const [av]=useAlunoData(aluno.id,"treino_avaliacao",{});
-  const [avalFisica]=useAlunoData(aluno.id,"avaliacao",{});
-  const [avalHist]=useAlunoData(aluno.id,"avaliacao_hist",[]);
-  const [compsData]=useAlunoData(aluno.id,"competicoes",[]);
-  const proximaComp=Array.isArray(compsData)?compsData.filter(c=>new Date(c.data)>new Date()).sort((a,b)=>new Date(a.data)-new Date(b.data))[0]:null;
-  const [objAluno,setObjAluno]=useState(aluno.objetivo||null);
-  useEffect(()=>{
-    if(!aluno.id)return;
-    let c=false;
-    supabase.from("profiles").select("objetivo").eq("id",aluno.id).maybeSingle()
-      .then(({data})=>{if(!c&&data?.objetivo)setObjAluno(data.objetivo);}).catch(()=>{});
-    return()=>{c=true;};
-  },[aluno.id]);
-  const diasDoente=saude.doente_desde?diffDays(saude.doente_desde):0;
-
-  // Contar dias de treino feitos (baseado no check)
-  const [check]=useAlunoData(aluno.id,"treino_check_hoje",{});
-  // Simular quais dias têm exercícios marcados essa semana
-  const diasTreino=planoTreino?.dias||[];
-  const diasComTreino=diasTreino.filter(d=>d.tipo!=="descanso").length;
-
-  // Média de água (só temos hoje, mostrar o de hoje)
-  const pctAgua=Math.round((agua/meta)*100);
-
-  // Ícone da modalidade principal
-  const modIcons={musculacao:"🏋️",corrida:"🏃",natacao:"🏊",luta:"🥊",ciclismo:"🚴",funcional:"⚡",caminhada:"🚶"};
-  const modIcon=modIcons[planoTreino?.modalidade]||"🏋️";
-
-  return(
-    <div className="card" style={{cursor:"pointer"}} onClick={onVerCompleto}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:"1rem"}}>
-        <div>
-          <div style={{fontFamily:"var(--font-display)",fontSize:"1.3rem",letterSpacing:"0.05em"}}>{aluno.nome}</div>
-          {planoTreino&&<div style={{fontSize:"0.78rem",color:"var(--text2)",marginTop:"0.15rem"}}>{modIcon} {planoTreino.nome} • até {fmtDate(planoTreino.fim)}</div>}
         </div>
-        <div style={{display:"flex",gap:"0.4rem",flexWrap:"wrap",alignItems:"center"}}>
-          {saude.doente&&<span className="tag tag-red">🩒 {diasDoente}d</span>}
-          {objAluno&&(()=>{const obj=getObjetivo(objAluno);return(
-            <span style={{fontSize:"0.7rem",padding:"2px 8px",borderRadius:"20px",
-              border:"1.5px solid "+obj.color,color:obj.color,background:obj.color+"18",fontWeight:500,whiteSpace:"nowrap"}}>
-              {obj.icon} {obj.label}
-            </span>
-          );})()}
-          {saude.dores&&saude.dores.length>0&&<span className="tag tag-orange">🔴 {saude.dores.length} dor{saude.dores.length>1?"es":""}</span>}
-          {saude.mens&&<span className="tag tag-orange">🔴 Ciclo</span>}
-        </div>
-      </div>
 
-      {/* LINHA DE RESUMO */}
-      <div className="grid-3" style={{marginBottom:"1rem"}}>
-        <div style={{background:"var(--bg2)",borderRadius:"var(--radius)",padding:"0.85rem",textAlign:"center"}}>
-          <div style={{fontSize:"0.65rem",color:"var(--text3)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:"0.25rem"}}>{T("resumo.aguaHoje")}</div>
-          <div style={{fontFamily:"var(--font-display)",fontSize:"1.5rem",color:"var(--blue)"}}>{pctAgua}%</div>
-          <div style={{fontSize:"0.7rem",color:"var(--text3)"}}>{(agua/1000).toFixed(1)}L / {(meta/1000).toFixed(1)}L</div>
-        </div>
-        <div style={{background:"var(--bg2)",borderRadius:"var(--radius)",padding:"0.85rem",textAlign:"center"}}>
-          <div style={{fontSize:"0.65rem",color:"var(--text3)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:"0.25rem"}}>{T("resumo.diasTreino")}</div>
-          <div style={{fontFamily:"var(--font-display)",fontSize:"1.5rem",color:"var(--green)"}}>{diasComTreino}</div>
-          <div style={{fontSize:"0.7rem",color:"var(--text3)"}}>{T("resumo.diasComTreino")}</div>
-        </div>
-        <div style={{background:"var(--bg2)",borderRadius:"var(--radius)",padding:"0.85rem",textAlign:"center"}}>
-          <div style={{fontSize:"0.65rem",color:"var(--text3)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:"0.25rem"}}>{T("resumo.ultimoTreino")}</div>
-          <div style={{fontSize:"1.2rem"}}>{av.rating>0?"★".repeat(av.rating):"—"}</div>
-          <div style={{fontSize:"0.7rem",color:"var(--text3)"}}>{av.rating>0?`nota ${av.rating}/5`:T("resumo.semAval")}</div>
-        </div>
-      </div>
-
-      {/* DIAS DA SEMANA RESUMO */}
-      {planoTreino?.dias&&(
-        <div>
-          <div style={{fontSize:"0.7rem",color:"var(--text3)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:"0.5rem"}}>{T("resumo.semanaTreinos")}</div>
-          <div style={{display:"flex",gap:"0.3rem"}}>
-            {(planoTreino?.dias||[]).map((d,i)=>{
-              const tipoIcons={descanso:"😴",academia:"🏋️",corrida:"🏃",natacao:"🏊",luta:"🥊",ciclismo:"🚴",funcional:"⚡",caminhada:"🚶",treino:"🏋️"};
-              return(
-                <div key={i} style={{flex:1,textAlign:"center",padding:"0.4rem 0.2rem",background:"var(--bg2)",borderRadius:"8px",fontSize:"0.65rem"}}>
-                  <div style={{fontSize:"1rem",marginBottom:"0.15rem"}}>{tipoIcons[d.tipo]||"🏋️"}</div>
-                  <div style={{color:"var(--text3)"}}>{DIAS_SEMANA[i].slice(0,3)}</div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      <div style={{fontSize:"0.8rem",color:"var(--orange)",marginTop:"1rem"}}>{T("resumo.verRelatorio")}</div>
-    </div>
-  );
-}
-
-// Diário completo — visão mensal
-function DiarioAluno({aluno,onBack}){
-  const [saude]=useAlunoData(aluno.id,"saude",{});
-  const [treino]=useAlunoData(aluno.id,"treino_avaliacao",{});
-  const [alimCheck]=useAlunoData(aluno.id,"alim_check_hoje",{});
-  const [planoAlim]=useAlunoData(aluno.id,"plano_alim_aluno",null);
-  const [agua]=useAlunoData(aluno.id,"agua_hoje",0);
-  const [metaAgua]=useAlunoData(aluno.id,"meta_agua",3000);
-  const [aval]=useAlunoData(aluno.id,"avaliacao",{});
-  const [avalHist]=useAlunoData(aluno.id,"avaliacao_hist",[]);
-  const [objAluno,setObjAluno]=useState(aluno.objetivo||null);
-  useEffect(()=>{
-    if(!aluno.id)return;
-    let c=false;
-    supabase.from("profiles").select("objetivo").eq("id",aluno.id).maybeSingle()
-      .then(({data})=>{if(!c&&data?.objetivo)setObjAluno(data.objetivo);}).catch(()=>{});
-    return()=>{c=true;};
-  },[aluno.id]);
-  const [comps]=useAlunoData(aluno.id,"competicoes",[]);
-  const [planoTreino]=useAlunoData(aluno.id,"plano_treino_aluno",null);
-  const proximaComp=Array.isArray(comps)?comps.filter(c=>{try{return new Date(c.data)>new Date();}catch{return false;}}).sort((a,b)=>new Date(a.data)-new Date(b.data))[0]||null:null;
-  const refeicoes=(planoAlim?.refeicoes)||[];
-  const qtdComido=Object.values(alimCheck).filter(Boolean).length;
-  const diasDoente=saude.doente_desde?diffDays(saude.doente_desde):0;
-
-  const tipoIcons={descanso:"😴",academia:"🏋️",corrida:"🏃",natacao:"🏊",luta:"🥊",ciclismo:"🚴",funcional:"⚡",caminhada:"🚶",treino:"🏋️"};
-  const modIcons={musculacao:"🏋️",corrida:"🏃",natacao:"🏊",luta:"🥊",ciclismo:"🚴",funcional:"⚡",caminhada:"🚶"};
-
-  return(
-    <div className="page">
-      {/* HEADER PREMIUM */}
-      <div style={{display:"flex",alignItems:"center",gap:"12px",marginBottom:"20px",
-        background:"linear-gradient(135deg,rgba(96,165,250,0.08),rgba(96,165,250,0.02))",
-        border:"1px solid rgba(96,165,250,0.15)",borderRadius:"var(--r)",padding:"16px"}}>
-        <button onClick={onBack}
-          style={{width:"36px",height:"36px",borderRadius:"50%",border:"1px solid var(--border)",
-            background:"var(--card2)",cursor:"pointer",display:"flex",alignItems:"center",
-            justifyContent:"center",fontSize:"16px",flexShrink:0}}>←</button>
-        <div style={{width:"46px",height:"46px",borderRadius:"50%",flexShrink:0,
-          background:"linear-gradient(135deg,rgba(96,165,250,0.15),rgba(96,165,250,0.05))",
-          border:"1.5px solid rgba(96,165,250,0.3)",display:"flex",alignItems:"center",
-          justifyContent:"center",fontWeight:700,color:"#60a5fa",fontSize:"16px"}}>
-          {initials(aluno.nome)}
-        </div>
-        <div style={{flex:1,minWidth:0}}>
-          <div style={{fontFamily:"var(--font-display)",fontSize:"1.2rem",fontWeight:700,
-            marginBottom:"2px",letterSpacing:"-0.3px"}}>{aluno.nome}</div>
-          <div style={{fontSize:"12px",color:"var(--text3)"}}>{T("diario.relatorio")}</div>
-        </div>
-        {objAluno&&(()=>{const obj=getObjetivo(objAluno);return(
-          <span style={{fontSize:"11px",padding:"4px 10px",borderRadius:"20px",
-            border:"1.5px solid "+obj.color,color:obj.color,background:obj.color+"18",fontWeight:700,flexShrink:0}}>
-            {obj.icon} {obj.label}
-          </span>
-        );})()}
-      </div>
-
-      {/* DADOS PESSOAIS */}
-      <div className="card">
-        <div style={{display:"flex",alignItems:"center",gap:"8px",marginBottom:"14px"}}>
-          <div style={{width:"8px",height:"8px",borderRadius:"50%",background:"#60a5fa",
-            boxShadow:"0 0 8px rgba(96,165,250,0.5)"}}/>
-          <span style={{fontSize:"10px",fontWeight:700,textTransform:"uppercase",
-            letterSpacing:"0.1em",color:"var(--text3)"}}>{T("diario.perfilPaciente")}</span>
-        </div>
-        {Array.isArray(avalHist)&&avalHist.length>1&&(()=>{
-          const pts=avalHist.filter(h=>h.peso);
-          if(pts.length<2)return null;
-          const pesos=pts.map(h=>parseFloat(h.peso));
-          const diff=(pesos[pesos.length-1]-pesos[0]).toFixed(1);
-          const w=280,hh=60;
-          const xp=(i)=>10+(i/(pts.length-1||1))*(w-20);
-          const yp=(v)=>hh-6-((v-Math.min(...pesos)+2)/(Math.max(...pesos)-Math.min(...pesos)+4||1))*(hh-12);
-          const path=pts.map((p,i)=>`${i===0?"M":"L"}${xp(i).toFixed(1)},${yp(parseFloat(p.peso)).toFixed(1)}`).join(" ");
-          return(
-            <div style={{marginBottom:"0.75rem",padding:"0.75rem",background:"var(--bg)",borderRadius:"8px"}}>
-              <div style={{display:"flex",gap:"0.75rem",marginBottom:"0.5rem",flexWrap:"wrap"}}>
-                <div style={{flex:1}}><div style={{fontSize:"0.75rem",color:"var(--text2)"}}>{T("diario.variacaoTotal")}</div>
-                  <div style={{fontWeight:600,color:parseFloat(diff)<0?"var(--green)":"var(--orange)"}}>{parseFloat(diff)>0?"+":""}{diff}kg</div></div>
-                <div style={{flex:1}}><div style={{fontSize:"0.75rem",color:"var(--text2)"}}>{T("aval.registros")}</div>
-                  <div style={{fontWeight:600}}>{pts.length}</div></div>
-              </div>
-              <svg viewBox={`0 0 ${w} ${hh}`} style={{width:"100%",height:"60px"}}>
-                <path d={path} fill="none" stroke="var(--green)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                {pts.map((p,i)=>(<g key={i}><circle cx={xp(i)} cy={yp(parseFloat(p.peso))} r="2.5" fill="var(--green)"/>{(i===0||i===pts.length-1)&&<text x={xp(i)} y={yp(parseFloat(p.peso))-5} textAnchor="middle" fontSize="8" fill="var(--text2)">{p.peso}kg</text>}</g>))}
-              </svg>
-            </div>
-          );
-        })()}
-        <div className="grid-3">
-          <div className="diario-section"><div className="diario-label">{T("diario.peso")}</div><div className="diario-val" style={{fontFamily:"var(--font-display)",fontSize:"1.5rem",color:"var(--green)"}}>{aval.peso||"—"}<span style={{fontSize:"0.8rem",color:"var(--text2)"}}>{aval.peso?" kg":""}</span></div></div>
-          <div className="diario-section"><div className="diario-label">% Gordura</div><div className="diario-val" style={{fontFamily:"var(--font-display)",fontSize:"1.5rem",color:"var(--orange)"}}>{aval.gordura||"—"}<span style={{fontSize:"0.8rem",color:"var(--text2)"}}>{aval.gordura?"%":""}</span></div></div>
-          <div className="diario-section"><div className="diario-label">{T("auth.email")}</div><div className="diario-val" style={{fontSize:"0.85rem"}}>{aluno.email}</div></div>
-        </div>
-        {aval.cintura&&(
-          <div className="grid-4" style={{marginTop:"0.75rem",marginBottom:0}}>
-            {[["cintura","Cintura","cm"],["quadril","Quadril","cm"],["braco_d","Braço D","cm"],["perna_d","Perna D","cm"]].map(([k,l,u])=>
-              aval[k]?<div key={k} className="diario-section"><div className="diario-label">{l}</div><div className="diario-val">{aval[k]}{u}</div></div>:null
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* MODALIDADES QUE PRATICA */}
-      {planoTreino&&(
+        {/* Dias da semana */}
         <div className="card">
-          <div className="card-title">🏅 MODALIDADES / PLANO ATIVO</div>
-          <div style={{display:"flex",alignItems:"center",gap:"1rem",marginBottom:"1rem",flexWrap:"wrap"}}>
-            <div style={{fontSize:"2.5rem"}}>{modIcons[planoTreino.modalidade]||"🏋️"}</div>
-            <div>
-              <div style={{fontWeight:600,fontSize:"1rem"}}>{planoTreino.nome}</div>
-              <div style={{fontSize:"0.8rem",color:"var(--text2)"}}>Modalidade: {MODALIDADES.find(m=>m.v===planoTreino.modalidade)?.l||planoTreino.modalidade}</div>
-              <div style={{fontSize:"0.8rem",color:"var(--text2)"}}>{fmtDate(planoTreino.inicio)} → {fmtDate(planoTreino.fim)} • {planoTreino.duracao} {planoTreino.duracao===1?"mês":"meses"}</div>
-            </div>
-          </div>
-
-          {/* SEMANA DETALHADA */}
-          <div style={{fontSize:"0.75rem",color:"var(--text3)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:"0.75rem"}}>{T("diario.distribuicao")}</div>
-          <div style={{display:"flex",gap:"0.5rem",flexWrap:"wrap"}}>
-            {(planoTreino?.dias||[]).map((d,i)=>(
-              <div key={i} style={{flex:"1",minWidth:"80px",background:d.tipo==="descanso"?"var(--bg2)":"var(--card2)",border:d.tipo==="descanso"?"1px solid var(--border)":"1px solid var(--green-dim)",borderRadius:"var(--radius)",padding:"0.65rem",textAlign:"center"}}>
-                <div style={{fontSize:"1.2rem",marginBottom:"0.2rem"}}>{tipoIcons[d.tipo]||"🏋️"}</div>
-                <div style={{fontSize:"0.7rem",fontWeight:600,color:d.tipo==="descanso"?"var(--text3)":"var(--text)"}}>{DIAS_SEMANA[i].slice(0,3)}</div>
-                <div style={{fontSize:"0.65rem",color:"var(--text3)",marginTop:"0.1rem"}}>{d.tipo==="descanso"?"Descanso":d.nome?.split("—")[0]?.trim()||d.tipo}</div>
-                {/* Campos específicos */}
-                {d.distancia&&<div style={{fontSize:"0.65rem",color:"var(--blue)",marginTop:"0.15rem"}}>{d.distancia}</div>}
-                {d.rounds&&<div style={{fontSize:"0.65rem",color:"var(--red)",marginTop:"0.15rem"}}>{d.rounds}</div>}
-              </div>
+          <div className="card-title">📅 {T("prescr.diasTreino")||"DIAS DE TREINO"}</div>
+          {/* Selector de dia */}
+          <div style={{display:"flex",gap:"6px",flexWrap:"wrap",marginBottom:"16px"}}>
+            {DIAS_SEMANA.map((d_nome,i)=>(
+              <button key={i} onClick={()=>setDiaEdit(i)}
+                className={`btn btn-sm ${diaEdit===i?"btn-primary":"btn-ghost"}`}
+                style={{fontSize:"11px",padding:"4px 10px"}}>
+                {d_nome.slice(0,3)} {dias[i]?.tipo==="descanso"?"😴":"🏋️"}
+              </button>
             ))}
           </div>
-        </div>
-      )}
 
-      {proximaComp&&(()=>{
-        const diff=Math.ceil((new Date(proximaComp.data)-new Date())/(1000*60*60*24));
-        const color=diff<=7?"var(--red)":diff<=30?"var(--orange)":"var(--green)";
-        return(
-          <div className="card" style={{borderLeft:"3px solid "+color}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-              <div>
-                <div style={{fontWeight:600,fontSize:"0.9rem"}}>🏆 {proximaComp.nome}</div>
-                <div style={{fontSize:"0.78rem",color:"var(--text2)"}}>{proximaComp.modalidade} • {proximaComp.local}</div>
+          {/* Editar dia selecionado */}
+          <div style={{background:"var(--card2)",borderRadius:"var(--r)",padding:"14px"}}>
+            <div style={{fontWeight:700,marginBottom:"12px",color:"var(--text1)"}}>
+              {DIAS_SEMANA[diaEdit]}
+            </div>
+            <div className="grid-2" style={{marginBottom:"12px"}}>
+              <div className="form-group">
+                <label className="form-label">Tipo</label>
+                <select className="form-select" value={d.tipo||"academia"}
+                  onChange={e=>setDias(prev=>{const n=[...prev];n[diaEdit]={...n[diaEdit],tipo:e.target.value};return n;})}>
+                  {TIPOS.map(([v,l])=><option key={v} value={v}>{l}</option>)}
+                </select>
               </div>
-              <div style={{textAlign:"right"}}>
-                <div style={{fontWeight:700,color,fontSize:"1rem"}}>{diff===0?"HOJE!":diff===1?"Amanhã":diff+"d"}</div>
-                <div style={{fontSize:"0.7rem",color:"var(--text3)"}}>{T("diario.paraProva")}</div>
+              <div className="form-group">
+                <label className="form-label">Nome do treino</label>
+                <input className="form-input" value={d.nome||""} placeholder="Ex: Treino A — Peito"
+                  onChange={e=>setDias(prev=>{const n=[...prev];n[diaEdit]={...n[diaEdit],nome:e.target.value};return n;})}/>
               </div>
             </div>
-          </div>
-        );
-      })()}
-      <div className="card">
-        <div style={{display:"flex",alignItems:"center",gap:"8px",marginBottom:"14px"}}>
-          <div style={{width:"8px",height:"8px",borderRadius:"50%",background:"#60a5fa",
-            boxShadow:"0 0 8px rgba(96,165,250,0.5)"}}/>
-          <span style={{fontSize:"10px",fontWeight:700,textTransform:"uppercase",
-            letterSpacing:"0.1em",color:"var(--text3)"}}>{T("acomp.hidratacao")}</span>
-        </div>
-        <div className="grid-2" style={{marginBottom:"1rem"}}>
-          <div className="diario-section" style={{textAlign:"center"}}>
-            <div className="diario-label">{T("diario.consumoHoje")}</div>
-            <div style={{fontFamily:"var(--font-display)",fontSize:"2.5rem",color:"var(--blue)"}}>{(agua/1000).toFixed(1)}<span style={{fontSize:"0.9rem",color:"var(--text2)"}}>L</span></div>
-          </div>
-          <div className="diario-section" style={{textAlign:"center"}}>
-            <div className="diario-label">{T("diario.metaDiaria")}</div>
-            <div style={{fontFamily:"var(--font-display)",fontSize:"2.5rem",color:"var(--text)"}}>{(metaAgua/1000).toFixed(1)}<span style={{fontSize:"0.9rem",color:"var(--text2)"}}>L</span></div>
-          </div>
-        </div>
-        <div className="prog-wrap">
-          <div className="prog-hdr"><span>{T("diario.atingimento")}: </span><span className="blue">{Math.round((agua/metaAgua)*100)}%</span></div>
-          <div className="prog-track"><div className="prog-fill blue" style={{width:`${Math.min((agua/metaAgua)*100,100)}%`}}/></div>
-        </div>
-      </div>
 
-      {/* TREINO — AVALIAÇÃO */}
-      {treino.rating>0&&(
-        <div className="card">
-          <div className="card-title">🏋️ AVALIAÇÃO DO ÚLTIMO TREINO</div>
-          <div className="grid-2">
-            <div className="diario-section"><div className="diario-label">{T("diario.nota")}</div><div style={{fontSize:"1.8rem"}}>{"★".repeat(treino.rating)}{"☆".repeat(5-treino.rating)}</div></div>
-            <div className="diario-section"><div className="diario-label">{T("diario.data")}</div><div className="diario-val">{treino.data?fmtDate(treino.data):"—"}</div></div>
-          </div>
-          {treino.feedback&&<div className="diario-section" style={{marginTop:"0.5rem"}}><div className="diario-label">Feedback do aluno</div><div className="diario-val">"{treino.feedback}"</div></div>}
-        </div>
-      )}
+            {/* Exercícios do dia */}
+            {d.tipo!=="descanso"&&(<>
+              {(d.exercicios||[]).map((ex,ei)=>(
+                <div key={ei} style={{display:"flex",alignItems:"center",gap:"8px",
+                  background:"var(--card3,var(--card))",borderRadius:"var(--r)",
+                  padding:"8px 12px",marginBottom:"6px"}}>
+                  <div style={{flex:1,fontSize:"13px"}}>
+                    <span style={{fontWeight:600}}>{ex.nome}</span>
+                    {ex.series&&<span style={{color:"var(--text3)",marginLeft:"8px"}}>{ex.series}×{ex.reps} {ex.carga&&`— ${ex.carga}kg`}</span>}
+                  </div>
+                  <button className="btn btn-ghost btn-sm" style={{padding:"2px 8px",color:"var(--red)"}}
+                    onClick={()=>removeExercicio(diaEdit,ei)}>✕</button>
+                </div>
+              ))}
 
-      {/* ALIMENTAÇÃO */}
-      {planoAlim&&(
-        <div className="card">
-          <div className="card-title">🥗 PLANO ALIMENTAR</div>
-          <PeriodoBadge plano={planoAlim}/>
-          <div style={{fontSize:"0.9rem",color:"var(--text2)",marginTop:"0.5rem",marginBottom:"1rem"}}>
-            Refeições feitas hoje: <span style={{color:"var(--green)",fontWeight:600}}>{qtdComido}/{refeicoes.length}</span>
-          </div>
-          {(refeicoes||[]).map((r,i)=>(
-            <div key={i} className="meal-item" style={{background:alimCheck[i]?"var(--green-dim)":"var(--card2)",border:alimCheck[i]?"1px solid rgba(46,204,113,0.3)":"none"}}>
-              <div style={{color:"var(--text3)",fontFamily:"var(--font-mono)",fontSize:"0.75rem",minWidth:"45px"}}>{r.h}</div>
-              <div style={{flex:1,fontWeight:600,fontSize:"0.88rem"}}>{r.r}</div>
-              {alimCheck[i]?<span className="tag tag-green">✓ Comeu</span>:<span style={{fontSize:"0.75rem",color:"var(--text3)"}}>Não marcado</span>}
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* COMPETIÇÕES */}
-      {comps.length>0&&(
-        <div className="card">
-          <div className="card-title">🏆 COMPETIÇÕES</div>
-          {(comps||[]).map((c,i)=>{const d=new Date(c.data);return(<div key={i} className="comp-card" style={{background:"var(--bg2)"}}><div className="comp-date"><div className="comp-date-day">{d.getDate()}</div><div className="comp-date-month">{d.toLocaleDateString("pt-BR",{month:"short"})}</div></div><div style={{flex:1}}><div style={{fontWeight:600}}>{c.nome}</div><div style={{fontSize:"0.8rem",color:"var(--text2)"}}>{c.modalidade}</div></div><span className="tag tag-orange">{c.objetivo}</span></div>);})}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ── BANNER PLANO GRATUITO (Treinador + Nutri) ─────────────────
-function PlanoGratuitoBanner({user}){
-  // Contas demo nunca mostram banner de trial
-  if(user?.isDemoUser||user?.email?.endsWith('@demo.com'))return null;
-  const criadoEm=user?.criadoEm||user?.created_at||new Date().toISOString();
-  const diasTotal=30;
-  const ms=Date.now()-new Date(criadoEm).getTime();
-  const diasPassados=Math.max(0,Math.floor(ms/(1000*60*60*24)));
-  const diasRestantes=Math.max(0,diasTotal-diasPassados);
-  const pct=Math.min(100,Math.round((diasPassados/diasTotal)*100));
-  const urgente=diasRestantes>0&&diasRestantes<=5;
-  const expirado=diasRestantes===0&&diasPassados>=diasTotal;
-
-  const cor=expirado?"#ef4444":urgente?"#f97316":"#6366f1";
-  const corBg=expirado?"rgba(239,68,68,0.1)":urgente?"rgba(249,115,22,0.1)":"rgba(99,102,241,0.08)";
-
-  return(
-    <div style={{
-      background:corBg,border:`1px solid ${cor}40`,
-      borderRadius:"12px",padding:"14px 16px",marginBottom:"1rem"
-    }}>
-      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"8px"}}>
-        <div style={{display:"flex",alignItems:"center",gap:"10px"}}>
-          <span style={{fontSize:"1.2rem"}}>{expirado?"🔒":urgente?"⚠️":"✨"}</span>
-          <div>
-            <div style={{fontWeight:700,fontSize:"0.85rem",color:"var(--text1)"}}>
-              {expirado?"Período gratuito encerrado"
-                :urgente?`Últimos ${diasRestantes} dia${diasRestantes>1?"s":""} gratuitos!`
-                :"Plano Gratuito — Versão Beta"}
-            </div>
-            <div style={{fontSize:"0.72rem",color:"var(--text3)",marginTop:"2px"}}>
-              {expirado?"Renove para continuar usando o TrioFit"
-                :`${diasPassados} de ${diasTotal} dias • ${diasRestantes} dias restantes`}
-            </div>
+              {/* Adicionar exercício */}
+              <div style={{marginTop:"10px",display:"flex",gap:"6px",flexWrap:"wrap"}}>
+                <input className="form-input" style={{flex:"2 1 160px"}}
+                  list="banco-ex-list" value={novoEx.nome} placeholder="Nome do exercício"
+                  onChange={e=>setNovoEx(p=>({...p,nome:e.target.value}))}
+                  onBlur={e=>{
+                    const match=BANCO_EXERCICIOS.find(b=>b.nome.toLowerCase()===e.target.value.toLowerCase());
+                    if(match&&!novoEx.video)setNovoEx(p=>({...p,video:match.video||""}));
+                  }}/>
+                <datalist id="banco-ex-list">
+                  {React.useMemo(()=>BANCO_EXERCICIOS.map(b=><option key={b.nome} value={b.nome}/>),[])}
+                </datalist>
+                <input className="form-input" style={{flex:"1 1 60px"}} value={novoEx.series}
+                  placeholder="Séries" onChange={e=>setNovoEx(p=>({...p,series:e.target.value}))}/>
+                <input className="form-input" style={{flex:"1 1 60px"}} value={novoEx.reps}
+                  placeholder="Reps" onChange={e=>setNovoEx(p=>({...p,reps:e.target.value}))}/>
+                <input className="form-input" style={{flex:"1 1 60px"}} value={novoEx.carga}
+                  placeholder="Kg" onChange={e=>setNovoEx(p=>({...p,carga:e.target.value}))}/>
+                <button className="btn btn-primary btn-sm" onClick={addExercicio}>+ Adicionar</button>
+              </div>
+            </>)}
           </div>
         </div>
-        <button
-          onClick={()=>window.open("mailto:contato@triofit.app?subject=Quero+o+plano+Pro","_blank")}
-          style={{background:cor,color:"#fff",border:"none",borderRadius:"20px",
-            padding:"6px 14px",fontSize:"0.72rem",fontWeight:700,cursor:"pointer",
-            whiteSpace:"nowrap",boxShadow:"0 2px 8px rgba(0,0,0,0.2)"}}
-        >{expirado?"Renovar agora →":"Quero o Pro →"}</button>
-      </div>
-      <div style={{background:"var(--border2)",borderRadius:"99px",height:"4px",overflow:"hidden"}}>
-        <div style={{width:`${pct}%`,height:"100%",borderRadius:"99px",background:cor,transition:"width 0.5s"}}/>
-      </div>
-    </div>
-  );
-}
 
-function TreinadorDash({
-  user,setPage}){
-  useLang();
-  const [alunos,setAlunos]=useState([]);
-  useEffect(()=>{
-    DB.getAlunosDe(user.id).then(d=>{
-      const base=d||[];
-      if(DEMO_IDS.includes(user.id)){
-        const demo=DEMO_ALUNO;
-        setAlunos(base.some(a=>a.id===demo.id)?base:[demo,...base]);
-      } else setAlunos(base);
-    }).catch(()=>setAlunos([]));
-  },[user.id]);
-  const [msgs,setMsgs]=useState(0);
-  const [atualizacoes,setAtualizacoes]=useState([]);
-  useEffect(()=>{
-    let c=false;
-    DB.getAlunosDe(user.id).then(d=>{
-      if(c)return;
-      const base=d||[];
-      if(DEMO_IDS.includes(user.id)){
-        const demo=DEMO_ALUNO;
-        setAlunos(base.some(a=>a.id===demo.id)?base:[...base,demo]);
-      }else setAlunos(base);
-    }).catch(()=>setAlunos([]));
-    return()=>{c=true;};
-  },[user.id])
-
-  const total=(alunos||[]).length;
-  const hoje=new Date().toLocaleDateString("pt-BR",{weekday:"long",day:"numeric",month:"long"});
-
-  return(
-    <div className="page">
-      <PlanoGratuitoBanner user={user}/>
-      <div className="page-header">
-        <div className="page-title">Olá, {user.nome?.split(" ")[0]}! 👋</div>
-        <div className="page-sub" style={{textTransform:"capitalize"}}>{hoje}</div>
-      </div>
-
-      {/* STATS */}
-      <div className="grid-3" style={{marginBottom:"20px"}}>
-        <div className="stat-card">
-          <div className="stat-label">{T("dash.alunos")}</div>
-          <div className="stat-value orange">{total}</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-label">{T("dash.mensagens")}</div>
-          <div className={"stat-value "+(msgs>0?"orange":"green")}>{msgs}</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-label">{T("dash.seuCodigo")}</div>
-          <div style={{letterSpacing:"4px",fontSize:"1.6rem",fontFamily:"var(--font-mono)",
-                  color:"var(--green)",textShadow:"0 0 20px rgba(74,222,128,0.3)"}}>
-                  {user.codigo||"——"}</div>
-          <div className="stat-sub">{T("dash.compartilhe")}</div>
-        </div>
-      </div>
-
-      {/* AÇÕES RÁPIDAS */}
-      <div className="grid-2" style={{marginBottom:"20px"}}>
-        <button className="btn btn-orange btn-full" style={{padding:"14px"}} onClick={()=>setPage("prescrever")}>
-          📋 Prescrever Treino
+        {/* Botão salvar */}
+        <button className="btn btn-primary btn-full" onClick={salvar} disabled={salvando}
+          style={{marginTop:"8px",padding:"14px"}}>
+          {salvando?"⏳ Salvando...":`📤 Enviar plano para ${alunoSel.nome}`}
         </button>
-        <button className="btn btn-ghost btn-full" style={{padding:"14px"}} onClick={()=>setPage("cadastrar")}>
-          ➕ Novo Aluno
-        </button>
-      </div>
-
-      {/* ATUALIZAÇÕES RECENTES */}
-      {atualizacoes.length>0&&(
-        <div className="card">
-          <div className="card-title">{T("dash.atualizacoes")}</div>
-          {atualizacoes.map((a,i)=>(
-            <div key={i} style={{display:"flex",alignItems:"center",gap:"12px",padding:"10px 0",borderBottom:i<atualizacoes.length-1?"1px solid var(--border)":"none"}}>
-              <div style={{width:"36px",height:"36px",borderRadius:"50%",background:"var(--green-dim2)",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,color:"var(--green)",fontSize:"12px",flexShrink:0}}>{initials(a.nome)}</div>
-              <div style={{flex:1}}>
-                <div style={{fontWeight:600,fontSize:"13px"}}>{a.nome.split(" ")[0]}</div>
-                <div style={{fontSize:"12px",color:"var(--text2)"}}>{a.msg}</div>
-              </div>
-              <div style={{fontSize:"11px",color:"var(--text3)"}}>{new Date(a.data).toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit"})}</div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* LISTA DE ALUNOS */}
-      <div className="card">
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"14px"}}>
-          <div className="card-title" style={{marginBottom:0}}>{T("dash.meusAlunos")}</div>
-          {total>3&&<button className="btn btn-ghost btn-sm" onClick={()=>setPage("cadastrar")}>{T("dash.verTodos")}</button>}
-        </div>
-        {total===0?(
-          <div style={{textAlign:"center",padding:"2rem",color:"var(--text3)"}}>
-            <div style={{fontSize:"2.5rem",marginBottom:"8px"}}>👥</div>
-            <div style={{fontWeight:600,color:"var(--text2)",marginBottom:"4px"}}>{T("dash.semAluno")}</div>
-            <button className="btn btn-orange btn-sm" style={{marginTop:"8px"}} onClick={()=>setPage("cadastrar")}>{T("dash.cadastrarAluno")}</button>
-          </div>
-        ):(alunos||[]).slice(0,5).map(a=>(
-          <div key={a.id} style={{display:"flex",alignItems:"center",gap:"12px",padding:"10px 0",borderBottom:"1px solid var(--border)"}}>
-            <div style={{width:"38px",height:"38px",borderRadius:"50%",background:a.bloqueado?"var(--red-dim)":"var(--orange-dim)",border:"1.5px solid",borderColor:a.bloqueado?"rgba(248,113,113,0.3)":"rgba(251,146,60,0.25)",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,color:a.bloqueado?"var(--red)":"var(--orange)",fontSize:"13px",flexShrink:0}}>{initials(a.nome)}</div>
-            <div style={{flex:1,minWidth:0}}>
-              <div style={{fontWeight:600,fontSize:"13px",display:"flex",alignItems:"center",gap:"6px"}}>
-                {a.nome.split(" ").slice(0,2).join(" ")}
-                {a.bloqueado&&<span style={{fontSize:"10px",padding:"1px 6px",borderRadius:"20px",background:"var(--red-dim)",color:"var(--red)"}}>{T("geral.bloqueado")}</span>}
-              </div>
-              <div style={{fontSize:"11px",color:"var(--text2)"}}>{a.grupo||a.objetivo||a.email}</div>
-            </div>
-            {getObjetivo(a.objetivo)&&<span className="obj-badge" style={{background:getObjetivo(a.objetivo).bg,color:getObjetivo(a.objetivo).color,fontSize:"10px"}}>{getObjetivo(a.objetivo).badge}</span>}
-          </div>
-        ))}
-      </div>
+      </>)}
     </div>
   );
 }
+
 
 function TreinadorNotificacoes({
   user,showToast}){
