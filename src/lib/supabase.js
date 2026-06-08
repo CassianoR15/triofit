@@ -112,18 +112,19 @@ export const DB = {
 
   _loginAttempts: new Map(),
   async _warmup() {
-    // Ping Supabase to wake up from cold start (free tier sleeps after inactivity)
     if(this._warmedUp) return;
-    if(this._warmingUp) return; // prevent duplicate calls
+    if(this._warmingUp) return;
     this._warmingUp = true;
     try {
-      await supabase.auth.getSession(); // lightweight session check
+      // Warm BOTH the session endpoint AND the password endpoint
+      // by making a lightweight DB query (wakes the auth service)
+      await Promise.race([
+        supabase.from('profiles').select('id').limit(1).maybeSingle(),
+        new Promise(r=>setTimeout(r,3000)), // max 3s warmup
+      ]);
       this._warmedUp = true;
-    } catch(e) {
-      // ignore warmup errors
-    } finally {
-      this._warmingUp = false;
-    }
+    } catch(e) {}
+    finally { this._warmingUp = false; }
   },
 
   async login(email, senha) {
