@@ -2602,6 +2602,7 @@ function TreinadorPrescrever({user,showToast}){
                   <div style={{flex:1,fontSize:"13px"}}>
                     <span style={{fontWeight:600}}>{ex.nome}</span>
                     {ex.series&&<span style={{color:"var(--text3)",marginLeft:"8px"}}>{ex.series}×{ex.reps} {ex.carga&&`— ${ex.carga}kg`}</span>}
+                    {ex.video&&<a href={ex.video} target="_blank" rel="noopener" style={{marginLeft:"8px",fontSize:"11px",color:"var(--blue)"}}>🎥</a>}
                   </div>
                   <button className="btn btn-ghost btn-sm" style={{padding:"2px 8px",color:"var(--red)"}}
                     onClick={()=>removeExercicio(diaEdit,ei)}>✕</button>
@@ -2615,17 +2616,19 @@ function TreinadorPrescrever({user,showToast}){
                   onChange={e=>setNovoEx(p=>({...p,nome:e.target.value}))}
                   onBlur={e=>{
                     const match=BANCO_EXERCICIOS.find(b=>b.nome.toLowerCase()===e.target.value.toLowerCase());
-                    if(match&&!novoEx.video)setNovoEx(p=>({...p,video:match.video||""}));
+                    if(match){setNovoEx(p=>({...p,video:p.video||match.video||"",grupo:match.grupo||""}));}
                   }}/>
                 <datalist id="banco-ex-list">
                   {BANCO_EXERCICIOS.map(b=><option key={b.nome} value={b.nome}/>)}
                 </datalist>
-                <input className="form-input" style={{flex:"1 1 60px"}} value={novoEx.series}
+                <input className="form-input" style={{flex:"1 1 55px"}} value={novoEx.series}
                   placeholder="Séries" onChange={e=>setNovoEx(p=>({...p,series:e.target.value}))}/>
-                <input className="form-input" style={{flex:"1 1 60px"}} value={novoEx.reps}
+                <input className="form-input" style={{flex:"1 1 55px"}} value={novoEx.reps}
                   placeholder="Reps" onChange={e=>setNovoEx(p=>({...p,reps:e.target.value}))}/>
-                <input className="form-input" style={{flex:"1 1 60px"}} value={novoEx.carga}
+                <input className="form-input" style={{flex:"1 1 55px"}} value={novoEx.carga}
                   placeholder="Kg" onChange={e=>setNovoEx(p=>({...p,carga:e.target.value}))}/>
+                <input className="form-input" style={{flex:"2 1 120px"}} value={novoEx.video}
+                  placeholder="🎥 URL vídeo (auto)" onChange={e=>setNovoEx(p=>({...p,video:e.target.value}))}/>
                 <button className="btn btn-primary btn-sm" onClick={addExercicio}>+ Adicionar</button>
               </div>
             </>)}
