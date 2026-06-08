@@ -1,5 +1,5 @@
 // TrioFit Service Worker
-const CACHE = 'triofit-v1780002976';
+const CACHE = 'triofit-v1780920785';
 const OFFLINE_URL = '/';
 
 // Arquivos para cache inicial
