@@ -2431,6 +2431,8 @@ function TreinadorPrescrever({user,showToast}){
   const [novoEx,setNovoEx]=useState({nome:"",series:"",reps:"",carga:"",video:"",obs:""});
   const [salvando,setSalvando]=useState(false);
   const [planoDeletado,setPlanoDeletado]=useState(false);
+  const [planoExistente,setPlanoExistente]=useState(null);
+  const [loadingPlano,setLoadingPlano]=useState(false);
   useLang();
 
   // Carregar alunos (uma única vez)
@@ -2448,11 +2450,27 @@ function TreinadorPrescrever({user,showToast}){
     return()=>{cancelled=true;};
   },[user.id]);
 
-  // Selecionar aluno
+  // Selecionar aluno — carrega plano existente
   function selecionarAluno(a){
-    if(!a){setAlunoSel(null);return;}
-    setAlunoSel({id:a.id||"",nome:a.nome||"",email:a.email||"",role:a.role||"aluno",...a});
+    if(!a){setAlunoSel(null);setPlanoExistente(null);return;}
+    const safe={id:a.id||"",nome:a.nome||"",email:a.email||"",role:a.role||"aluno",...a};
+    setAlunoSel(safe);
     setPlanoDeletado(false);
+    setLoadingPlano(true);
+    DB.getData("plano_treino_aluno",safe.id).then(p=>{
+      setPlanoExistente(p||null);
+      setLoadingPlano(false);
+    }).catch(()=>{setPlanoExistente(null);setLoadingPlano(false);});
+  }
+
+  // Deletar plano existente
+  async function deletarPlano(){
+    if(!alunoSel?.id)return;
+    await DB.setData("plano_treino_aluno",alunoSel.id,null);
+    if(DB._dc2)DB._dc2.delete(alunoSel.id+'|plano_treino_aluno');
+    setPlanoExistente(null);
+    setPlanoDeletado(true);
+    showToast&&showToast("🗑️ Plano deletado!","warn");
   }
 
   // Adicionar exercício
@@ -2497,6 +2515,7 @@ function TreinadorPrescrever({user,showToast}){
       const kClear = alunoSel.id + '|plano_treino_aluno';
       if(DB._dc2) DB._dc2.delete(kClear);
       showToast&&showToast(`✅ Plano enviado para ${alunoSel.nome}! 🏋️`,"success",4000);
+      setPlanoExistente(plano);
       setAlunoSel(null);
       setNomePlano("Treino A/B/C");
       setDias(DIAS_SEMANA.map((_,i)=>({nome:`Treino ${String.fromCharCode(65+i)}`,tipo:i<5?"academia":"descanso",exercicios:[]})));
@@ -2528,6 +2547,31 @@ function TreinadorPrescrever({user,showToast}){
       </div>
 
       {alunoSel&&(<>
+        {/* Status do plano atual */}
+        {loadingPlano&&<div className="alert alert-info" style={{marginBottom:"1rem"}}>⏳ Verificando plano atual...</div>}
+        {!loadingPlano&&planoExistente&&!planoDeletado&&(
+          <div style={{background:"rgba(99,102,241,0.08)",border:"1px solid rgba(99,102,241,0.3)",
+            borderRadius:"12px",padding:"16px",marginBottom:"1rem"}}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:"8px"}}>
+              <div>
+                <div style={{fontWeight:700,color:"var(--text1)"}}>📋 Plano atual: <span style={{color:"var(--blue)"}}>{planoExistente.nome||"Plano de treino"}</span></div>
+                <div style={{fontSize:"0.8rem",color:"var(--text3)",marginTop:"3px"}}>
+                  {planoExistente.dias?.filter(d=>d.tipo!=="descanso").length||0} dias de treino •{" "}
+                  {planoExistente.duracao||1} mês{(planoExistente.duracao||1)>1?"es":""}
+                </div>
+              </div>
+              <div style={{display:"flex",gap:"8px"}}>
+                <button className="btn btn-ghost btn-sm" style={{color:"var(--red)"}}
+                  onClick={deletarPlano}>🗑️ Deletar</button>
+                <button className="btn btn-primary btn-sm"
+                  onClick={()=>setPlanoDeletado(true)}>✏️ Novo plano</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Formulário só aparece se não há plano OU se clicou "Novo plano" */}
+        {(!planoExistente||planoDeletado)&&(<>
         {/* Config do plano */}
         <div className="card">
           <div className="card-title">⚙️ {T("prescr.config")||"CONFIGURAÇÕES DO PLANO"}</div>
@@ -2647,6 +2691,7 @@ function TreinadorPrescrever({user,showToast}){
           style={{marginTop:"8px",padding:"14px"}}>
           {salvando?"⏳ Salvando...":`📤 Enviar plano para ${alunoSel.nome}`}
         </button>
+        </>)}
       </>)}
     </div>
   );
