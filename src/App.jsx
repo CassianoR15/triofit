@@ -4106,6 +4106,317 @@ function PlanoGratuitoBanner({user}){
 }
 
 
+function ResumoSemanalAluno({aluno,onVerCompleto}){
+  const [saude]=useAlunoData(aluno.id,"saude",{});
+  const [agua]=useAlunoData(aluno.id,"agua_hoje",0);
+  const [meta]=useAlunoData(aluno.id,"meta_agua",3000);
+  const [planoTreino]=useAlunoData(aluno.id,"plano_treino_aluno",null);
+  const [av]=useAlunoData(aluno.id,"treino_avaliacao",{});
+  const [avalFisica]=useAlunoData(aluno.id,"avaliacao",{});
+  const [avalHist]=useAlunoData(aluno.id,"avaliacao_hist",[]);
+  const [compsData]=useAlunoData(aluno.id,"competicoes",[]);
+  const proximaComp=Array.isArray(compsData)?compsData.filter(c=>new Date(c.data)>new Date()).sort((a,b)=>new Date(a.data)-new Date(b.data))[0]:null;
+  const [objAluno,setObjAluno]=useState(aluno.objetivo||null);
+  useEffect(()=>{
+    if(!aluno.id)return;
+    let c=false;
+    supabase.from("profiles").select("objetivo").eq("id",aluno.id).maybeSingle()
+      .then(({data})=>{if(!c&&data?.objetivo)setObjAluno(data.objetivo);}).catch(()=>{});
+    return()=>{c=true;};
+  },[aluno.id]);
+  const diasDoente=saude.doente_desde?diffDays(saude.doente_desde):0;
+
+  // Contar dias de treino feitos (baseado no check)
+  const [check]=useAlunoData(aluno.id,"treino_check_hoje",{});
+  // Simular quais dias têm exercícios marcados essa semana
+  const diasTreino=planoTreino?.dias||[];
+  const diasComTreino=diasTreino.filter(d=>d.tipo!=="descanso").length;
+
+  // Média de água (só temos hoje, mostrar o de hoje)
+  const pctAgua=Math.round((agua/meta)*100);
+
+  // Ícone da modalidade principal
+  const modIcons={musculacao:"🏋️",corrida:"🏃",natacao:"🏊",luta:"🥊",ciclismo:"🚴",funcional:"⚡",caminhada:"🚶"};
+  const modIcon=modIcons[planoTreino?.modalidade]||"🏋️";
+
+  return(
+    <div className="card" style={{cursor:"pointer"}} onClick={onVerCompleto}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:"1rem"}}>
+        <div>
+          <div style={{fontFamily:"var(--font-display)",fontSize:"1.3rem",letterSpacing:"0.05em"}}>{aluno.nome}</div>
+          {planoTreino&&<div style={{fontSize:"0.78rem",color:"var(--text2)",marginTop:"0.15rem"}}>{modIcon} {planoTreino.nome} • até {fmtDate(planoTreino.fim)}</div>}
+        </div>
+        <div style={{display:"flex",gap:"0.4rem",flexWrap:"wrap",alignItems:"center"}}>
+          {saude.doente&&<span className="tag tag-red">🩒 {diasDoente}d</span>}
+          {objAluno&&(()=>{const obj=getObjetivo(objAluno);return(
+            <span style={{fontSize:"0.7rem",padding:"2px 8px",borderRadius:"20px",
+              border:"1.5px solid "+obj.color,color:obj.color,background:obj.color+"18",fontWeight:500,whiteSpace:"nowrap"}}>
+              {obj.icon} {obj.label}
+            </span>
+          );})()}
+          {saude.dores&&saude.dores.length>0&&<span className="tag tag-orange">🔴 {saude.dores.length} dor{saude.dores.length>1?"es":""}</span>}
+          {saude.mens&&<span className="tag tag-orange">🔴 Ciclo</span>}
+        </div>
+      </div>
+
+      {/* LINHA DE RESUMO */}
+      <div className="grid-3" style={{marginBottom:"1rem"}}>
+        <div style={{background:"var(--bg2)",borderRadius:"var(--radius)",padding:"0.85rem",textAlign:"center"}}>
+          <div style={{fontSize:"0.65rem",color:"var(--text3)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:"0.25rem"}}>{T("resumo.aguaHoje")}</div>
+          <div style={{fontFamily:"var(--font-display)",fontSize:"1.5rem",color:"var(--blue)"}}>{pctAgua}%</div>
+          <div style={{fontSize:"0.7rem",color:"var(--text3)"}}>{(agua/1000).toFixed(1)}L / {(meta/1000).toFixed(1)}L</div>
+        </div>
+        <div style={{background:"var(--bg2)",borderRadius:"var(--radius)",padding:"0.85rem",textAlign:"center"}}>
+          <div style={{fontSize:"0.65rem",color:"var(--text3)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:"0.25rem"}}>{T("resumo.diasTreino")}</div>
+          <div style={{fontFamily:"var(--font-display)",fontSize:"1.5rem",color:"var(--green)"}}>{diasComTreino}</div>
+          <div style={{fontSize:"0.7rem",color:"var(--text3)"}}>{T("resumo.diasComTreino")}</div>
+        </div>
+        <div style={{background:"var(--bg2)",borderRadius:"var(--radius)",padding:"0.85rem",textAlign:"center"}}>
+          <div style={{fontSize:"0.65rem",color:"var(--text3)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:"0.25rem"}}>{T("resumo.ultimoTreino")}</div>
+          <div style={{fontSize:"1.2rem"}}>{av.rating>0?"★".repeat(av.rating):"—"}</div>
+          <div style={{fontSize:"0.7rem",color:"var(--text3)"}}>{av.rating>0?`nota ${av.rating}/5`:T("resumo.semAval")}</div>
+        </div>
+      </div>
+
+      {/* DIAS DA SEMANA RESUMO */}
+      {planoTreino?.dias&&(
+        <div>
+          <div style={{fontSize:"0.7rem",color:"var(--text3)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:"0.5rem"}}>{T("resumo.semanaTreinos")}</div>
+          <div style={{display:"flex",gap:"0.3rem"}}>
+            {(planoTreino?.dias||[]).map((d,i)=>{
+              const tipoIcons={descanso:"😴",academia:"🏋️",corrida:"🏃",natacao:"🏊",luta:"🥊",ciclismo:"🚴",funcional:"⚡",caminhada:"🚶",treino:"🏋️"};
+              return(
+                <div key={i} style={{flex:1,textAlign:"center",padding:"0.4rem 0.2rem",background:"var(--bg2)",borderRadius:"8px",fontSize:"0.65rem"}}>
+                  <div style={{fontSize:"1rem",marginBottom:"0.15rem"}}>{tipoIcons[d.tipo]||"🏋️"}</div>
+                  <div style={{color:"var(--text3)"}}>{DIAS_SEMANA[i].slice(0,3)}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      <div style={{fontSize:"0.8rem",color:"var(--orange)",marginTop:"1rem"}}>{T("resumo.verRelatorio")}</div>
+    </div>
+  );
+}
+
+// Diário completo — visão mensal
+function DiarioAluno({aluno,onBack}){
+  const [saude]=useAlunoData(aluno.id,"saude",{});
+  const [treino]=useAlunoData(aluno.id,"treino_avaliacao",{});
+  const [alimCheck]=useAlunoData(aluno.id,"alim_check_hoje",{});
+  const [planoAlim]=useAlunoData(aluno.id,"plano_alim_aluno",null);
+  const [agua]=useAlunoData(aluno.id,"agua_hoje",0);
+  const [metaAgua]=useAlunoData(aluno.id,"meta_agua",3000);
+  const [aval]=useAlunoData(aluno.id,"avaliacao",{});
+  const [avalHist]=useAlunoData(aluno.id,"avaliacao_hist",[]);
+  const [objAluno,setObjAluno]=useState(aluno.objetivo||null);
+  useEffect(()=>{
+    if(!aluno.id)return;
+    let c=false;
+    supabase.from("profiles").select("objetivo").eq("id",aluno.id).maybeSingle()
+      .then(({data})=>{if(!c&&data?.objetivo)setObjAluno(data.objetivo);}).catch(()=>{});
+    return()=>{c=true;};
+  },[aluno.id]);
+  const [comps]=useAlunoData(aluno.id,"competicoes",[]);
+  const [planoTreino]=useAlunoData(aluno.id,"plano_treino_aluno",null);
+  const proximaComp=Array.isArray(comps)?comps.filter(c=>{try{return new Date(c.data)>new Date();}catch{return false;}}).sort((a,b)=>new Date(a.data)-new Date(b.data))[0]||null:null;
+  const refeicoes=(planoAlim?.refeicoes)||[];
+  const qtdComido=Object.values(alimCheck).filter(Boolean).length;
+  const diasDoente=saude.doente_desde?diffDays(saude.doente_desde):0;
+
+  const tipoIcons={descanso:"😴",academia:"🏋️",corrida:"🏃",natacao:"🏊",luta:"🥊",ciclismo:"🚴",funcional:"⚡",caminhada:"🚶",treino:"🏋️"};
+  const modIcons={musculacao:"🏋️",corrida:"🏃",natacao:"🏊",luta:"🥊",ciclismo:"🚴",funcional:"⚡",caminhada:"🚶"};
+
+  return(
+    <div className="page">
+      {/* HEADER PREMIUM */}
+      <div style={{display:"flex",alignItems:"center",gap:"12px",marginBottom:"20px",
+        background:"linear-gradient(135deg,rgba(96,165,250,0.08),rgba(96,165,250,0.02))",
+        border:"1px solid rgba(96,165,250,0.15)",borderRadius:"var(--r)",padding:"16px"}}>
+        <button onClick={onBack}
+          style={{width:"36px",height:"36px",borderRadius:"50%",border:"1px solid var(--border)",
+            background:"var(--card2)",cursor:"pointer",display:"flex",alignItems:"center",
+            justifyContent:"center",fontSize:"16px",flexShrink:0}}>←</button>
+        <div style={{width:"46px",height:"46px",borderRadius:"50%",flexShrink:0,
+          background:"linear-gradient(135deg,rgba(96,165,250,0.15),rgba(96,165,250,0.05))",
+          border:"1.5px solid rgba(96,165,250,0.3)",display:"flex",alignItems:"center",
+          justifyContent:"center",fontWeight:700,color:"#60a5fa",fontSize:"16px"}}>
+          {initials(aluno.nome)}
+        </div>
+        <div style={{flex:1,minWidth:0}}>
+          <div style={{fontFamily:"var(--font-display)",fontSize:"1.2rem",fontWeight:700,
+            marginBottom:"2px",letterSpacing:"-0.3px"}}>{aluno.nome}</div>
+          <div style={{fontSize:"12px",color:"var(--text3)"}}>{T("diario.relatorio")}</div>
+        </div>
+        {objAluno&&(()=>{const obj=getObjetivo(objAluno);return(
+          <span style={{fontSize:"11px",padding:"4px 10px",borderRadius:"20px",
+            border:"1.5px solid "+obj.color,color:obj.color,background:obj.color+"18",fontWeight:700,flexShrink:0}}>
+            {obj.icon} {obj.label}
+          </span>
+        );})()}
+      </div>
+
+      {/* DADOS PESSOAIS */}
+      <div className="card">
+        <div style={{display:"flex",alignItems:"center",gap:"8px",marginBottom:"14px"}}>
+          <div style={{width:"8px",height:"8px",borderRadius:"50%",background:"#60a5fa",
+            boxShadow:"0 0 8px rgba(96,165,250,0.5)"}}/>
+          <span style={{fontSize:"10px",fontWeight:700,textTransform:"uppercase",
+            letterSpacing:"0.1em",color:"var(--text3)"}}>{T("diario.perfilPaciente")}</span>
+        </div>
+        {Array.isArray(avalHist)&&avalHist.length>1&&(()=>{
+          const pts=avalHist.filter(h=>h.peso);
+          if(pts.length<2)return null;
+          const pesos=pts.map(h=>parseFloat(h.peso));
+          const diff=(pesos[pesos.length-1]-pesos[0]).toFixed(1);
+          const w=280,hh=60;
+          const xp=(i)=>10+(i/(pts.length-1||1))*(w-20);
+          const yp=(v)=>hh-6-((v-Math.min(...pesos)+2)/(Math.max(...pesos)-Math.min(...pesos)+4||1))*(hh-12);
+          const path=pts.map((p,i)=>`${i===0?"M":"L"}${xp(i).toFixed(1)},${yp(parseFloat(p.peso)).toFixed(1)}`).join(" ");
+          return(
+            <div style={{marginBottom:"0.75rem",padding:"0.75rem",background:"var(--bg)",borderRadius:"8px"}}>
+              <div style={{display:"flex",gap:"0.75rem",marginBottom:"0.5rem",flexWrap:"wrap"}}>
+                <div style={{flex:1}}><div style={{fontSize:"0.75rem",color:"var(--text2)"}}>{T("diario.variacaoTotal")}</div>
+                  <div style={{fontWeight:600,color:parseFloat(diff)<0?"var(--green)":"var(--orange)"}}>{parseFloat(diff)>0?"+":""}{diff}kg</div></div>
+                <div style={{flex:1}}><div style={{fontSize:"0.75rem",color:"var(--text2)"}}>{T("aval.registros")}</div>
+                  <div style={{fontWeight:600}}>{pts.length}</div></div>
+              </div>
+              <svg viewBox={`0 0 ${w} ${hh}`} style={{width:"100%",height:"60px"}}>
+                <path d={path} fill="none" stroke="var(--green)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                {pts.map((p,i)=>(<g key={i}><circle cx={xp(i)} cy={yp(parseFloat(p.peso))} r="2.5" fill="var(--green)"/>{(i===0||i===pts.length-1)&&<text x={xp(i)} y={yp(parseFloat(p.peso))-5} textAnchor="middle" fontSize="8" fill="var(--text2)">{p.peso}kg</text>}</g>))}
+              </svg>
+            </div>
+          );
+        })()}
+        <div className="grid-3">
+          <div className="diario-section"><div className="diario-label">{T("diario.peso")}</div><div className="diario-val" style={{fontFamily:"var(--font-display)",fontSize:"1.5rem",color:"var(--green)"}}>{aval.peso||"—"}<span style={{fontSize:"0.8rem",color:"var(--text2)"}}>{aval.peso?" kg":""}</span></div></div>
+          <div className="diario-section"><div className="diario-label">% Gordura</div><div className="diario-val" style={{fontFamily:"var(--font-display)",fontSize:"1.5rem",color:"var(--orange)"}}>{aval.gordura||"—"}<span style={{fontSize:"0.8rem",color:"var(--text2)"}}>{aval.gordura?"%":""}</span></div></div>
+          <div className="diario-section"><div className="diario-label">{T("auth.email")}</div><div className="diario-val" style={{fontSize:"0.85rem"}}>{aluno.email}</div></div>
+        </div>
+        {aval.cintura&&(
+          <div className="grid-4" style={{marginTop:"0.75rem",marginBottom:0}}>
+            {[["cintura","Cintura","cm"],["quadril","Quadril","cm"],["braco_d","Braço D","cm"],["perna_d","Perna D","cm"]].map(([k,l,u])=>
+              aval[k]?<div key={k} className="diario-section"><div className="diario-label">{l}</div><div className="diario-val">{aval[k]}{u}</div></div>:null
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* MODALIDADES QUE PRATICA */}
+      {planoTreino&&(
+        <div className="card">
+          <div className="card-title">🏅 MODALIDADES / PLANO ATIVO</div>
+          <div style={{display:"flex",alignItems:"center",gap:"1rem",marginBottom:"1rem",flexWrap:"wrap"}}>
+            <div style={{fontSize:"2.5rem"}}>{modIcons[planoTreino.modalidade]||"🏋️"}</div>
+            <div>
+              <div style={{fontWeight:600,fontSize:"1rem"}}>{planoTreino.nome}</div>
+              <div style={{fontSize:"0.8rem",color:"var(--text2)"}}>Modalidade: {MODALIDADES.find(m=>m.v===planoTreino.modalidade)?.l||planoTreino.modalidade}</div>
+              <div style={{fontSize:"0.8rem",color:"var(--text2)"}}>{fmtDate(planoTreino.inicio)} → {fmtDate(planoTreino.fim)} • {planoTreino.duracao} {planoTreino.duracao===1?"mês":"meses"}</div>
+            </div>
+          </div>
+
+          {/* SEMANA DETALHADA */}
+          <div style={{fontSize:"0.75rem",color:"var(--text3)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:"0.75rem"}}>{T("diario.distribuicao")}</div>
+          <div style={{display:"flex",gap:"0.5rem",flexWrap:"wrap"}}>
+            {(planoTreino?.dias||[]).map((d,i)=>(
+              <div key={i} style={{flex:"1",minWidth:"80px",background:d.tipo==="descanso"?"var(--bg2)":"var(--card2)",border:d.tipo==="descanso"?"1px solid var(--border)":"1px solid var(--green-dim)",borderRadius:"var(--radius)",padding:"0.65rem",textAlign:"center"}}>
+                <div style={{fontSize:"1.2rem",marginBottom:"0.2rem"}}>{tipoIcons[d.tipo]||"🏋️"}</div>
+                <div style={{fontSize:"0.7rem",fontWeight:600,color:d.tipo==="descanso"?"var(--text3)":"var(--text)"}}>{DIAS_SEMANA[i].slice(0,3)}</div>
+                <div style={{fontSize:"0.65rem",color:"var(--text3)",marginTop:"0.1rem"}}>{d.tipo==="descanso"?"Descanso":d.nome?.split("—")[0]?.trim()||d.tipo}</div>
+                {/* Campos específicos */}
+                {d.distancia&&<div style={{fontSize:"0.65rem",color:"var(--blue)",marginTop:"0.15rem"}}>{d.distancia}</div>}
+                {d.rounds&&<div style={{fontSize:"0.65rem",color:"var(--red)",marginTop:"0.15rem"}}>{d.rounds}</div>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {proximaComp&&(()=>{
+        const diff=Math.ceil((new Date(proximaComp.data)-new Date())/(1000*60*60*24));
+        const color=diff<=7?"var(--red)":diff<=30?"var(--orange)":"var(--green)";
+        return(
+          <div className="card" style={{borderLeft:"3px solid "+color}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+              <div>
+                <div style={{fontWeight:600,fontSize:"0.9rem"}}>🏆 {proximaComp.nome}</div>
+                <div style={{fontSize:"0.78rem",color:"var(--text2)"}}>{proximaComp.modalidade} • {proximaComp.local}</div>
+              </div>
+              <div style={{textAlign:"right"}}>
+                <div style={{fontWeight:700,color,fontSize:"1rem"}}>{diff===0?"HOJE!":diff===1?"Amanhã":diff+"d"}</div>
+                <div style={{fontSize:"0.7rem",color:"var(--text3)"}}>{T("diario.paraProva")}</div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+      <div className="card">
+        <div style={{display:"flex",alignItems:"center",gap:"8px",marginBottom:"14px"}}>
+          <div style={{width:"8px",height:"8px",borderRadius:"50%",background:"#60a5fa",
+            boxShadow:"0 0 8px rgba(96,165,250,0.5)"}}/>
+          <span style={{fontSize:"10px",fontWeight:700,textTransform:"uppercase",
+            letterSpacing:"0.1em",color:"var(--text3)"}}>{T("acomp.hidratacao")}</span>
+        </div>
+        <div className="grid-2" style={{marginBottom:"1rem"}}>
+          <div className="diario-section" style={{textAlign:"center"}}>
+            <div className="diario-label">{T("diario.consumoHoje")}</div>
+            <div style={{fontFamily:"var(--font-display)",fontSize:"2.5rem",color:"var(--blue)"}}>{(agua/1000).toFixed(1)}<span style={{fontSize:"0.9rem",color:"var(--text2)"}}>L</span></div>
+          </div>
+          <div className="diario-section" style={{textAlign:"center"}}>
+            <div className="diario-label">{T("diario.metaDiaria")}</div>
+            <div style={{fontFamily:"var(--font-display)",fontSize:"2.5rem",color:"var(--text)"}}>{(metaAgua/1000).toFixed(1)}<span style={{fontSize:"0.9rem",color:"var(--text2)"}}>L</span></div>
+          </div>
+        </div>
+        <div className="prog-wrap">
+          <div className="prog-hdr"><span>{T("diario.atingimento")}: </span><span className="blue">{Math.round((agua/metaAgua)*100)}%</span></div>
+          <div className="prog-track"><div className="prog-fill blue" style={{width:`${Math.min((agua/metaAgua)*100,100)}%`}}/></div>
+        </div>
+      </div>
+
+      {/* TREINO — AVALIAÇÃO */}
+      {treino.rating>0&&(
+        <div className="card">
+          <div className="card-title">🏋️ AVALIAÇÃO DO ÚLTIMO TREINO</div>
+          <div className="grid-2">
+            <div className="diario-section"><div className="diario-label">{T("diario.nota")}</div><div style={{fontSize:"1.8rem"}}>{"★".repeat(treino.rating)}{"☆".repeat(5-treino.rating)}</div></div>
+            <div className="diario-section"><div className="diario-label">{T("diario.data")}</div><div className="diario-val">{treino.data?fmtDate(treino.data):"—"}</div></div>
+          </div>
+          {treino.feedback&&<div className="diario-section" style={{marginTop:"0.5rem"}}><div className="diario-label">Feedback do aluno</div><div className="diario-val">"{treino.feedback}"</div></div>}
+        </div>
+      )}
+
+      {/* ALIMENTAÇÃO */}
+      {planoAlim&&(
+        <div className="card">
+          <div className="card-title">🥗 PLANO ALIMENTAR</div>
+          <PeriodoBadge plano={planoAlim}/>
+          <div style={{fontSize:"0.9rem",color:"var(--text2)",marginTop:"0.5rem",marginBottom:"1rem"}}>
+            Refeições feitas hoje: <span style={{color:"var(--green)",fontWeight:600}}>{qtdComido}/{refeicoes.length}</span>
+          </div>
+          {(refeicoes||[]).map((r,i)=>(
+            <div key={i} className="meal-item" style={{background:alimCheck[i]?"var(--green-dim)":"var(--card2)",border:alimCheck[i]?"1px solid rgba(46,204,113,0.3)":"none"}}>
+              <div style={{color:"var(--text3)",fontFamily:"var(--font-mono)",fontSize:"0.75rem",minWidth:"45px"}}>{r.h}</div>
+              <div style={{flex:1,fontWeight:600,fontSize:"0.88rem"}}>{r.r}</div>
+              {alimCheck[i]?<span className="tag tag-green">✓ Comeu</span>:<span style={{fontSize:"0.75rem",color:"var(--text3)"}}>Não marcado</span>}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* COMPETIÇÕES */}
+      {comps.length>0&&(
+        <div className="card">
+          <div className="card-title">🏆 COMPETIÇÕES</div>
+          {(comps||[]).map((c,i)=>{const d=new Date(c.data);return(<div key={i} className="comp-card" style={{background:"var(--bg2)"}}><div className="comp-date"><div className="comp-date-day">{d.getDate()}</div><div className="comp-date-month">{d.toLocaleDateString("pt-BR",{month:"short"})}</div></div><div style={{flex:1}}><div style={{fontWeight:600}}>{c.nome}</div><div style={{fontSize:"0.8rem",color:"var(--text2)"}}>{c.modalidade}</div></div><span className="tag tag-orange">{c.objetivo}</span></div>);})}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── BANNER PLANO GRATUITO (Treinador + Nutri) ─────────────────
 function TreinadorDash({
   user,setPage}){
   useLang();
