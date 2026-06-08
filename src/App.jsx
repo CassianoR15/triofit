@@ -1139,7 +1139,12 @@ function VinculoPorCodigo({label,tipo,atual,onVincular}){
     if(codigo.trim().length<6){setErro(T("vinculo.digiteCodigo"));return;}
     setBuscando(true);
     try{
-      const u=await DB.getUserByCodigo(codigo.trim().toUpperCase());
+      // Try twice — rate limit can cause first attempt to fail
+      let u = await DB.getUserByCodigo(codigo.trim().toUpperCase());
+      if(!u){
+        await new Promise(r=>setTimeout(r,1500));
+        u = await DB.getUserByCodigo(codigo.trim().toUpperCase());
+      }
       setBuscando(false);
       if(!u){setErro(T("vinculo.codigoNaoEncontrado"));return;}
       const rl={treinador:"treinador",nutri:"nutricionista",aluno:"aluno"}[u.role]||u.role||"outro";

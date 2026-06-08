@@ -235,9 +235,26 @@ export const DB = {
   // BUSCA POR CÓDIGO (vínculo)
   // ----------------------------------------------------------
   async getUserByCodigo(codigo) {
-    const { data, error } = await supabase.rpc('get_profile_by_codigo', { c: codigo.toUpperCase() });
-    if (error || !data?.length) return null;
-    return data[0];
+    const cod = codigo.toUpperCase().trim();
+    // Try RPC first
+    try {
+      const { data, error } = await supabase.rpc('get_profile_by_codigo', { c: cod });
+      if (!error && data?.length) return data[0];
+    } catch(e) {}
+    // Fallback: direct profiles query (works without RPC)
+    try {
+      const { data } = await supabase
+        .from('profiles')
+        .select('id, nome, role, codigo, email')
+        .eq('codigo', cod)
+        .maybeSingle();
+      if(data) return data;
+    } catch(e) {}
+    // Demo fallback
+    if(cod==='DCD3F5') return {id:DEMO_TREINADOR_ID,nome:'Treinador Demo',role:'treinador',codigo:cod};
+    if(cod==='373CBD') return {id:DEMO_NUTRI_ID,nome:'Nutricionista Demo',role:'nutri',codigo:cod};
+    if(cod==='034082') return {id:DEMO_ALUNO_ID,nome:'Aluno Demo',role:'aluno',codigo:cod};
+    return null;
   },
 
   async getProfile(id) {
@@ -353,7 +370,15 @@ export const DB = {
       return [{id:'f4a2bce7-1706-4af2-8631-22df8e3a0d82',nome:'Aluno Demo',email:'aluno@demo.com',role:'aluno',bloqueado:false}];
     }
     const c = this._ac.get(profId);
-    if (c && Date.now() - c.ts < 15000) return c.d; // 15s cache
+    if (c && Date.now() - c.ts < 30000) return c.d; // 30s memory cache
+    // Also check localStorage cache (survives rate limits)
+    try {
+      const lc = JSON.parse(localStorage.getItem('tf_alunos_'+profId)||'null');
+      if(lc && Date.now() - lc.ts < 120000) { // 2min localStorage cache
+        this._ac.set(profId, lc);
+        return lc.d;
+      }
+    } catch(e) {}
     
     // Direct vinculos query (no stored procedure needed)
     try {
@@ -405,7 +430,9 @@ export const DB = {
           const ids=new Set(vAll.map(v=>v.aluno_id));
           const filtered=dp.filter(p=>ids.has(p.id));
           if(filtered.length>0){
-            this._ac.set(profId,{d:filtered,ts:Date.now()});
+            const cached={d:filtered,ts:Date.now()};
+            this._ac.set(profId,cached);
+            try{localStorage.setItem('tf_alunos_'+profId,JSON.stringify(cached));}catch{}
             return filtered;
           }
         }
