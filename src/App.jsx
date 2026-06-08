@@ -816,27 +816,40 @@ function AuthScreen({onLogin}){
   }
 
   async function fillDemo(email,senha){
-    // Reset state first — ensures button is never stuck disabled
     setError("");setSuccess("");setTab("login");
     setLoading(false);
     setEmail(email);setSenha(senha);
-    // Safety: reset loading after 15s regardless of outcome
-    const safetyTimer=setTimeout(()=>setLoading(false),15000);
     setLoading(true);
-    await new Promise(r=>setTimeout(r,50));
+    
+    // Tentar login real com timeout de 8s
+    // Se falhar, usar dados demo hardcoded (sempre funciona)
     try{
-      const res=await DB.login(email,senha);
-      clearTimeout(safetyTimer);
+      const loginPromise=DB.login(email,senha);
+      const timeoutPromise=new Promise((_,rej)=>setTimeout(()=>rej(new Error("timeout")),8000));
+      const res=await Promise.race([loginPromise,timeoutPromise]);
       if(res&&res.ok&&res.user){
         setLoading(false);
-        // Marca usuário demo para que o logout funcione sem sessão Supabase
         res.user.isDemoUser=true;
         onLogin(res.user);return;
       }
-      setError(res?.msg||"Erro ao entrar com conta demo");
     }catch(e){
-      setError("Erro de conexão. Tente novamente.");
+      // Login falhou ou demorou — usar fallback demo local
     }
+    
+    // Fallback: demo sem Supabase (sempre disponível)
+    const DEMOS={
+      "aluno@demo.com":{id:DEMO_ALUNO_ID,email:"aluno@demo.com",nome:"Aluno Demo",role:"aluno",
+        codigo:"034082",isDemoUser:true,
+        treinadorId:DEMO_TREINADOR_ID,nutriId:DEMO_NUTRI_ID},
+      "treinador@demo.com":{id:DEMO_TREINADOR_ID,email:"treinador@demo.com",nome:"Treinador Demo",role:"treinador",
+        codigo:"DCD3F5",isDemoUser:true},
+      "nutri@demo.com":{id:DEMO_NUTRI_ID,email:"nutri@demo.com",nome:"Nutricionista Demo",role:"nutri",
+        codigo:"373CBD",isDemoUser:true},
+    };
+    const demoUser=DEMOS[email];
+    if(demoUser){setLoading(false);onLogin(demoUser);return;}
+    
+    setError("Erro ao entrar com conta demo. Tente novamente.");
     setLoading(false);
     const DEMO_IDS={aluno:DEMO_ALUNO_ID,treinador:DEMO_TREINADOR_ID,nutri:DEMO_NUTRI_ID};
     const role=email.includes("treinador")?"treinador":email.includes("nutri")?"nutri":"aluno";
