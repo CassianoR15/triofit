@@ -22,6 +22,19 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   },
 });
 
+// Cliente isolado para signup de alunos (não afeta sessão do treinador)
+function createTempSignupClient(){
+  return createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: {
+      persistSession: false,      // NÃO salva sessão no storage
+      autoRefreshToken: false,    // NÃO faz refresh automático
+      detectSessionInUrl: false,
+      storageKey: 'triofit_temp_' + Date.now(), // chave única isolada
+      lock: async (name, timeout, fn) => fn(),  // sem web locks
+    },
+  });
+}
+
 // ============================================================
 // DB — API idêntica ao localStorage anterior
 // Troca localStorage por Supabase sem mudar o resto do app
@@ -615,29 +628,7 @@ export const DB = {
       const uid=data?.user?.id;
       const sessionExists=!!data?.session;
       
-      // Restore trainer/nutri session immediately after signUp
-      // (signUp auto-logs in as the new user, which would kick out the trainer)
-      if(currentSession?.access_token) {
-        try {
-          await supabase.auth.setSession({
-            access_token: currentSession.access_token,
-            refresh_token: currentSession.refresh_token,
-          });
-          // Verify session was restored
-          const {data:{session:check}} = await supabase.auth.getSession();
-          if(check?.user?.id !== currentSession.user?.id) {
-            // Session not restored - try again
-            await supabase.auth.setSession({
-              access_token: currentSession.access_token,
-              refresh_token: currentSession.refresh_token,
-            });
-          }
-        } catch(e) { console.warn('Session restore:', e?.message); }
-        // Liberar flag APÓS restaurar sessão do treinador
-        if(typeof window!=='undefined') window._triofit_cadastrando=false;
-      } else {
-        if(typeof window!=='undefined') window._triofit_cadastrando=false;
-      }
+      // Sessão do treinador nunca foi afetada (usamos cliente temporário)
       
       // Se não tem uid → falhou de verdade
       if(!uid){

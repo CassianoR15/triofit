@@ -4843,8 +4843,6 @@ function TrioFitInner(){
       if(_loggingOut.current) return;
       // Ignora SIGNED_OUT causado por token_refresh_failed (browser voltou do background)
       if(event==='TOKEN_REFRESHED'||event==='SIGNED_IN'){
-        // Ignorar SIGNED_IN durante cadastro de aluno (evita auto-login como aluno)
-        if(window._triofit_cadastrando) return;
         if(session?.user){
           // Small delay to avoid race with onLogin direct call
           await new Promise(r=>setTimeout(r,100));
