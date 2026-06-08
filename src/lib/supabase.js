@@ -450,7 +450,7 @@ export const DB = {
     if (!userId) return null;
     const k = userId + '|' + chave;
     const c = this._dc2.get(k);
-    if (c && Date.now() - c.ts < 10000) // 10s return c.v;
+    if (c && Date.now() - c.ts < 10000) return c.v;
     try {
       const { data, error } = await supabase
         .from('dados')
@@ -458,11 +458,18 @@ export const DB = {
         .eq('user_id', userId)
         .eq('chave', chave)
         .maybeSingle();
-      if (error) return null;
-      const v = data?.valor ?? null;
-      this._dc2.set(k, { v, ts: Date.now() });
-      return v;
-    } catch { return null; }
+      if (!error && data) {
+        const v = data?.valor ?? null;
+        this._dc2.set(k, { v, ts: Date.now() });
+        return v;
+      }
+    } catch {}
+    // Fallback: check localStorage
+    try {
+      const lc = JSON.parse(localStorage.getItem('tf_data_'+userId+'_'+chave)||'null');
+      if(lc) return lc.v;
+    } catch {}
+    return null;
   },
 
   async setData(chave, userId, valor) {
@@ -474,23 +481,21 @@ export const DB = {
     const k = userId + '|' + chave;
     this._dc2 = this._dc2 || new Map();
     this._dc2.set(k, { v: valor, ts: Date.now() });
-    // Try RPC first, then direct upsert as fallback
-    let saved = false;
+    // Save to localStorage as immediate fallback
+    try{localStorage.setItem('tf_data_'+userId+'_'+chave,JSON.stringify({v:valor,ts:Date.now()}));}catch{}
+    // Try direct upsert first (most reliable)
     try {
-      const { error } = await supabase.rpc('upsert_dado', {
-        p_user_id: userId, p_chave: chave, p_valor: valor,
-      });
-      if (!error) saved = true;
-    } catch(e) {}
-    if (!saved) {
-      // Fallback: direct upsert on dados table
-      try {
-        await supabase.from('dados').upsert(
-          { user_id: userId, chave, valor, updated_at: new Date().toISOString() },
-          { onConflict: 'user_id,chave' }
-        );
-      } catch(e) { console.warn('setData fallback:', e?.message); }
-    }
+      const { error:e1 } = await supabase.from('dados').upsert(
+        { user_id: userId, chave, valor, updated_at: new Date().toISOString() },
+        { onConflict: 'user_id,chave' }
+      );
+      if(!e1) return; // Success
+      console.warn('setData upsert error:', e1.message);
+    } catch(e) { console.warn('setData upsert:', e?.message); }
+    // Fallback: try RPC
+    try {
+      await supabase.rpc('upsert_dado', { p_user_id: userId, p_chave: chave, p_valor: valor });
+    } catch(e) { console.warn('setData rpc:', e?.message); }
   },
 
   // ----------------------------------------------------------
