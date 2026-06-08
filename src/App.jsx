@@ -4066,6 +4066,46 @@ function ContaBloqueada({user, onLogout}){
   );
 }
 
+function PlanoGratuitoBanner({user}){
+  if(user?.isDemoUser||user?.email?.endsWith('@demo.com'))return null;
+  const criadoEm=user?.criadoEm||user?.created_at||new Date().toISOString();
+  const diasTotal=30;
+  const ms=Date.now()-new Date(criadoEm).getTime();
+  const diasPassados=Math.max(0,Math.floor(ms/(1000*60*60*24)));
+  const diasRestantes=Math.max(0,diasTotal-diasPassados);
+  const pct=Math.min(100,Math.round((diasPassados/diasTotal)*100));
+  const urgente=diasRestantes>0&&diasRestantes<=5;
+  const expirado=diasRestantes===0&&diasPassados>=diasTotal;
+  const cor=expirado?"#ef4444":urgente?"#f97316":"#6366f1";
+  const corBg=expirado?"rgba(239,68,68,0.1)":urgente?"rgba(249,115,22,0.1)":"rgba(99,102,241,0.08)";
+  return(
+    <div style={{background:corBg,border:`1px solid ${cor}40`,borderRadius:"12px",padding:"14px 16px",marginBottom:"1rem"}}>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"8px"}}>
+        <div style={{display:"flex",alignItems:"center",gap:"10px"}}>
+          <span style={{fontSize:"1.2rem"}}>{expirado?"🔒":urgente?"⚠️":"✨"}</span>
+          <div>
+            <div style={{fontWeight:700,fontSize:"0.85rem",color:"var(--text1)"}}>
+              {expirado?"Período gratuito encerrado":urgente?`Últimos ${diasRestantes} dia${diasRestantes>1?"s":""} gratuitos!`:"Plano Gratuito — Versão Beta"}
+            </div>
+            <div style={{fontSize:"0.72rem",color:"var(--text3)",marginTop:"2px"}}>
+              {expirado?"Renove para continuar usando o TrioFit":`${diasPassados} de ${diasTotal} dias • ${diasRestantes} dias restantes`}
+            </div>
+          </div>
+        </div>
+        <button onClick={()=>window.open("mailto:contato@triofit.app?subject=Quero+o+plano+Pro","_blank")}
+          style={{background:cor,color:"#fff",border:"none",borderRadius:"20px",padding:"6px 14px",
+            fontSize:"0.72rem",fontWeight:700,cursor:"pointer",whiteSpace:"nowrap"}}>
+          {expirado?"Renovar agora →":"Quero o Pro →"}
+        </button>
+      </div>
+      <div style={{background:"var(--border2)",borderRadius:"99px",height:"4px",overflow:"hidden"}}>
+        <div style={{width:`${pct}%`,height:"100%",borderRadius:"99px",background:cor}}/>
+      </div>
+    </div>
+  );
+}
+
+
 function TreinadorDash({
   user,setPage}){
   useLang();
