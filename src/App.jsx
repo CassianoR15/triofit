@@ -2404,18 +2404,7 @@ const [saving,setSaving]=useState(false);
   },[user.id]);
   const [alunoSel,setAlunoSel]=useState(null);
   const [planoDeletado,setPlanoDeletado]=useState(false);
-  // Dados do aluno para preview (carregados quando alunoSel muda)
-  const [saude,setSaude]=useState({});
-  const [planoAlim,setPlanoAlim]=useState(null);
-  const [agua,setAgua]=useState(0);
-  const [historico,setHistorico]=useState([]);
-  const [proximaComp,setProximaComp]=useState(null);
-  useEffect(()=>{
-    if(!alunoSel?.id){setSaude({});setPlanoAlim(null);setAgua(0);setHistorico([]);setProximaComp(null);return;}
-    DB.getData("saude",alunoSel.id).then(d=>setSaude(d||{})).catch(()=>{});
-    DB.getData("plano_alim_aluno",alunoSel.id).then(d=>setPlanoAlim(d)).catch(()=>{});
-    DB.getData("agua_hoje",alunoSel.id).then(d=>setAgua(d||0)).catch(()=>{});
-  },[alunoSel?.id]);
+
   const [confirmandoDeletar,setConfirmandoDeletar]=useState(false);
   const [formKey,setFormKey]=useState(0);
   const [nomePlano,setNomePlano]=useState("Treino A/B/C");
@@ -2890,41 +2879,6 @@ function DiarioAluno({aluno,onBack}){
         </div>
       )}
 
-      {/* SAÚDE DO MÊS */}
-      <div className="card">
-        <div style={{display:"flex",alignItems:"center",gap:"8px",marginBottom:"14px"}}>
-          <div style={{width:"8px",height:"8px",borderRadius:"50%",background:"var(--red)",
-            boxShadow:"0 0 8px rgba(239,68,68,0.5)"}}/>
-          <span style={{fontSize:"10px",fontWeight:700,textTransform:"uppercase",
-            letterSpacing:"0.1em",color:"var(--text3)"}}>{T("diario.saudeMes")}</span>
-        </div>
-        <SaudeStatusCard status={saude} soLeitura={true}/>
-
-        {/* HISTÓRICO DE DOENÇAS/DORES */}
-        <div style={{marginTop:"1rem",display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0.75rem"}}>
-          <div className="diario-section">
-            <div className="diario-label">🩒 Dias doente no mês</div>
-            <div className="diario-val" style={{fontFamily:"var(--font-display)",fontSize:"1.8rem",color:saude.doente?"var(--red)":"var(--green)"}}>{saude.doente?diasDoente:0}<span style={{fontSize:"0.8rem",color:"var(--text2)"}}> dias</span></div>
-            {saude.sintomas&&<div style={{fontSize:"0.8rem",color:"var(--text2)",marginTop:"0.25rem"}}>{saude.sintomas}</div>}
-          </div>
-          <div className="diario-section">
-            <div className="diario-label">🔴 Dores musculares ativas</div>
-            <div className="diario-val" style={{fontFamily:"var(--font-display)",fontSize:"1.8rem",color:saude.dores?.length?"var(--orange)":"var(--green)"}}>{saude.dores?.length||0}<span style={{fontSize:"0.8rem",color:"var(--text2)"}}> grupos</span></div>
-            {(saude?.dores||[]).length>0&&<div style={{fontSize:"0.8rem",color:"var(--text2)",marginTop:"0.25rem"}}>{(saude?.dores||[]).map(d=>`${d.musculo||""} (${diffDays(d.desde)}d)`).join(", ")}</div>}
-          </div>
-          <div className="diario-section">
-            <div className="diario-label">🔴 Ciclo menstrual</div>
-            <div className="diario-val">{saude.mens?<span className="tag tag-orange">{T("diario.menstrualAtiva")}</span>:<span style={{color:"var(--text3)"}}>{T("geral.naoInformado")}</span>}</div>
-          </div>
-          <div className="diario-section">
-            <div className="diario-label">💊 Medicamentos</div>
-            <div className="diario-val" style={{fontSize:"0.85rem"}}>{saude.meds||<span style={{color:"var(--text3)"}}>{T("geral.nenhum")}</span>}</div>
-          </div>
-        </div>
-        {saude.obs&&<div className="diario-section" style={{marginTop:"0.75rem"}}><div className="diario-label">{T("geral.observacoes")}</div><div className="diario-val">{saude.obs}</div></div>}
-      </div>
-
-      {/* HIDRATAÇÃO */}
       {proximaComp&&(()=>{
         const diff=Math.ceil((new Date(proximaComp.data)-new Date())/(1000*60*60*24));
         const color=diff<=7?"var(--red)":diff<=30?"var(--orange)":"var(--green)";
@@ -4414,7 +4368,7 @@ function CadastrarAluno({
               background:cfg.corGrad,color:cfg.cor,border:"1px solid "+cfg.corBorder,fontWeight:700,
               borderRadius:"var(--r)",cursor:"pointer",width:"100%",transition:"all .15s"}}
               onClick={()=>{setErroMsg("");setSalvando(false);setTimeout(cadastrar,10);}} disabled={salvando}>
-              {salvando?<_CadTimer/>:"✅ "+cfg.labelBtn}
+              {salvando?"⏳ Cadastrando...":"✅ "+cfg.labelBtn}
             </button>
           </div>
         </div>
