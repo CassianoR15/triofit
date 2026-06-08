@@ -3040,26 +3040,17 @@ function TreinadorDash({
   const [msgs,setMsgs]=useState(0);
   const [atualizacoes,setAtualizacoes]=useState([]);
   useEffect(()=>{
-    DB.getMensagensNaoLidas(user.id).then(d=>setMsgs(d.length)).catch(()=>{});
-    // Busca atualizações recentes dos alunos
-    DB.getAlunosDe(user.id).then(async lista=>{
-      const items=[];
-      for(const a of (lista||[]).slice(0,5)){
-        try{
-          const diario=await DB.getData("diario_saude",a.id);
-          if(diario?.atualizadoEm){
-            items.push({nome:a.nome,tipo:"saude",data:diario.atualizadoEm,msg:T("dash.atuSaude")});
-          }
-          const treino=await DB.getData("treino_avaliacao",a.id);
-          if(treino?.data){
-            items.push({nome:a.nome,tipo:"treino",data:treino.data,msg:`Finalizou treino ⭐${treino.rating||""}`});
-          }
-        }catch{}
-      }
-      items.sort((a,b)=>new Date(b.data)-new Date(a.data));
-      setAtualizacoes(items.slice(0,6));
-    }).catch(e=>console.warn("TrioFit data error:",e));
-  },[user.id]);
+    let c=false;
+    DB.getAlunosDe(user.id).then(d=>{
+      if(c)return;
+      const base=d||[];
+      if(DEMO_IDS.includes(user.id)){
+        const demo=DEMO_ALUNO;
+        setAlunos(base.some(a=>a.id===demo.id)?base:[...base,demo]);
+      }else setAlunos(base);
+    }).catch(()=>setAlunos([]));
+    return()=>{c=true;};
+  },[user.id])
 
   const total=(alunos||[]).length;
   const hoje=new Date().toLocaleDateString("pt-BR",{weekday:"long",day:"numeric",month:"long"});
