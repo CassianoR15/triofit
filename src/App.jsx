@@ -2596,16 +2596,18 @@ function TreinadorPrescrever({user,showToast}){
             {/* Exercícios do dia */}
             {d.tipo!=="descanso"&&(<>
               {(d.exercicios||[]).map((ex,ei)=>(
-                <div key={ei} style={{display:"flex",alignItems:"center",gap:"8px",
-                  background:"var(--card3,var(--card))",borderRadius:"var(--r)",
+                <div key={ei} style={{background:"var(--card3,var(--card))",borderRadius:"var(--r)",
                   padding:"8px 12px",marginBottom:"6px"}}>
-                  <div style={{flex:1,fontSize:"13px"}}>
-                    <span style={{fontWeight:600}}>{ex.nome}</span>
-                    {ex.series&&<span style={{color:"var(--text3)",marginLeft:"8px"}}>{ex.series}×{ex.reps} {ex.carga&&`— ${ex.carga}kg`}</span>}
-                    {ex.video&&<a href={ex.video} target="_blank" rel="noopener" style={{marginLeft:"8px",fontSize:"11px",color:"var(--blue)"}}>🎥</a>}
+                  <div style={{display:"flex",alignItems:"center",gap:"8px"}}>
+                    <div style={{flex:1,fontSize:"13px"}}>
+                      <span style={{fontWeight:600}}>{ex.nome}</span>
+                      {ex.series&&<span style={{color:"var(--text3)",marginLeft:"8px"}}>{ex.series}×{ex.reps} {ex.carga&&`— ${ex.carga}kg`}</span>}
+                      {ex.video&&<a href={ex.video} target="_blank" rel="noopener" style={{marginLeft:"8px",fontSize:"11px",color:"var(--blue)"}}>🎥</a>}
+                    </div>
+                    <button className="btn btn-ghost btn-sm" style={{padding:"2px 8px",color:"var(--red)"}}
+                      onClick={()=>removeExercicio(diaEdit,ei)}>✕</button>
                   </div>
-                  <button className="btn btn-ghost btn-sm" style={{padding:"2px 8px",color:"var(--red)"}}
-                    onClick={()=>removeExercicio(diaEdit,ei)}>✕</button>
+                  {ex.obs&&<div style={{fontSize:"11px",color:"var(--text3)",marginTop:"3px",fontStyle:"italic",paddingLeft:"2px"}}>📝 {ex.obs}</div>}
                 </div>
               ))}
 
@@ -2629,6 +2631,8 @@ function TreinadorPrescrever({user,showToast}){
                   placeholder="Kg" onChange={e=>setNovoEx(p=>({...p,carga:e.target.value}))}/>
                 <input className="form-input" style={{flex:"2 1 120px"}} value={novoEx.video}
                   placeholder="🎥 URL vídeo (auto)" onChange={e=>setNovoEx(p=>({...p,video:e.target.value}))}/>
+                <input className="form-input" style={{flex:"3 1 200px"}} value={novoEx.obs}
+                  placeholder="📝 Observações (ex: controle a descida, 2s)" onChange={e=>setNovoEx(p=>({...p,obs:e.target.value}))}/>
                 <button className="btn btn-primary btn-sm" onClick={addExercicio}>+ Adicionar</button>
               </div>
             </>)}
