@@ -2618,7 +2618,7 @@ function TreinadorPrescrever({user,showToast}){
                     if(match&&!novoEx.video)setNovoEx(p=>({...p,video:match.video||""}));
                   }}/>
                 <datalist id="banco-ex-list">
-                  {React.useMemo(()=>BANCO_EXERCICIOS.map(b=><option key={b.nome} value={b.nome}/>),[])}
+                  {BANCO_EXERCICIOS.map(b=><option key={b.nome} value={b.nome}/>)}
                 </datalist>
                 <input className="form-input" style={{flex:"1 1 60px"}} value={novoEx.series}
                   placeholder="Séries" onChange={e=>setNovoEx(p=>({...p,series:e.target.value}))}/>
@@ -4121,6 +4121,8 @@ function TreinadorDash({
   },[user.id]);
   const [msgs,setMsgs]=useState(0);
   const [atualizacoes,setAtualizacoes]=useState([]);
+ 
+
   useEffect(()=>{
     let c=false;
     DB.getAlunosDe(user.id).then(d=>{
