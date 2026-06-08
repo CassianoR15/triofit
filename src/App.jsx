@@ -833,7 +833,16 @@ function AuthScreen({onLogin}){
         onLogin(res.user);return;
       }
     }catch(e){
-      // Login falhou ou demorou — usar fallback demo local
+      // Login falhou ou demorou — tentar mais uma vez antes de usar fallback
+      try{
+        const res2=await Promise.race([
+          DB.login(email,senha),
+          new Promise((_,rej)=>setTimeout(()=>rej(new Error("t")),8000))
+        ]);
+        if(res2&&res2.ok&&res2.user){
+          setLoading(false);res2.user.isDemoUser=true;onLogin(res2.user);return;
+        }
+      }catch(e2){}
     }
     
     // Fallback: demo sem Supabase (sempre disponível)
