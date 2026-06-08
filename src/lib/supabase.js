@@ -534,7 +534,10 @@ export const DB = {
   async cadastrarAluno({nome, sobrenome, email, telefone, genero, grupo, objetivo, senha, treinadorId, nutriId}) {
     try {
       // Warmup Supabase first (cold start prevention)
+      // Warmup auth service specifically (different from DB warmup)
       await this._warmup();
+      // Small delay to let warmup complete
+      await new Promise(r=>setTimeout(r,500));
       const emailLimpo=(email||'').trim().toLowerCase();
       const nomeFull=[nome,sobrenome].filter(Boolean).join(' ').trim();
       const emailRegex=/^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
@@ -621,6 +624,15 @@ export const DB = {
             access_token: currentSession.access_token,
             refresh_token: currentSession.refresh_token,
           });
+          // Verify session was restored
+          const {data:{session:check}} = await supabase.auth.getSession();
+          if(check?.user?.id !== currentSession.user?.id) {
+            // Session not restored - try again
+            await supabase.auth.setSession({
+              access_token: currentSession.access_token,
+              refresh_token: currentSession.refresh_token,
+            });
+          }
         } catch(e) { console.warn('Session restore:', e?.message); }
       }
       
