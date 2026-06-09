@@ -804,8 +804,16 @@ function AuthScreen({onLogin}){
     if(!isValidEmail(e)){setError("Email inválido. Exemplo: nome@gmail.com");return;}
     if(senha.length<6){setError("Senha: mínimo 6 caracteres.");return;}
     setLoading(true);
-    const res=await DB.register(n,e,senha,role);
+    setError("⏳ Criando conta...");
+    let res = await DB.register(n,e,senha,role);
+    // Auto-retry once on timeout
+    if(!res.ok && res.msg?.includes('TIMEOUT')){
+      setError("⏳ Servidor lento, tentando novamente...");
+      await new Promise(r=>setTimeout(r,2000));
+      res = await DB.register(n,e,senha,role);
+    }
     setLoading(false);
+    setError("");
     if(!res.ok){setError(res.msg||T("erros.erroCriar"));return;}
     if(res.needsConfirmation||!res.user){
       setSuccess("✅ Conta criada com sucesso! Verifique seu email para ativar a conta.");

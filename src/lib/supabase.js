@@ -45,19 +45,25 @@ export const DB = {
   // AUTH
   // ----------------------------------------------------------
   async register(nome, email, senha, role) {
+    // Warmup auth service before register
+    await this._warmup();
     try {
-      // Normaliza email
       const emailNorm = (email||'').trim().toLowerCase();
       const nomeNorm = (nome||'').trim();
 
-      const { data, error } = await supabase.auth.signUp({
+      // Add timeout to prevent silent freeze
+      const signupPromise = supabase.auth.signUp({
         email: emailNorm,
         password: senha,
         options: {
           data: { nome: nomeNorm, role: role||'aluno' },
-          emailRedirectTo: window.location.origin,
+          emailRedirectTo: 'https://triofit.vercel.app',
         },
       });
+      const timeoutPromise = new Promise((_,rej)=>
+        setTimeout(()=>rej(new Error('TIMEOUT')), 30000)
+      );
+      const { data, error } = await Promise.race([signupPromise, timeoutPromise]);
 
       if (error) {
         const m = error.message || '';
@@ -106,6 +112,9 @@ export const DB = {
       }
       return { ok: true, user: await this._formatUser(data.user) };
     } catch(e) {
+      if(e?.message==='TIMEOUT'){
+        return { ok: false, msg: '⏳ Servidor demorou a responder. Tente novamente.' };
+      }
       return { ok: false, msg: 'Erro de conexão. Verifique sua internet e tente novamente.' };
     }
   },
