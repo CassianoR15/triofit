@@ -803,8 +803,11 @@ function AuthScreen({onLogin}){
     if(!e){setError("Digite seu email.");return;}
     if(!isValidEmail(e)){setError("Email inválido. Exemplo: nome@gmail.com");return;}
     if(senha.length<6){setError("Senha: mínimo 6 caracteres.");return;}
-    setLoading(true);
-    setError("⏳ Criando conta...");
+    setLoading(true); // Show spinner immediately
+    setError("");
+    // Small yield to let React render the spinner before heavy async
+    await new Promise(r=>setTimeout(r,50));
+    setError("⏳ Aguardando servidor...");
     let res = await DB.register(n,e,senha,role);
     // Auto-retry once on timeout
     if(!res.ok && res.msg?.includes('TIMEOUT')){
