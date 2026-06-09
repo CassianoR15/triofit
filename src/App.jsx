@@ -556,8 +556,8 @@ const styles = `
 // ============================================================
 // TOAST SYSTEM
 // ============================================================
-function Toast({msg,type,onClose}){
-  useEffect(()=>{const t=setTimeout(onClose,2500);return()=>clearTimeout(t);},[]);
+function Toast({msg,type,duration=3500,onClose}){
+  useEffect(()=>{const t=setTimeout(onClose,duration);return()=>clearTimeout(t);},[duration]);
   const icons={success:"✅",warn:"⚠️",error:"❌"};
   const borders={success:"rgba(46,204,113,0.4)",warn:"rgba(243,156,18,0.4)",error:"rgba(231,76,60,0.4)"};
   return(
@@ -570,9 +570,10 @@ function Toast({msg,type,onClose}){
 }
 function useToast(){
   const [toast,setToast]=useState(null);
-  const show=useCallback((msg,type="success")=>setToast({msg,type,id:Date.now()}),[]);
+  const show=useCallback((msg,type="success",duration=3000)=>
+    setToast({msg,type,id:Date.now(),duration}),[]);
   const hide=useCallback(()=>setToast(null),[]);
-  const ToastEl=toast?<Toast key={toast.id} msg={toast.msg} type={toast.type} onClose={hide}/>:null;
+  const ToastEl=toast?<Toast key={toast.id} msg={toast.msg} type={toast.type} duration={toast.duration} onClose={hide}/>:null;
   return{show,ToastEl};
 }
 
@@ -2910,7 +2911,7 @@ function NutriPrescrever({
     const plano={nome:nomePlano,protocolo,duracao,inicio,fim:fimDate.toISOString(),refeicoes,kcalMeta:fases[protocolo],criadoEm:new Date().toISOString()};
     await DB.setData("plano_alim_aluno",alunoSel.id,plano);
       _cs(alunoSel.id,"plano_alim_aluno",plano);
-    showToast&&showToast(`✅ Plano alimentar salvo com sucesso para ${alunoSel.nome}! 🥗`,"success");
+    showToast&&showToast(`✅ Plano alimentar enviado para ${alunoSel.nome}! 🥗`,"success",4000);
     showToast&&showToast(`✅ Plano alimentar enviado para ${alunoSel.nome}!`);
   }
 
