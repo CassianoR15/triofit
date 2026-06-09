@@ -1340,7 +1340,7 @@ function AlunoTreinos({
     setPlanoTreino(undefined);
     const fetchPlano = () => {
       DB.getData("plano_treino_aluno",user.id).then(d=>{
-        if(!cancelled){const _demo=user.id===DEMO_ALUNO_ID||user.email==="aluno@demo.com";setPlanoTreino(d||(_demo?DEMO_PLAN_ALUNO:null));setPlanoReady(true);}
+        if(!cancelled){const _demo=user.id===DEMO_ALUNO_ID||user.email==="aluno@demo.com"||user.isDemoUser;setPlanoTreino(d||(_demo?DEMO_PLAN_ALUNO:null));setPlanoReady(true);}
       }).catch(()=>{
         if(!cancelled){const _demo=user.id===DEMO_ALUNO_ID||user.email==="aluno@demo.com";setPlanoTreino(_demo?DEMO_PLAN_ALUNO:null);setPlanoReady(true);}
       });
@@ -1623,11 +1623,11 @@ function AlunoTreinos({
               <div style={{display:"flex",alignItems:"center",gap:"10px",marginBottom:"12px"}}>
                 {!treinoAtivo?(
                   <button className="btn btn-primary btn-sm" onClick={()=>{setTreinoAtivo(true);if(!treinoInicio)setTreinoInicio(Date.now());}}>
-                    ▶ {T("treino.iniciar")||"Iniciar treino"}
+                    ▶ {"▶ Iniciar Treino"||"Iniciar treino"}
                   </button>
                 ):(
                   <button className="btn btn-ghost btn-sm" onClick={()=>setTreinoAtivo(false)}>
-                    ⏸ {T("treino.pausar")||"Pausar"}
+                    ⏸ {"⏸ Pausar"||"Pausar"}
                   </button>
                 )}
                 {treinoDuracao>0&&(
@@ -1713,7 +1713,7 @@ function AlunoTreinos({
             ):(
               <div style={{background:"var(--card2)",borderRadius:"var(--radius)",padding:"1rem",marginTop:"0.5rem"}}>
                 <div style={{fontWeight:600,marginBottom:"0.3rem"}}>⚠️ {(diaInfo?.exercicios||[]).filter((_,j)=>checked[`${diaAtivo}_${j}`]).length} de {(diaInfo?.exercicios||[]).length} exercícios concluídos</div>
-                <div style={{fontSize:"0.85rem",color:"var(--text2)",marginBottom:"0.75rem"}}>{T("treino.finalizar")}</div>
+                <div style={{fontSize:"0.85rem",color:"var(--text2)",marginBottom:"0.75rem"}}>{"🏁 Finalizar Treino"}</div>
                 <div style={{display:"flex",gap:"0.5rem"}}>
                   <button className="btn btn-ghost btn-sm" onClick={()=>setConfirmandoFinalizar(false)}>{T("geral.continuar")}</button>
                   <button className="btn btn-primary btn-sm" onClick={()=>finalizarTreino(diaAtivo,diaInfo,checked)}>{T("treino.finalizarAssim")}</button>
@@ -2572,7 +2572,7 @@ function TreinadorPrescrever({user,showToast}){
                 <button className="btn btn-ghost btn-sm" style={{color:"var(--red)"}}
                   onClick={deletarPlano}>🗑️ Deletar</button>
                 <button className="btn btn-primary btn-sm"
-                  onClick={()=>setPlanoDeletado(true)}>✏️ Novo plano</button>
+                  onClick={()=>{setPlanoDeletado(true);setPlanoExistente(null);}}>✏️ Novo plano</button>
               </div>
             </div>
           </div>
