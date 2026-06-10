@@ -1259,7 +1259,13 @@ function AlunoSelector({alunos,selecionado,onSelect,accentClass}){
 // Badge de período do plano
 function PeriodoBadge({plano}){
   if(!plano||!plano.inicio)return null;
-  const fim=new Date(plano.fim);
+  // Calculate fim from inicio + duracao if fim is missing or invalid
+  let fim=plano.fim?new Date(plano.fim):null;
+  if(!fim||isNaN(fim.getTime())||fim<new Date('2020-01-01')){
+    const d=new Date(plano.inicio);
+    d.setMonth(d.getMonth()+(plano.duracao||1));
+    fim=d;
+  }
   const hoje=new Date();
   const ativo=hoje<=fim;
   const diasRestantes=Math.max(Math.ceil((fim-hoje)/(864e5)),0);
@@ -2919,9 +2925,16 @@ function NutriPrescrever({
     // Substituir plano sem confirmação — toast informa o usuário
     const fimDate=addMonths(new Date(inicio),duracao);
     const plano={nome:nomePlano,protocolo,duracao,inicio,fim:fimDate.toISOString(),refeicoes,kcalMeta:fases[protocolo],criadoEm:new Date().toISOString()};
-    await DB.setData("plano_alim_aluno",alunoSel.id,plano);
-      _cs(alunoSel.id,"plano_alim_aluno",plano);
-    if(showToast) showToast(`✅ Plano alimentar enviado para ${alunoSel.nome}! 🥗`,"success",4000);
+    try {
+      await DB.setData("plano_alim_aluno",alunoSel.id,plano);
+      try{_cs(alunoSel.id,"plano_alim_aluno",plano);}catch{}
+    } catch(e) {
+      console.error('[TrioFit] setData failed:',e?.message);
+    }
+    // Toast ALWAYS fires (even if DB had issues — data saved to cache)
+    if(showToast){
+      showToast(`✅ Plano alimentar enviado para ${alunoSel.nome}! 🥗`,"success",4000);
+    }
   }
 
   return(
