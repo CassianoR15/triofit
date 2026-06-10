@@ -2922,18 +2922,18 @@ function NutriPrescrever({
 
   async function salvar(){
     if(!alunoSel)return;
-    // Substituir plano sem confirmação — toast informa o usuário
+    const nomeAluno=alunoSel.nome;
+    // Mostrar toast IMEDIATAMENTE (antes do await — visível durante freeze)
+    if(showToast) showToast(`⏳ Enviando plano para ${nomeAluno}...`,"success",35000);
     const fimDate=addMonths(new Date(inicio),duracao);
     const plano={nome:nomePlano,protocolo,duracao,inicio,fim:fimDate.toISOString(),refeicoes,kcalMeta:fases[protocolo],criadoEm:new Date().toISOString()};
     try {
       await DB.setData("plano_alim_aluno",alunoSel.id,plano);
       try{_cs(alunoSel.id,"plano_alim_aluno",plano);}catch{}
+      // Atualizar toast para sucesso
+      if(showToast) showToast(`✅ Plano alimentar enviado para ${nomeAluno}! 🥗`,"success",5000);
     } catch(e) {
-      console.error('[TrioFit] setData failed:',e?.message);
-    }
-    // Toast ALWAYS fires (even if DB had issues — data saved to cache)
-    if(showToast){
-      showToast(`✅ Plano alimentar enviado para ${alunoSel.nome}! 🥗`,"success",4000);
+      if(showToast) showToast(`⚠️ Erro ao enviar plano. Tente novamente.`,"error",5000);
     }
   }
 
