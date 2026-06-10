@@ -1344,7 +1344,17 @@ function AlunoTreinos({
     setPlanoTreino(undefined);
     const fetchPlano = () => {
       DB.getData("plano_treino_aluno",user.id).then(d=>{
-        if(!cancelled){const _demo=user.id===DEMO_ALUNO_ID||user.email==="aluno@demo.com"||user.isDemoUser;setPlanoTreino(d||(_demo?DEMO_PLAN_ALUNO:null));setPlanoReady(true);}
+        if(!cancelled){const _demo=user.id===DEMO_ALUNO_ID||user.email==="aluno@demo.com"||user.isDemoUser;// Normalize plan format regardless of insertion method
+          const raw=d||(_demo?DEMO_PLAN_ALUNO:null);
+          if(raw&&!raw.dias&&raw.exercicios){
+            // Flat format from API — wrap in dias structure
+            raw.dias=DIAS_SEMANA.map((_,i)=>({
+              nome:`Treino ${String.fromCharCode(65+i)}`,
+              tipo:i<5?"academia":"descanso",
+              exercicios:i===0?raw.exercicios:[]
+            }));
+          }
+          setPlanoTreino(raw);setPlanoReady(true);}
       }).catch(()=>{
         if(!cancelled){const _demo=user.id===DEMO_ALUNO_ID||user.email==="aluno@demo.com";setPlanoTreino(_demo?DEMO_PLAN_ALUNO:null);setPlanoReady(true);}
       });
@@ -2911,8 +2921,7 @@ function NutriPrescrever({
     const plano={nome:nomePlano,protocolo,duracao,inicio,fim:fimDate.toISOString(),refeicoes,kcalMeta:fases[protocolo],criadoEm:new Date().toISOString()};
     await DB.setData("plano_alim_aluno",alunoSel.id,plano);
       _cs(alunoSel.id,"plano_alim_aluno",plano);
-    showToast&&showToast(`✅ Plano alimentar enviado para ${alunoSel.nome}! 🥗`,"success",4000);
-    showToast&&showToast(`✅ Plano alimentar enviado para ${alunoSel.nome}!`);
+    if(showToast) showToast(`✅ Plano alimentar enviado para ${alunoSel.nome}! 🥗`,"success",4000);
   }
 
   return(
